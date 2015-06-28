@@ -5,20 +5,21 @@ A basic wrapper for the Protein Data Bank (PDB) xml-based API. This can be used 
 *Written by William Gilpin for Stanford AP315, Spring 2015.*
 
 
-## Dependencies
+## Installation
 
-+ Python 3 with the included **urllib.request** library
+   $ pip install -r "requirements.txt"
+   $ pip install pypdb
 
-+ Install **xml2dict** *(Please follow the GNU license associated with that library)*
+This code works on Python 3. It works on Python 2 if you replace the calls to **urllib.request** with calls to the **requests** libary, although I haven't tested it extensively in Python 2
 
-+ Install **dict2xml** *(Please follow the license associated with that library)*
+The requirements final includes the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**dicttoxml**](https://github.com/quandyfactory/dicttoxml) *(Please follow the GNU license associated with those libraries)*
 
 
 ## Usage
 
 This package can be used to get lists of PDB IDs associated with specific search terms, experiment types, structures, and other common criteria.
 
-Given a list of PDBs, this package can be used to fetch any data associated with those PDBs, including their dates of deposition, lsits of authors and associated publications, their sequences or structures, their top BLAST matches, and other query-specific attributes like lists of a ligands or chemical structure.
+Given a list of PDBs, this package can be used to fetch any data associated with those PDBs, including their dates of deposition, lists of authors and associated publications, their sequences or structures, their top BLAST matches, and other query-specific attributes like lists of a ligands or chemical structure.
 
 A set of demos is included in the iPython notebook **demos.ipynb**. A static version of this notebook (for viewing) is available as **demos.html**
 
