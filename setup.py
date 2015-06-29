@@ -3,7 +3,7 @@ setup(
   name = 'pypdb',
   packages = ['pypdb'], # same as 'name'
   version = '0.1',
-  install_requires=["xml2dict", "dict2xml"],
+  install_requires=["xmltodict", "dicttoxml"],
   description = 'A Python wrapper for the Protein Data Bank API',
   author = 'William Gilpin',
   author_email = 'firstnamelastname(as one word)@googleemailservice',

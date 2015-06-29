@@ -11,7 +11,7 @@ A basic wrapper for the Protein Data Bank (PDB) xml-based API. This can be used 
 
 This code works on Python 3. It works on Python 2 if you replace the calls to **urllib.request** with calls to the **requests** libary, although I haven't tested it extensively in Python 2
 
-+ Includes the libraries [**xml2dict**](https://github.com/martinblech/xmltodict) and [**dict2xml**](https://github.com/quandyfactory/dicttoxml) *(Please follow the GNU license associated with those libraries)*
++ Includes the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**dicttoxml**](https://github.com/quandyfactory/dicttoxml) *(Please follow the GNU license associated with those libraries)*
 
 
 ## Usage
