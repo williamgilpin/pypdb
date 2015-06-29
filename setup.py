@@ -7,7 +7,7 @@ setup(
   name = 'pypdb',
   packages = ['pypdb'], # same as 'name'
   version = '0.1',
-  requires=[
+  install_requires=[
         'xmltodict', 
         'dicttoxml',
   ],
