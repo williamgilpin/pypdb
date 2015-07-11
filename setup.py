@@ -1,7 +1,7 @@
 from setuptools import setup
 
 
-setuptools.setup(
+setup(
   name = 'pypdb',
   packages = ['pypdb','beautifulsoup'], # same as 'name'
   version = '0.2',
