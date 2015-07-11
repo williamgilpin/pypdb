@@ -7,14 +7,11 @@ A basic wrapper for the Protein Data Bank (PDB) xml-based API. This can be used 
 
 ## Installation
 
-	$ curl -O https://github.com/williamgilpin/pypdb/blob/master/requirements.txt
-	$ pip install -r "requirements.txt"
 	$ pip install pypdb
 
 This code works on Python 3. It works on Python 2 if you replace the calls to **urllib.request** with calls to the **requests** libary, although I haven't tested it extensively in Python 2
 
-The requirements file includes the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**dicttoxml**](https://github.com/quandyfactory/dicttoxml) *(Please follow the GNU license associated with those libraries)*
-
+The installation adds the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**BeautifulSoup**](http://www.crummy.com/software/BeautifulSoup/). Please follow the licenses associated with these libraries.
 
 ## Usage
 
@@ -26,7 +23,7 @@ A set of demos is included in the iPython notebook **demos.ipynb**. A static ver
 
 ## Development
 
-This package has not been refined for every use case (there are many elborate request types allowed through the PDB's xml-based API), but I believe that enough of the basic structure is present that any additional features may be easily implemented. I encourage forks and pull requests.
+This package has not been refined for every use case (there are many elaborate request types allowed through the PDB's xml-based API), but I believe that enough of the basic structure is present that any additional features may be easily implemented. I encourage forks and pull requests.
 
 More information about the PDB's API and request format can be found at this page:
 
