@@ -9,9 +9,16 @@ from matplotlib.pyplot import *
 from numpy import *
 
 import urllib.request
-import dicttoxml
 import xmltodict
 import re
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    try:
+        import BeautifulSoup
+    except ImportError:
+        print ("pypdb can't find BeautifulSoup. You cannot parse BLAST search results without this module")
 
 from json import loads, dumps
 
@@ -35,10 +42,10 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     
         The type of query to perform, the easiest is an AdvancedKeywordQuery but more
         specific types of searches may also be performed
-        
+
     Returns
     -------
-    
+        
     scan_params : dict
         
         A dictionary representing the query
@@ -47,7 +54,8 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     '''
     assert querytype in {'HoldingsQuery', 'ExpTypeQuery',
                          'AdvancedKeywordQuery','StructureIdQuery',
-                         'ModifiedStructuresQuery'
+                         'ModifiedStructuresQuery', 'AdvancedAuthorQuery', 'MotifQuery',
+                         'NoLigandQuery'
                         }
   
     query_params = dict()
@@ -57,6 +65,19 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
         query_params['description'] = 'Text Search for: '+ search_term
         query_params['keywords'] = search_term
         
+    elif querytype=='NoLigandQuery':
+        query_params['haveLigands'] = 'yes'
+    
+    elif querytype=='AdvancedAuthorQuery':
+        query_params['description'] = 'Author Name: '+ search_term
+        query_params['searchType'] = 'All Authors'
+        query_params['audit_author.name'] = search_term
+        query_params['exactMatch'] = 'false'
+    
+    elif querytype=='MotifQuery':
+        query_params['description'] = 'Motif Query For: '+ search_term
+        query_params['motif'] = search_term
+    
     # search for a specific structure
     elif querytype in ['StructureIdQuery','ModifiedStructuresQuery']:
         query_params['structureIdList'] = search_term
@@ -98,8 +119,8 @@ def do_search(scan_params):
     
     url = 'http://www.rcsb.org/pdb/rest/search'
 
-
-    queryText = dicttoxml.dicttoxml(scan_params)
+    queryText = xmltodict.unparse(scan_params, pretty=False)
+    queryText = queryText.encode()
 
     req = urllib.request.Request(url, data=queryText)
     f = urllib.request.urlopen(req)
@@ -124,7 +145,7 @@ def to_dict(odict):
     '''
     return loads(dumps(odict))
 
-def remove_tags(kk):
+def remove_at_sign(kk):
     '''
     Removes the '@' character from the beginning of key names in a dict()
     '''
@@ -185,14 +206,122 @@ def get_info(pdb_id, url_root='http://www.rcsb.org/pdb/rest/describeMol?structur
     out = xmltodict.parse(result,process_namespaces=True)
     
     return out
+ 
+
+def get_raw_blast(pdb_id):
+    '''
+    Look up BLAST page for a given PDB ID
+        
+    get_blast() uses this function internally
     
+    Inputs
+    ------
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+        
+    url_root : string
+        The string root of the specific url for the request type
+        
+    Returns
+    -------
+    
+    out : OrderedDict
+        An ordered dictionary object corresponding to bare xml
+        
+    '''
+    
+    url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB1?structureId='
+    url = url_root + pdb_id
+    req = urllib.request.Request(url)
+    f = urllib.request.urlopen(req)
+    result = f.read()
+    assert result
+    
+    return result
+
+
+def parse_blast(blast_string):
+    '''
+    This function requires BeautifulSoup and the re module
+    It goes throught the complicated output returned by the BLAST
+    search and probides a list of matches, as well as the raw 
+    text file showing the alignments for each of the matches.
+    
+    get_blast() uses this function internally
+    
+    Inputs
+    ------
+    
+    blast_string : str
+        A complete webpage of standard BLAST results
+        
+    Returns
+    -------
+    
+    out : 2-tuple
+        A tuple consisting of a list of PDB matches, and a list
+        of their alignment text files (unformatted)
+    
+    
+    '''
+    
+    soup = BeautifulSoup(str(blast_string), "html.parser")
+    
+    all_blasts = list()
+    all_blast_ids = list()
+
+    pattern = '></a>....:'
+    prog = re.compile(pattern)
+
+    for item in soup.find_all('pre'):
+        if len(item.find_all('a'))==1:
+            all_blasts.append(item)
+            blast_id = re.findall(pattern, str(item) )[0][-5:-1]
+            all_blast_ids.append(blast_id)
+        
+    out = (all_blast_ids, all_blasts)
+    return out
+    
+    
+
+def get_blast(pdb_id):
+    '''
+    Look up BLAST for a given PDB ID. This function is a wrapper
+    for get_raw_blast and parse_blast
+    
+    Inputs
+    ------
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+        
+    Returns
+    -------
+    
+    out : 2-tuple
+        A tuple consisting of a list of PDB matches, and a list
+        of their alignment text files (unformatted)
+        
+    '''
+
+    raw_results = get_raw_blast(pdb_id)
+    out = parse_blast(raw_results)
+    
+    return out
+
 def describe_pdb(pdb_id):
     """
-    Return a text pdb description from PDB
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+    
+    Returns
+    -------
+    out : string
+        A text pdb description from PDB
     """
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/describePDB?structureId=')
     out = to_dict(out)
-    return remove_tags(out['PDBdescription']['PDB'])
+    out = remove_at_sign(out['PDBdescription']['PDB'])
+    return out
 
 def get_entity_info(pdb_id):
     """
@@ -200,21 +329,15 @@ def get_entity_info(pdb_id):
     """
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/getEntityInfo?structureId=')
     out = to_dict(out)
-    return remove_tags( out['entityInfo']['PDB'] )
+    return remove_at_sign( out['entityInfo']['PDB'] )
 
-def describe_chemical(pdb_id):
+def describe_chemical(chem_id):
     """
-    Return pdb id information
+    
+    This takes the chemical name (ie, NAG), not the PDB id
+    Return chem id information
     """
-    out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/describeHet?chemicalID=')
-    out = to_dict(out)
-    return out
-
-def get_blast(pdb_id):
-    """
-    Return BLAST of given PDB_ID
-    """
-    out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB1?structureId=')
+    out = get_info(chem_id, url_root = 'http://www.rcsb.org/pdb/rest/describeHet?chemicalID=')
     out = to_dict(out)
     return out
 
@@ -224,7 +347,7 @@ def get_ligands(pdb_id):
     """
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/ligandInfo?structureId=')
     out = to_dict(out)
-    return remove_tags(out['structureId'])
+    return remove_at_sign(out['structureId'])
 
 def get_gene_onto(pdb_id):
     """
@@ -232,7 +355,10 @@ def get_gene_onto(pdb_id):
     """
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/goTerms?structureId=')
     out = to_dict(out)
-    return remove_tags(out['goTerms'])
+    if not out['goTerms']:
+        return None
+    out = remove_at_sign(out['goTerms'])
+    return out
 
 def get_pfam(pdb_id):
     """
@@ -240,7 +366,9 @@ def get_pfam(pdb_id):
     """
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/hmmer?structureId=')
     out = to_dict(out)
-    return remove_tags(out['hmmer3'])
+    if not out['hmmer3']:
+        return dict()
+    return remove_at_sign(out['hmmer3'])
 
 def get_clusters(pdb_id):
     """
@@ -248,7 +376,7 @@ def get_clusters(pdb_id):
     """
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/representatives?structureId=')
     out = to_dict(out)
-    return remove_tags(out['representatives'])
+    return remove_at_sign(out['representatives'])
 
 
 
