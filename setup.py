@@ -4,10 +4,10 @@ from setuptools import setup
 setup(
   name = 'pypdb',
   packages = ['pypdb'], # same as 'name'
-  version = '0.4',
+  version = '0.5',
   install_requires=[
         'xmltodict', 
-        'beautifulsoup'
+        'beautifulsoup4'
   ],
   description = 'A Python wrapper for the Protein Data Bank (PDB) API',
   author = 'William Gilpin',
