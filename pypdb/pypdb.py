@@ -206,11 +206,37 @@ def get_info(pdb_id, url_root='http://www.rcsb.org/pdb/rest/describeMol?structur
     out = xmltodict.parse(result,process_namespaces=True)
     
     return out
- 
 
-def get_raw_blast(pdb_id):
+def get_pdb_file(pdb_id):
     '''
-    Look up BLAST page for a given PDB ID
+
+    Get the full PDB file associated with a PDB_ID
+
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+
+    '''
+    url = 'http://www.rcsb.org/pdb/files/'+pdb_id+'.pdb'
+    req = urllib.request.Request(url)
+    f = urllib.request.urlopen(req)
+    result = f.read()
+    result = result.decode('unicode_escape')
+
+    return result
+
+ 
+def get_all_info(pdb_id):
+    '''
+
+    A wrapper for get_info that cleans up the output slighly
+    
+    ''' 
+    out = to_dict( get_info(pdb_id) )['molDescription']['structureId']
+    return remove_at_sign(out)
+
+def get_raw_blast(pdb_id, output_form='HTML', chain_id='A'):
+    '''
+    Look up full BLAST page for a given PDB ID
         
     get_blast() uses this function internally
     
@@ -218,9 +244,13 @@ def get_raw_blast(pdb_id):
     ------
     pdb_id : string
         A 4 character string giving a pdb entry of interest
+
+    chain_id : string
+        A single character designating the chain ID of interest
+
         
-    url_root : string
-        The string root of the specific url for the request type
+    output_form : string
+        TXT, HTML, or XML formatting of the outputs
         
     Returns
     -------
@@ -229,12 +259,13 @@ def get_raw_blast(pdb_id):
         An ordered dictionary object corresponding to bare xml
         
     '''
-    
-    url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB1?structureId='
-    url = url_root + pdb_id
+
+    url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB2?structureId='
+    url = url_root + pdb_id + '&chainId='+ chain_id +'&outputFormat=' + output_form
     req = urllib.request.Request(url)
     f = urllib.request.urlopen(req)
     result = f.read()
+    result = result.decode('unicode_escape')
     assert result
     
     return result
@@ -244,8 +275,10 @@ def parse_blast(blast_string):
     '''
     This function requires BeautifulSoup and the re module
     It goes throught the complicated output returned by the BLAST
-    search and probides a list of matches, as well as the raw 
+    search and provides a list of matches, as well as the raw 
     text file showing the alignments for each of the matches.
+
+    This function works best with HTML formatted inputs
     
     get_blast() uses this function internally
     
@@ -281,18 +314,23 @@ def parse_blast(blast_string):
         
     out = (all_blast_ids, all_blasts)
     return out
-    
-    
 
-def get_blast(pdb_id):
+
+def get_blast2(pdb_id, chain_id='A', output_form='HTML'):
     '''
-    Look up BLAST for a given PDB ID. This function is a wrapper
+    Alternative way to look up BLAST for a given PDB ID. This function is a wrapper
     for get_raw_blast and parse_blast
     
     Inputs
     ------
     pdb_id : string
         A 4 character string giving a pdb entry of interest
+
+    chain_id : string
+        A single character designating the chain ID of interest
+
+    output_form : string
+        TXT, HTML, or XML formatting of the BLAST page
         
     Returns
     -------
@@ -303,7 +341,7 @@ def get_blast(pdb_id):
         
     '''
 
-    raw_results = get_raw_blast(pdb_id)
+    raw_results = get_raw_blast(pdb_id, chain_id=chain_id, output_form=output_form)
     out = parse_blast(raw_results)
     
     return out
@@ -343,7 +381,7 @@ def describe_chemical(chem_id):
 
 def get_ligands(pdb_id):
     """
-    Return ligands of given PDB_ID
+    Return ligands of given PDB ID
     """
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/ligandInfo?structureId=')
     out = to_dict(out)
@@ -359,6 +397,58 @@ def get_gene_onto(pdb_id):
         return None
     out = remove_at_sign(out['goTerms'])
     return out
+
+def get_seq_cluster(pdb_id_chain):
+    """
+    Get the sequence cluster of a PDB ID plus a pdb_id plus a chain,
+
+    pdb_id_chain : string
+        A string denoting a 4 character PDB ID plus a one character chain
+        offset with a dot: XXXX.X, as in 2F5N.A
+
+    """
+
+    url_root = 'http://www.rcsb.org/pdb/rest/sequenceCluster?structureId='
+    out = get_info(pdb_id_chain, url_root = url_root)
+    out = to_dict(out)
+    return remove_at_sign(out['sequenceCluster'])
+
+def get_blast(pdb_id, chain_id='A'):
+    """
+    Return BLAST search results for a given PDB ID
+    The key of the output dict())that returns the full search results is 
+    'BlastOutput_iterations'
+
+    To get a list of just the results without the metadata of the search use:
+    hits = full_results['BlastOutput_iterations']['Iteration']['Iteration_hits']['Hit']
+
+    Inputs
+    ------
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+
+    chain_id : string
+        A single character designating the chain ID of interest
+
+
+    Returns
+    -------
+    
+    out : dict()
+        A nested dict() consisting of the BLAST search results and all associated metadata
+        If you just want the hits, look under four levels of keys:
+        results['BlastOutput_iterations']['Iteration']['Iteration_hits']['Hit']
+
+
+    """
+
+    raw_results = get_raw_blast(pdb_id, output_form='XML', chain_id=chain_id)
+
+    out = xmltodict.parse(raw_results, process_namespaces=True)
+    out = to_dict(out)
+    out = out['BlastOutput']
+    return out
+
 
 def get_pfam(pdb_id):
     """
