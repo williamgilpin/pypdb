@@ -1,17 +1,20 @@
-# pypdb
+# PyPDB
 
-A basic wrapper for the Protein Data Bank (PDB) xml-based API. This can be used to perform searched for PDB IDs matching some criteria, as well as to look up information associated with specific PDB IDs
-
-*Written by William Gilpin for Stanford AP315, Spring 2015.*
+A Python 3 toolkit for performing searches the Protein Data Bank (PDB) using its xml-based API. This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed within Python scripts, allowing it to supplement existing tools (i.e. Biopython) that are designed for manipulating .pdb files.
 
 
 ## Installation
 
 	$ pip install pypdb
 
-This code works on Python 3. It works on Python 2 if you replace the calls to **urllib.request** with calls to the **requests** libary, although I haven't tested it extensively in Python 2
+This code is designed for Python 3. The installation adds the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**BeautifulSoup**](http://www.crummy.com/software/BeautifulSoup/). Please follow the licenses associated with these libraries.
 
-The installation adds the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**BeautifulSoup**](http://www.crummy.com/software/BeautifulSoup/). Please follow the licenses associated with these libraries.
+If you are installing directly from setup.py,
+
+       	$ pip install xmltodict beautifulsoup4
+	$ pip install pypdb
+
+BeautifulSoup is only necessary to use one function, get_blast2.
 
 ## Usage
 
