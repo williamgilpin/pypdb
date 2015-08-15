@@ -49,8 +49,7 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     scan_params : dict
         
         A dictionary representing the query
-        
-    William Gilpin, 2015. Please heed attribution described in the license
+    
     '''
     assert querytype in {'HoldingsQuery', 'ExpTypeQuery',
                          'AdvancedKeywordQuery','StructureIdQuery',
@@ -114,7 +113,6 @@ def do_search(scan_params):
     idlist : list
         A list of PDB ids returned by the search
         
-    William Gilpin, 2015. Please heed attribution described in the license
     '''
     
     url = 'http://www.rcsb.org/pdb/rest/search'
@@ -207,13 +205,18 @@ def get_info(pdb_id, url_root='http://www.rcsb.org/pdb/rest/describeMol?structur
     
     return out
 
-def get_pdb_file(pdb_id):
+def get_pdb_file(pdb_id, compression=False):
     '''
 
     Get the full PDB file associated with a PDB_ID
 
     pdb_id : string
         A 4 character string giving a pdb entry of interest
+
+    compression : bool
+        Retrieve a compressed (gz) version of the file
+
+    http://www.rcsb.org/pdb/download/downloadFile.do?fileFormat=cif&compression=NO&structureId=2F5N
 
     '''
     url = 'http://www.rcsb.org/pdb/files/'+pdb_id+'.pdb'
