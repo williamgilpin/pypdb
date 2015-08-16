@@ -9,9 +9,14 @@ Welcome to PyPDB's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
+   pypdb
 
+.. automodule:: pypdb
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Indices and tables
 ==================
