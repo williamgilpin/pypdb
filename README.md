@@ -2,6 +2,8 @@
 
 A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB) using its XML-based API. This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed within Python scripts, allowing it to supplement existing tools (i.e. Biopython) that are designed for manipulating .pdb files.
 
+Full documentation is available on [ReadTheDocs](http://pypdb.readthedocs.org/en/latest/)
+
 
 ## Installation
 
@@ -11,8 +13,8 @@ This code is designed for Python 3. The installation adds the libraries [**xmlto
 
 If you are installing directly from setup.py,
 
-       	$ pip install xmltodict beautifulsoup4
-        $ pip install pypdb
+    $ pip install xmltodict beautifulsoup4
+    $ pip install pypdb
 
 BeautifulSoup is only necessary to use one function, get_blast2.
 
