@@ -4,7 +4,7 @@ PyPDB: A Python API for the RCSB Protein Data Bank
 
 GitHub: https://github.com/williamgilpin/pypdb
 
-ReadTheDocs:
+ReadTheDocs: xxx
 
 PyPI: https://pypi.python.org/pypi/pypdb
 
