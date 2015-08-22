@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="utf-8" />
-<title>demos</title>
+<title>advanced_demos</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -177,13 +177,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="pypdb-demos">pypdb demos<a class="anchor-link" href="#pypdb-demos">&#182;</a></h1><p>This is a set of basic examples of the usage and outputs of the various individual functions included in. There are generally two types of functions:</p>
-<ul>
-<li>Functions that perform searches and return lists of PDB IDs</li>
-<li>Functions that get information about specific PDB IDs</li>
-</ul>
-<p>The list of supported search types, as well as the different types of information that can be returned for a given PDB ID, is large (and growing) and is enumerated completely in the docstrings of pypdb.py. The PDB allows a very wide range of different types of queries, and so any option that is not currently available can likely be implemented pretty easily based on the structure of the query types that have already been implemented. I appreciate any feedback and pull requests.</p>
-<p><strong>Another notebook in this directory, advanced_demos.ipynb, includes more in-depth usages of multiple functions, including the tutorial on graphing the popularity of CRISPR that was originally included in this notebook</strong></p>
+<h1 id="pypdb-advanced-demos">pypdb advanced demos<a class="anchor-link" href="#pypdb-advanced-demos">&#182;</a></h1><p>This is a set of basic examples of the ways that algorithmic querying with PyPDB can be used to perform advanced search tasks. Most of these examples combine multiple functions in the API in order to perform searches based on the results of previous searches</p>
 
 </div>
 </div>
@@ -234,16 +228,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="1.-Search-functions-that-return-lists-of-PDB-IDs">1. Search functions that return lists of PDB IDs<a class="anchor-link" href="#1.-Search-functions-that-return-lists-of-PDB-IDs">&#182;</a></h1>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-a-list-of-PDBs-for-a-specific-search-term">Get a list of PDBs for a specific search term<a class="anchor-link" href="#Get-a-list-of-PDBs-for-a-specific-search-term">&#182;</a></h3>
+<h3 id="Look-up-structural-information-about-the-results-of-a-BLAST-search">Look up structural information about the results of a BLAST search<a class="anchor-link" href="#Look-up-structural-information-about-the-results-of-a-BLAST-search">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -252,9 +237,18 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">search_dict</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;actin network&#39;</span><span class="p">)</span>
-<span class="n">found_pdbs</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">search_dict</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">found_pdbs</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span class="c"># Search for PDB IDs related to CRISPR</span>
+<span class="n">crispr_query</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;crispr&#39;</span><span class="p">)</span>
+<span class="n">crispr_results</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">crispr_query</span><span class="p">)</span>
+
+<span class="c"># Run BLAST on the top result</span>
+<span class="n">top_result</span> <span class="o">=</span> <span class="n">crispr_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">blast_hits</span> <span class="o">=</span> <span class="n">get_blast2</span><span class="p">(</span><span class="n">top_result</span><span class="p">)</span>
+
+
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">blast_hits</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="n">pdbdesc</span> <span class="o">=</span> <span class="n">describe_pdb</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pdbdesc</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">])</span>
 </pre></div>
 
 </div>
@@ -267,7 +261,17 @@ div#notebook {
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;1D7M&apos;, &apos;3W3D&apos;, &apos;4A7H&apos;, &apos;4A7L&apos;, &apos;4A7N&apos;]
+<pre>Structure of Thermus Thermophilus Cse3 bound to an RNA representing a product complex
+Structure of Thermus Thermophilus Cse3 bound to an RNA representing a pre-cleavage complex
+Structure of Thermus Thermophilus Cse3 bound to an RNA representing a product mimic complex
+STRUCTURE A OF CRISPR ENDORIBONUCLEASE CSE3 BOUND TO 19 NT RNA
+STRUCTURE B OF CRISPR ENDORIBONUCLEASE CSE3 BOUND TO 19 NT RNA
+STRUCTURE OF CRISPR ENDORIBONUCLEASE CSE3 BOUND TO 20 NT RNA
+Crystal structure of a CRISPR-associated protein from thermus thermophilus
+Crystal structure of the E. coli CRISPR RNA-guided surveillance complex, Cascade
+Crystal structure of a CRISPR RNA-guided surveillance complex, Cascade, bound to a ssDNA target
+Crystal structure of RNA-guided immune Cascade complex from E.coli
+Crystal structure of the CRISPR-associated protein Cas6e from Escherichia coli str. K-12
 </pre>
 </div>
 </div>
@@ -281,7 +285,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Search-by-a-specific-modified-structure">Search by a specific modified structure<a class="anchor-link" href="#Search-by-a-specific-modified-structure">&#182;</a></h3>
+<h3 id="Estimate-total-number-of-depositions-versus-time">Estimate total number of depositions versus time<a class="anchor-link" href="#Estimate-total-number-of-depositions-versus-time">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -290,9 +294,28 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">search_dict</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;3W3D&#39;</span><span class="p">,</span><span class="n">querytype</span><span class="o">=</span><span class="s">&#39;ModifiedStructuresQuery&#39;</span><span class="p">)</span>
-<span class="n">found_pdbs</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">search_dict</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">found_pdbs</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span class="c"># Choose a random sample because we don&#39;t want to call the database for every single entry</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">choice</span>
+
+<span class="n">all_pdbs</span> <span class="o">=</span> <span class="n">get_all</span><span class="p">()</span>
+
+<span class="n">all_dates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">pdb_desc</span> <span class="o">=</span> <span class="n">describe_pdb</span><span class="p">(</span> <span class="n">choice</span><span class="p">(</span><span class="n">all_pdbs</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">depdate</span> <span class="o">=</span> <span class="p">(</span><span class="n">pdb_desc</span><span class="p">[</span><span class="s">&#39;deposition_date&#39;</span><span class="p">])</span>
+    <span class="n">all_dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="n">depdate</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span> <span class="p">)</span>
+    
+<span class="n">all_dates</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">all_dates</span><span class="p">)</span>
+
+<span class="n">figure</span><span class="p">()</span>
+<span class="n">subs_v_time</span> <span class="o">=</span> <span class="n">hist</span><span class="p">(</span><span class="n">all_dates</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_dates</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">all_dates</span><span class="p">))</span>
+<span class="n">show</span><span class="p">(</span><span class="n">subs_v_time</span><span class="p">)</span>   
+
+<span class="c"># Show power-law scaling</span>
+<span class="n">figure</span><span class="p">()</span>
+<span class="n">subs_v_time_loglog</span> <span class="o">=</span> <span class="n">loglog</span><span class="p">(</span><span class="n">subs_v_time</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+<span class="n">show</span><span class="p">(</span><span class="n">subs_v_time_loglog</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -304,48 +327,152 @@ div#notebook {
 
 
 <div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;1H3E&apos;, &apos;1OB2&apos;, &apos;1OB5&apos;, &apos;1QPC&apos;, &apos;2D2G&apos;, &apos;2D2H&apos;, &apos;2D2J&apos;, &apos;2JUE&apos;, &apos;2LN8&apos;, &apos;2N2Q&apos;, &apos;2WDC&apos;, &apos;2XU8&apos;, &apos;3BF7&apos;, &apos;3BF8&apos;, &apos;3DLS&apos;, &apos;3J1O&apos;, &apos;3JA8&apos;, &apos;3VNY&apos;, &apos;3VNZ&apos;, &apos;3VO0&apos;, &apos;4B3Z&apos;, &apos;4B7V&apos;, &apos;4C2M&apos;, &apos;4C4O&apos;, &apos;4CDQ&apos;, &apos;4CM5&apos;, &apos;4COU&apos;, &apos;4COV&apos;, &apos;4COW&apos;, &apos;4COY&apos;, &apos;4COZ&apos;, &apos;4CRC&apos;, &apos;4D3W&apos;, &apos;4MJ3&apos;, &apos;4N1R&apos;, &apos;4NDJ&apos;, &apos;4NDK&apos;, &apos;4OIV&apos;, &apos;4PA0&apos;, &apos;4QDJ&apos;, &apos;4QDK&apos;, &apos;4QS7&apos;, &apos;4QS8&apos;, &apos;4QS9&apos;, &apos;4RFE&apos;, &apos;4RFN&apos;, &apos;4RFO&apos;, &apos;4RPT&apos;, &apos;4RV3&apos;, &apos;4S3G&apos;, &apos;4TQU&apos;, &apos;4TQV&apos;, &apos;4U2Y&apos;, &apos;4U31&apos;, &apos;4U33&apos;, &apos;4U3C&apos;, &apos;4UDZ&apos;, &apos;4UF1&apos;, &apos;4UF2&apos;, &apos;4UF3&apos;, &apos;4UIR&apos;, &apos;4UJ3&apos;, &apos;4UJ4&apos;, &apos;4UJ5&apos;, &apos;4UY4&apos;, &apos;4UZJ&apos;, &apos;4W6V&apos;, &apos;4WGK&apos;, &apos;4WIH&apos;, &apos;4WJ1&apos;, &apos;4WJ2&apos;, &apos;4WMQ&apos;, &apos;4WMY&apos;, &apos;4WNJ&apos;, &apos;4WNS&apos;, &apos;4WO0&apos;, &apos;4WT8&apos;, &apos;4WUB&apos;, &apos;4WWY&apos;, &apos;4WXH&apos;, &apos;4WXV&apos;, &apos;4WZ0&apos;, &apos;4WZ2&apos;, &apos;4WZ3&apos;, &apos;4WZG&apos;, &apos;4XAA&apos;, &apos;4XAB&apos;, &apos;4XAC&apos;, &apos;4XBZ&apos;, &apos;4XC9&apos;, &apos;4XCA&apos;, &apos;4XCB&apos;, &apos;4XFW&apos;, &apos;4XK0&apos;, &apos;4XLD&apos;, &apos;4XN6&apos;, &apos;4XNC&apos;, &apos;4XNE&apos;, &apos;4XOY&apos;, &apos;4XOZ&apos;, &apos;4XP0&apos;, &apos;4XP2&apos;, &apos;4XP3&apos;, &apos;4XPF&apos;, &apos;4XPG&apos;, &apos;4XPH&apos;, &apos;4XR9&apos;, &apos;4XRJ&apos;, &apos;4XSG&apos;, &apos;4XSH&apos;, &apos;4XSX&apos;, &apos;4XSY&apos;, &apos;4XSZ&apos;, &apos;4Y6N&apos;, &apos;4Y6U&apos;, &apos;4Y7F&apos;, &apos;4Y7G&apos;, &apos;4Y9X&apos;, &apos;4YCX&apos;, &apos;4YD1&apos;, &apos;4YD2&apos;, &apos;4YD8&apos;, &apos;4YH8&apos;, &apos;4YLU&apos;, &apos;4YMK&apos;, &apos;4YTC&apos;, &apos;4YTF&apos;, &apos;4YTH&apos;, &apos;4YTI&apos;, &apos;4YU9&apos;, &apos;4YVG&apos;, &apos;4YVH&apos;, &apos;4YWY&apos;, &apos;4Z0V&apos;, &apos;4Z2B&apos;, &apos;4Z8B&apos;, &apos;4ZFX&apos;, &apos;4ZH2&apos;, &apos;4ZH3&apos;, &apos;4ZH4&apos;, &apos;4ZHC&apos;, &apos;4ZHD&apos;, &apos;4ZHF&apos;, &apos;4ZHG&apos;, &apos;4ZHH&apos;, &apos;4ZL4&apos;, &apos;4ZN8&apos;, &apos;4ZOT&apos;, &apos;4ZP4&apos;, &apos;4ZPH&apos;, &apos;4ZPI&apos;, &apos;4ZPK&apos;, &apos;4ZPR&apos;, &apos;4ZQD&apos;, &apos;4ZSC&apos;, &apos;4ZSD&apos;, &apos;5A2E&apos;, &apos;5A2F&apos;, &apos;5A2T&apos;, &apos;5A42&apos;, &apos;5A63&apos;, &apos;5AAM&apos;, &apos;5AFO&apos;, &apos;5AIT&apos;, &apos;5AIU&apos;, &apos;5AK7&apos;, &apos;5AK8&apos;, &apos;5BNV&apos;, &apos;5BNX&apos;, &apos;5BO0&apos;, &apos;5BOJ&apos;, &apos;5BV3&apos;, &apos;5BWM&apos;, &apos;5C1M&apos;, &apos;5C1Z&apos;, &apos;5C23&apos;, &apos;5C30&apos;, &apos;5C33&apos;, &apos;5C7U&apos;, &apos;5C7W&apos;, &apos;5CE7&apos;, &apos;5CPF&apos;]
-</pre>
-</div>
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+RU5ErkJggg==
+"
+>
 </div>
 
 </div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Search-by-Author">Search by Author<a class="anchor-link" href="#Search-by-Author">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">search_dict</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;Perutz, M.F.&#39;</span><span class="p">,</span><span class="n">querytype</span><span class="o">=</span><span class="s">&#39;AdvancedAuthorQuery&#39;</span><span class="p">)</span>
-<span class="n">found_pdbs</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">search_dict</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">found_pdbs</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
 
 <div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;1CQ4&apos;, &apos;1FDH&apos;, &apos;1GDJ&apos;, &apos;1HDA&apos;, &apos;1PBX&apos;, &apos;2DHB&apos;, &apos;2GDM&apos;, &apos;2HHB&apos;, &apos;2MHB&apos;, &apos;3HHB&apos;, &apos;4HHB&apos;]
-</pre>
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
 </div>
+
 </div>
 
 </div>
@@ -357,7 +484,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Search-by-Motif">Search by Motif<a class="anchor-link" href="#Search-by-Motif">&#182;</a></h3>
+<h3 id="Graph-new-CRISPR-entries-versus-time">Graph new CRISPR entries versus time<a class="anchor-link" href="#Graph-new-CRISPR-entries-versus-time">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -366,9 +493,22 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">search_dict</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;T[AG]AGGY&#39;</span><span class="p">,</span><span class="n">querytype</span><span class="o">=</span><span class="s">&#39;MotifQuery&#39;</span><span class="p">)</span>
-<span class="n">found_pdbs</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">search_dict</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">found_pdbs</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span class="c"># Perform search</span>
+<span class="n">all_dates</span> <span class="o">=</span> <span class="n">find_dates</span><span class="p">(</span><span class="s">&#39;crispr&#39;</span><span class="p">,</span> <span class="n">max_results</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="n">all_dates</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">all_dates</span><span class="p">)</span>
+<span class="n">all_dates</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">depdate</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span> <span class="k">for</span> <span class="n">depdate</span> <span class="ow">in</span> <span class="n">all_dates</span><span class="p">])</span>
+<span class="n">subs_v_time</span> <span class="o">=</span> <span class="n">histogram</span><span class="p">(</span><span class="n">all_dates</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_dates</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">all_dates</span><span class="p">))</span>
+<span class="n">dates</span><span class="p">,</span> <span class="n">num_entries</span> <span class="o">=</span> <span class="n">subs_v_time</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:],</span> <span class="n">subs_v_time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">popgraph</span> <span class="o">=</span> <span class="n">fill_between</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">num_entries</span><span class="p">)</span>
+
+<span class="c"># Formatting the plots</span>
+<span class="n">xlim</span><span class="p">([</span><span class="n">dates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dates</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="p">)</span>
+<span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">FormatStrFormatter</span><span class="p">(</span><span class="s">&#39;%d&#39;</span><span class="p">))</span>
+<span class="n">xticks</span><span class="p">(</span><span class="n">fontweight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+<span class="n">yticks</span><span class="p">(</span><span class="n">fontweight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+<span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Year&#39;</span><span class="p">,</span><span class="n">fontweight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+<span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;New PDB entries&#39;</span><span class="p">,</span><span class="n">fontweight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+<span class="n">show</span><span class="p">(</span><span class="n">popgraph</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -380,10 +520,190 @@ div#notebook {
 
 
 <div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;3LEZ&apos;, &apos;3SGH&apos;, &apos;4F47&apos;]
-</pre>
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+sxby/wGnMsN656IyzQAAAABJRU5ErkJggg==
+"
+>
 </div>
+
 </div>
 
 </div>
@@ -395,18 +715,33 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Search-by-a-specific-experimental-method">Search by a specific experimental method<a class="anchor-link" href="#Search-by-a-specific-experimental-method">&#182;</a></h3>
+<h3 id="Sweep-RMSD-matching-parameters">Sweep RMSD matching parameters<a class="anchor-link" href="#Sweep-RMSD-matching-parameters">&#182;</a></h3>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">search_dict</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;SOLID-STATE NMR&#39;</span><span class="p">,</span><span class="n">querytype</span><span class="o">=</span><span class="s">&#39;ExpTypeQuery&#39;</span><span class="p">)</span>
-<span class="n">found_pdbs</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">search_dict</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">found_pdbs</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span class="n">point_group</span> <span class="o">=</span> <span class="s">&#39;C1&#39;</span>
+<span class="n">max_distance</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">npts</span> <span class="o">=</span> <span class="mi">20</span>
+
+<span class="n">dist_vals</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="n">npts</span><span class="p">)</span>
+<span class="n">dx</span> <span class="o">=</span> <span class="n">dist_vals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">dist_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">all_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">dist_val</span> <span class="ow">in</span> <span class="n">dist_vals</span><span class="p">:</span>
+    <span class="n">idlist</span> <span class="o">=</span> <span class="n">do_protsym_search</span><span class="p">(</span><span class="n">point_group</span><span class="p">,</span> <span class="n">min_rmsd</span><span class="o">=</span><span class="n">dist_val</span><span class="p">,</span> <span class="n">max_rmsd</span><span class="o">=</span><span class="p">(</span><span class="n">dist_val</span><span class="o">+</span><span class="n">dx</span><span class="p">))</span>
+    <span class="n">all_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idlist</span><span class="p">)</span>
+    
+<span class="n">counts</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">all_ids</span><span class="p">])</span>
+<span class="n">show</span><span class="p">(</span><span class="n">semilogy</span><span class="p">(</span><span class="n">dist_vals</span><span class="p">,</span> <span class="n">counts</span><span class="p">))</span>
+<span class="n">title</span><span class="p">(</span><span class="s">&#39;Total results versus RMSD&#39;</span><span class="p">)</span>
+<span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Radius (A)&#39;</span><span class="p">)</span>
+<span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Number of results&#39;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -417,492 +752,183 @@ div#notebook {
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;1CEK&apos;, &apos;1EQ8&apos;, &apos;1M8M&apos;, &apos;1MAG&apos;, &apos;1MP6&apos;, &apos;1MZT&apos;, &apos;1NH4&apos;, &apos;1NYJ&apos;, &apos;1PI7&apos;, &apos;1PI8&apos;, &apos;1PJD&apos;, &apos;1PJE&apos;, &apos;1PJF&apos;, &apos;1Q7O&apos;, &apos;1RVS&apos;, &apos;1XSW&apos;, &apos;1ZN5&apos;, &apos;1ZY6&apos;, &apos;2C0X&apos;, &apos;2CZP&apos;, &apos;2E8D&apos;, &apos;2H3O&apos;, &apos;2H95&apos;, &apos;2JSV&apos;, &apos;2JU6&apos;, &apos;2JZZ&apos;, &apos;2K0P&apos;, &apos;2KAD&apos;, &apos;2KB7&apos;, &apos;2KHT&apos;, &apos;2KIB&apos;, &apos;2KJ3&apos;, &apos;2KLR&apos;, &apos;2KQ4&apos;, &apos;2KQT&apos;, &apos;2KRJ&apos;, &apos;2KSJ&apos;, &apos;2KWD&apos;, &apos;2KYV&apos;, &apos;2L0J&apos;, &apos;2L3Z&apos;, &apos;2LBU&apos;, &apos;2LEG&apos;, &apos;2LGI&apos;, &apos;2LJ2&apos;, &apos;2LME&apos;, &apos;2LMN&apos;, &apos;2LMO&apos;, &apos;2LMP&apos;, &apos;2LMQ&apos;, &apos;2LNL&apos;, &apos;2LNQ&apos;, &apos;2LNY&apos;, &apos;2LPZ&apos;, &apos;2LTQ&apos;, &apos;2LU5&apos;, &apos;2M02&apos;, &apos;2M3B&apos;, &apos;2M3G&apos;, &apos;2M4J&apos;, &apos;2M5K&apos;, &apos;2M5M&apos;, &apos;2M5N&apos;, &apos;2M67&apos;, &apos;2MC7&apos;, &apos;2MCU&apos;, &apos;2MCV&apos;, &apos;2MCW&apos;, &apos;2MCX&apos;, &apos;2MEX&apos;, &apos;2MJZ&apos;, &apos;2MME&apos;, &apos;2MMU&apos;, &apos;2MPZ&apos;, &apos;2MSG&apos;, &apos;2MTZ&apos;, &apos;2MVX&apos;, &apos;2MXU&apos;, &apos;2N0R&apos;, &apos;2N1E&apos;, &apos;2NNT&apos;, &apos;2RLZ&apos;, &apos;2UVS&apos;, &apos;2W0N&apos;, &apos;2XKM&apos;, &apos;3ZPK&apos;]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Search-by-whether-it-has-free-ligands">Search by whether it has free ligands<a class="anchor-link" href="#Search-by-whether-it-has-free-ligands">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">search_dict</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">querytype</span><span class="o">=</span><span class="s">&#39;NoLigandQuery&#39;</span><span class="p">)</span>
-<span class="n">found_pdbs</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">search_dict</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">found_pdbs</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;100D&apos;, &apos;101D&apos;, &apos;101M&apos;, &apos;102D&apos;, &apos;102L&apos;, &apos;102M&apos;, &apos;103L&apos;, &apos;103M&apos;, &apos;104M&apos;, &apos;105M&apos;]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Search-by-protein-symmetry-group">Search by protein symmetry group<a class="anchor-link" href="#Search-by-protein-symmetry-group">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">kk</span> <span class="o">=</span> <span class="n">do_protsym_search</span><span class="p">(</span><span class="s">&#39;C9&#39;</span><span class="p">,</span> <span class="n">min_rmsd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_rmsd</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">kk</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;1KZU&apos;, &apos;1NKZ&apos;, &apos;2FKW&apos;, &apos;3B8M&apos;, &apos;3B8N&apos;]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Information-Search-functions">Information Search functions<a class="anchor-link" href="#Information-Search-functions">&#182;</a></h1>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>While the basic functions described in the previous section are useful for looking up and manipulating individual unique entries, these functions are intended to be more user-facing: they take search keywords and return lists of authors or dates</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Find-most-common-authors-for-a-given-keyword">Find most common authors for a given keyword<a class="anchor-link" href="#Find-most-common-authors-for-a-given-keyword">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">top_authors</span> <span class="o">=</span> <span class="n">find_authors</span><span class="p">(</span><span class="s">&#39;crispr&#39;</span><span class="p">,</span><span class="n">max_results</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">top_authors</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;Doudna, J.A.&apos;, &apos;Jinek, M.&apos;, &apos;Nam, K.H.&apos;, &apos;Ke, A.&apos;, &apos;Li, H.&apos;]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Find-papers-for-a-given-keyword">Find papers for a given keyword<a class="anchor-link" href="#Find-papers-for-a-given-keyword">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[31]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">matching_papers</span> <span class="o">=</span> <span class="n">find_papers</span><span class="p">(</span><span class="s">&#39;crispr&#39;</span><span class="p">,</span><span class="n">max_results</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">matching_papers</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;Crystal structure of a CRISPR-associated protein from thermus thermophilus&apos;, &apos;CRYSTAL STRUCTURE OF HYPOTHETICAL PROTEIN SSO1404 FROM SULFOLOBUS SOLFATARICUS P2&apos;, &apos;NMR solution structure of a CRISPR repeat binding protein&apos;]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="2.-Functions-that-return-information-about-single-PDB-entries">2. Functions that return information about single PDB entries<a class="anchor-link" href="#2.-Functions-that-return-information-about-single-PDB-entries">&#182;</a></h1>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-the-full-PDB-file">Get the full PDB file<a class="anchor-link" href="#Get-the-full-PDB-file">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[24]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">pdb_file</span> <span class="o">=</span> <span class="n">get_pdb_file</span><span class="p">(</span><span class="s">&#39;4lza&#39;</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s">&#39;cif&#39;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="k">True</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">pdb_file</span><span class="p">[:</span><span class="mi">200</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>data_4LZA
-# 
-_entry.id   4LZA 
-# 
-_audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    4.032 
-_audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-a-general-description-of-the-entry's-metadata">Get a general description of the entry's metadata<a class="anchor-link" href="#Get-a-general-description-of-the-entry's-metadata">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">describe_pdb</span><span class="p">(</span><span class="s">&#39;4lza&#39;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt output_prompt">Out[4]:</div>
+<div class="output_area"><div class="prompt output_prompt">Out[15]:</div>
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>{&apos;citation_authors&apos;: &apos;Malashkevich, V.N., Bhosle, R., Toro, R., Hillerich, B., Gizzi, A., Garforth, S., Kar, A., Chan, M.K., Lafluer, J., Patel, H., Matikainen, B., Chamala, S., Lim, S., Celikgil, A., Villegas, G., Evans, B., Love, J., Fiser, A., Khafizov, K., Seidel, R., Bonanno, J.B., Almo, S.C.&apos;,
- &apos;deposition_date&apos;: &apos;2013-07-31&apos;,
- &apos;expMethod&apos;: &apos;X-RAY DIFFRACTION&apos;,
- &apos;keywords&apos;: &apos;TRANSFERASE&apos;,
- &apos;last_modification_date&apos;: &apos;2013-08-14&apos;,
- &apos;nr_atoms&apos;: &apos;0&apos;,
- &apos;nr_entities&apos;: &apos;1&apos;,
- &apos;nr_residues&apos;: &apos;390&apos;,
- &apos;release_date&apos;: &apos;2013-08-14&apos;,
- &apos;resolution&apos;: &apos;1.84&apos;,
- &apos;status&apos;: &apos;CURRENT&apos;,
- &apos;structureId&apos;: &apos;4LZA&apos;,
- &apos;structure_authors&apos;: &apos;Malashkevich, V.N., Bhosle, R., Toro, R., Hillerich, B., Gizzi, A., Garforth, S., Kar, A., Chan, M.K., Lafluer, J., Patel, H., Matikainen, B., Chamala, S., Lim, S., Celikgil, A., Villegas, G., Evans, B., Love, J., Fiser, A., Khafizov, K., Seidel, R., Bonanno, J.B., Almo, S.C., New York Structural Genomics Research Consortium (NYSGRC)&apos;,
- &apos;title&apos;: &apos;Crystal structure of adenine phosphoribosyltransferase from Thermoanaerobacter pseudethanolicus ATCC 33223, NYSGRC Target 029700.&apos;}</pre>
+<pre>&lt;matplotlib.text.Text at 0x10a076668&gt;</pre>
 </div>
 
 </div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-all-of-the-information-deposited-in-a-PDB-entry">Get all of the information deposited in a PDB entry<a class="anchor-link" href="#Get-all-of-the-information-deposited-in-a-PDB-entry">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[35]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">all_info</span> <span class="o">=</span> <span class="n">get_all_info</span><span class="p">(</span><span class="s">&#39;4lza&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">all_info</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
 
 <div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>{&apos;polymer&apos;: {&apos;macroMolecule&apos;: {&apos;@name&apos;: &apos;Adenine phosphoribosyltransferase&apos;, &apos;accession&apos;: {&apos;@id&apos;: &apos;B0K969&apos;}}, &apos;@entityNr&apos;: &apos;1&apos;, &apos;@type&apos;: &apos;protein&apos;, &apos;polymerDescription&apos;: {&apos;@description&apos;: &apos;Adenine phosphoribosyltransferase&apos;}, &apos;synonym&apos;: {&apos;@name&apos;: &apos;APRT&apos;}, &apos;@length&apos;: &apos;195&apos;, &apos;enzClass&apos;: {&apos;@ec&apos;: &apos;2.4.2.7&apos;}, &apos;chain&apos;: [{&apos;@id&apos;: &apos;A&apos;}, {&apos;@id&apos;: &apos;B&apos;}], &apos;Taxonomy&apos;: {&apos;@name&apos;: &apos;Thermoanaerobacter pseudethanolicus ATCC 33223&apos;, &apos;@id&apos;: &apos;340099&apos;}, &apos;@weight&apos;: &apos;22023.9&apos;}, &apos;id&apos;: &apos;4LZA&apos;}
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">results</span> <span class="o">=</span> <span class="n">get_all_info</span><span class="p">(</span><span class="s">&#39;2F5N&#39;</span><span class="p">)</span>
-<span class="n">first_polymer</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s">&#39;polymer&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">first_polymer</span><span class="p">[</span><span class="s">&#39;polymerDescription&#39;</span><span class="p">]</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[9]:</div>
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&apos;@description&apos;: &quot;5&apos;-D(*AP*GP*GP*TP*AP*GP*AP*CP*CP*TP*GP*GP*AP*CP*GP*C)-3&apos;&quot;}</pre>
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
 </div>
 
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Run-a-BLAST-search-on-an-entry">Run a BLAST search on an entry<a class="anchor-link" href="#Run-a-BLAST-search-on-an-entry">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>There are several options here: One function, get_blast(), returns a dict() just like every other function. However, all the metadata associated with this function leads to deeply-nested dictionaries. A simpler function, get_blast2(), uses text parsing on the raw output page, and it returns a tuple consisting of 1. a ranked list of other PDB IDs that were hits, and 2. A list of the actual BLAST alignments and similarity scores.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">blast_results</span> <span class="o">=</span> <span class="n">get_blast</span><span class="p">(</span><span class="s">&#39;2F5N&#39;</span><span class="p">,</span> <span class="n">chain_id</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
-<span class="n">just_hits</span> <span class="o">=</span> <span class="n">blast_results</span><span class="p">[</span><span class="s">&#39;BlastOutput_iterations&#39;</span><span class="p">][</span><span class="s">&#39;Iteration&#39;</span><span class="p">][</span><span class="s">&#39;Iteration_hits&#39;</span><span class="p">][</span><span class="s">&#39;Hit&#39;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">just_hits</span><span class="p">[</span><span class="mi">50</span><span class="p">][</span><span class="s">&#39;Hit_hsps&#39;</span><span class="p">][</span><span class="s">&#39;Hsp&#39;</span><span class="p">][</span><span class="s">&#39;Hsp_hseq&#39;</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>PELPEVETVRRELEKRIVGQKIISIEATYPRMVL--TGFEQLKKELTGKTIQGISRRGKYLIFEIGDDFRLISHLRMEGKYRLATLDAPREKHDHLTMKFADG-QLIYADVRKFGTWELISTDQVLPYFLKKKIGPEPTYEDFDEKLFREKLRKSTKKIKPYLLEQTLVAGLGNIYVDEVLWLAKIHPEKETNQLIESSIHLLHDSIIEILQKAIKLGGSSIRTY-SALGSTGKMQNELQVYGKTGEKCSRCGAEIQKIKVAGRGTHFCPVCQQ
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">blast_results</span> <span class="o">=</span> <span class="n">get_blast2</span><span class="p">(</span><span class="s">&#39;2F5N&#39;</span><span class="p">,</span> <span class="n">chain_id</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">output_form</span><span class="o">=</span><span class="s">&#39;HTML&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s">&#39;Total Results: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">blast_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">blast_results</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Total Results: 84
-
-&lt;pre&gt;
-&amp;gt;&lt;a name=&quot;45354&quot;&gt;&lt;/a&gt;2F5P:3:A|pdbid|entity|chain(s)|sequence
-          Length = 274
-
- Score =  545 bits (1404), Expect = e-155,   Method: Composition-based stats.
- Identities = 274/274 (100%), Positives = 274/274 (100%)
-
-Query: 1   MPELPEVETIRRTLLPLIVGKTIEDVRIFWPNIIRHPRDSEAFAARMIGQTVRGLERRGK 60
-           MPELPEVETIRRTLLPLIVGKTIEDVRIFWPNIIRHPRDSEAFAARMIGQTVRGLERRGK
-Sbjct: 1   MPELPEVETIRRTLLPLIVGKTIEDVRIFWPNIIRHPRDSEAFAARMIGQTVRGLERRGK 60
-
-Query: 61  FLKFLLDRDALISHLRMEGRYAVASALEPLEPHTHVVFCFTDGSELRYRDVRKFGTMHVY 120
-           FLKFLLDRDALISHLRMEGRYAVASALEPLEPHTHVVFCFTDGSELRYRDVRKFGTMHVY
-Sbjct: 61  FLKFLLDRDALISHLRMEGRYAVASALEPLEPHTHVVFCFTDGSELRYRDVRKFGTMHVY 120
-
-Query: 121 AKEEADRRPPLAELGPEPLSPAFSPAVLAERAVKTKRSVKALLLDCTVVAGFGNIYVDES 180
-           AKEEADRRPPLAELGPEPLSPAFSPAVLAERAVKTKRSVKALLLDCTVVAGFGNIYVDES
-Sbjct: 121 AKEEADRRPPLAELGPEPLSPAFSPAVLAERAVKTKRSVKALLLDCTVVAGFGNIYVDES 180
-
-Query: 181 LFRAGILPGRPAASLSSKEIERLHEEMVATIGEAVMKGGSTVRTYVNTQGEAGTFQHHLY 240
-           LFRAGILPGRPAASLSSKEIERLHEEMVATIGEAVMKGGSTVRTYVNTQGEAGTFQHHLY
-Sbjct: 181 LFRAGILPGRPAASLSSKEIERLHEEMVATIGEAVMKGGSTVRTYVNTQGEAGTFQHHLY 240
-
-Query: 241 VYGRQGNPCKRCGTPIEKTVVAGRGTHYCPRCQR 274
-           VYGRQGNPCKRCGTPIEKTVVAGRGTHYCPRCQR
-Sbjct: 241 VYGRQGNPCKRCGTPIEKTVVAGRGTHYCPRCQR 274
-&lt;/pre&gt;
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-PFAM-information-about-an-entry">Get PFAM information about an entry<a class="anchor-link" href="#Get-PFAM-information-about-an-entry">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[37]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">pfam_info</span> <span class="o">=</span> <span class="n">get_pfam</span><span class="p">(</span><span class="s">&#39;2LME&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">pfam_info</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>{&apos;pfamHit&apos;: {&apos;@pfamAcc&apos;: &apos;PF03895.10&apos;, &apos;@pfamName&apos;: &apos;YadA_anchor&apos;, &apos;@structureId&apos;: &apos;2LME&apos;, &apos;@pdbResNumEnd&apos;: &apos;105&apos;, &apos;@pdbResNumStart&apos;: &apos;28&apos;, &apos;@pfamDesc&apos;: &apos;YadA-like C-terminal region&apos;, &apos;@eValue&apos;: &apos;5.0E-22&apos;, &apos;@chainId&apos;: &apos;A&apos;}}
-</pre>
-</div>
 </div>
 
 </div>
@@ -914,249 +940,26 @@ Sbjct: 241 VYGRQGNPCKRCGTPIEKTVVAGRGTHYCPRCQR 274
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-chemical-info">Get chemical info<a class="anchor-link" href="#Get-chemical-info">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>This function takes the name of the chemical, not a PDB ID</p>
-
+<h2 id="Find-all-associated-organisms-and">Find all associated organisms and<a class="anchor-link" href="#Find-all-associated-organisms-and">&#182;</a></h2><h2 id="structure-types-for-the-results-of-a-BLAST-search">structure types for the results of a BLAST search<a class="anchor-link" href="#structure-types-for-the-results-of-a-BLAST-search">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[39]:</div>
+<div class="prompt input_prompt">In&nbsp;[56]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">chem_desc</span> <span class="o">=</span> <span class="n">describe_chemical</span><span class="p">(</span><span class="s">&#39;NAG&#39;</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">chem_desc</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>{&apos;describeHet&apos;: {&apos;ligandInfo&apos;: {&apos;ligand&apos;: {&apos;@chemicalID&apos;: &apos;NAG&apos;,
-                                           &apos;@molecularWeight&apos;: &apos;221.208&apos;,
-                                           &apos;@type&apos;: &apos;D-saccharide&apos;,
-                                           &apos;InChI&apos;: &apos;InChI=1S/C8H15NO6/c1-3(11)9-5-7(13)6(12)4(2-10)15-8(5)14/h4-8,10,12-14H,2H2,1H3,(H,9,11)/t4-,5-,6-,7-,8-/m1/s1&apos;,
-                                           &apos;InChIKey&apos;: &apos;OVRNDRQMDRJTHS-FMDGEEDCSA-N&apos;,
-                                           &apos;chemicalName&apos;: &apos;N-ACETYL-D-GLUCOSAMINE&apos;,
-                                           &apos;formula&apos;: &apos;C8 H15 N O6&apos;,
-                                           &apos;smiles&apos;: &apos;CC(=O)N[C@@H]1[C@H]([C@@H]([C@H](O[C@H]1O)CO)O)O&apos;}}}}
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-ligand-info-if-present">Get ligand info if present<a class="anchor-link" href="#Get-ligand-info-if-present">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[40]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">ligand_dict</span> <span class="o">=</span> <span class="n">get_ligands</span><span class="p">(</span><span class="s">&#39;100D&#39;</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">ligand_dict</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>{&apos;id&apos;: &apos;100D&apos;,
- &apos;ligandInfo&apos;: {&apos;ligand&apos;: {&apos;@chemicalID&apos;: &apos;SPM&apos;,
-                           &apos;@molecularWeight&apos;: &apos;202.34&apos;,
-                           &apos;@structureId&apos;: &apos;100D&apos;,
-                           &apos;@type&apos;: &apos;non-polymer&apos;,
-                           &apos;InChI&apos;: &apos;InChI=1S/C10H26N4/c11-5-3-9-13-7-1-2-8-14-10-4-6-12/h13-14H,1-12H2&apos;,
-                           &apos;InChIKey&apos;: &apos;PFNFFQXMRSDOHW-UHFFFAOYSA-N&apos;,
-                           &apos;chemicalName&apos;: &apos;SPERMINE&apos;,
-                           &apos;formula&apos;: &apos;C10 H26 N4&apos;,
-                           &apos;smiles&apos;: &apos;C(CCNCCCN)CNCCCN&apos;}}}
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-gene-ontology-info">Get gene ontology info<a class="anchor-link" href="#Get-gene-ontology-info">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[45]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">gene_info</span> <span class="o">=</span> <span class="n">get_gene_onto</span><span class="p">(</span><span class="s">&#39;4Z0L &#39;</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">gene_info</span><span class="p">[</span><span class="s">&#39;term&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>{&apos;@chainId&apos;: &apos;A&apos;,
- &apos;@id&apos;: &apos;GO:0001516&apos;,
- &apos;@structureId&apos;: &apos;4Z0L&apos;,
- &apos;detail&apos;: {&apos;@definition&apos;: &apos;The chemical reactions and pathways resulting &apos;
-                           &apos;in the formation of prostaglandins, any of a &apos;
-                           &apos;group of biologically active metabolites which &apos;
-                           &apos;contain a cyclopentane ring.&apos;,
-            &apos;@name&apos;: &apos;prostaglandin biosynthetic process&apos;,
-            &apos;@ontology&apos;: &apos;B&apos;,
-            &apos;@synonyms&apos;: &apos;prostaglandin anabolism, prostaglandin &apos;
-                         &apos;biosynthesis, prostaglandin formation, &apos;
-                         &apos;prostaglandin synthesis&apos;}}
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-sequence-clusters-by-chain">Get sequence clusters by chain<a class="anchor-link" href="#Get-sequence-clusters-by-chain">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[41]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">sclust</span> <span class="o">=</span> <span class="n">get_seq_cluster</span><span class="p">(</span><span class="s">&#39;2F5N.A&#39;</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">sclust</span><span class="p">[</span><span class="s">&#39;pdbChain&#39;</span><span class="p">][:</span><span class="mi">10</span><span class="p">])</span> <span class="c"># Just look at the top 10</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[{&apos;@name&apos;: &apos;4PD2.A&apos;, &apos;@rank&apos;: &apos;1&apos;},
- {&apos;@name&apos;: &apos;3U6P.A&apos;, &apos;@rank&apos;: &apos;2&apos;},
- {&apos;@name&apos;: &apos;4PCZ.A&apos;, &apos;@rank&apos;: &apos;3&apos;},
- {&apos;@name&apos;: &apos;3GPU.A&apos;, &apos;@rank&apos;: &apos;4&apos;},
- {&apos;@name&apos;: &apos;3JR5.A&apos;, &apos;@rank&apos;: &apos;5&apos;},
- {&apos;@name&apos;: &apos;3SAU.A&apos;, &apos;@rank&apos;: &apos;6&apos;},
- {&apos;@name&apos;: &apos;3GQ4.A&apos;, &apos;@rank&apos;: &apos;7&apos;},
- {&apos;@name&apos;: &apos;1R2Z.A&apos;, &apos;@rank&apos;: &apos;8&apos;},
- {&apos;@name&apos;: &apos;3U6E.A&apos;, &apos;@rank&apos;: &apos;9&apos;},
- {&apos;@name&apos;: &apos;2XZF.A&apos;, &apos;@rank&apos;: &apos;10&apos;}]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Get-the-representative-for-a-chain">Get the representative for a chain<a class="anchor-link" href="#Get-the-representative-for-a-chain">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[46]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">clusts</span> <span class="o">=</span> <span class="n">get_clusters</span><span class="p">(</span><span class="s">&#39;4hhb.A&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">clusts</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>{&apos;pdbChain&apos;: {&apos;@name&apos;: &apos;2W72.A&apos;}}
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="List-all-taxa-associated-with-a-list-of-IDs">List all taxa associated with a list of IDs<a class="anchor-link" href="#List-all-taxa-associated-with-a-list-of-IDs">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">crispr_query</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;crispr&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span class="c"># Search for PDB IDs related to CRISPR</span>
+<span class="n">crispr_query</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;swim&#39;</span><span class="p">)</span>
 <span class="n">crispr_results</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">crispr_query</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">list_taxa</span><span class="p">(</span><span class="n">crispr_results</span><span class="p">[:</span><span class="mi">10</span><span class="p">]))</span>
+
+<span class="c"># Run BLAST on the top result</span>
+<span class="n">top_result</span> <span class="o">=</span> <span class="n">crispr_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">blast_hits</span> <span class="o">=</span> <span class="n">get_blast2</span><span class="p">(</span><span class="n">top_result</span><span class="p">)</span>
+
+<span class="c"># Print list of associated taxa</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">list_taxa</span><span class="p">(</span><span class="n">blast_hits</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">5</span><span class="p">]))</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">list_types</span><span class="p">(</span><span class="n">blast_hits</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">5</span><span class="p">]))</span>
 </pre></div>
 
 </div>
@@ -1169,54 +972,12 @@ Sbjct: 241 VYGRQGNPCKRCGTPIEKTVVAGRGTHYCPRCQR 274
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;Thermus thermophilus&apos;,
- &apos;Sulfolobus solfataricus P2&apos;,
- &apos;Hyperthermus butylicus DSM 5456&apos;,
- &apos;unidentified phage&apos;,
- &apos;Sulfolobus solfataricus P2&apos;,
- &apos;Pseudomonas aeruginosa UCBPP-PA14&apos;,
- &apos;Pseudomonas aeruginosa UCBPP-PA14&apos;,
- &apos;Pseudomonas aeruginosa UCBPP-PA14&apos;,
- &apos;Sulfolobus solfataricus&apos;,
- &apos;Thermus thermophilus HB8&apos;]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="List-data-types-with-a-list-of-IDs">List data types with a list of IDs<a class="anchor-link" href="#List-data-types-with-a-list-of-IDs">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span class="n">crispr_query</span> <span class="o">=</span> <span class="n">make_query</span><span class="p">(</span><span class="s">&#39;crispr&#39;</span><span class="p">)</span>
-<span class="n">crispr_results</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">crispr_query</span><span class="p">)</span>
-<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">list_types</span><span class="p">(</span><span class="n">crispr_results</span><span class="p">[:</span><span class="mi">5</span><span class="p">]))</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[&apos;protein&apos;, &apos;protein&apos;, &apos;protein&apos;, &apos;protein&apos;, &apos;protein&apos;]
+<pre>[&apos;Thunnus thynnus&apos;,
+ &apos;Thunnus thynnus&apos;,
+ &apos;Thunnus thynnus&apos;,
+ &apos;Trematomus bernacchii&apos;,
+ &apos;Trematomus bernacchii&apos;]
+[&apos;protein&apos;, &apos;protein&apos;, &apos;protein&apos;, &apos;protein&apos;, &apos;protein&apos;]
 </pre>
 </div>
 </div>
