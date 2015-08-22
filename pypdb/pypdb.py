@@ -4,12 +4,12 @@ PyPDB: A Python API for the RCSB Protein Data Bank
 
 GitHub: https://github.com/williamgilpin/pypdb
 
-ReadTheDocs: xxx
+Documentation: http://williamgilpin.github.io/pypdb_docs/html
 
 PyPI: https://pypi.python.org/pypi/pypdb
 
-William Gilpin, 2015
-Please heed the license accompanying this file.  
+Please heed the PyPDB's MIT license, as well as those
+of its dependencies: matplotlib, numpy, and xmltodict
 '''
 
 from matplotlib.pyplot import *
@@ -20,6 +20,7 @@ from itertools import repeat, chain
 import urllib.request
 import re
 from json import loads, dumps
+import warnings
 
 import xmltodict
 
@@ -31,7 +32,11 @@ except ImportError:
     except ImportError:
         print ("pypdb can't find BeautifulSoup. You cannot parse BLAST search results without this module")
 
-
+'''
+=================
+Functions for searching the RCSB PDB for lists of PDB IDs
+=================
+'''
 
 # functions for conducting searches and obtaining lists of PDB ids
 def make_query(search_term, querytype='AdvancedKeywordQuery'):
@@ -78,6 +83,8 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
 
     Examples
     --------
+    This method usually gets used in tandem with do_search
+    
     >>> a = make_query('actin network')
     >>> print (a)
     {'orgPdbQuery': {'description': 'Text Search for: actin',
@@ -140,7 +147,7 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     return scan_params
 
 def do_search(scan_params):
-    '''Convert dict() to XML object for searching
+    '''Convert dict() to XML object an then send query to the RCSB PDB
 
     This function takes a valid query dict() object, converts it to XML,
     and then sends a request to the PDB for a list of IDs corresponding to search results
@@ -158,7 +165,27 @@ def do_search(scan_params):
     
     idlist : list
         A list of PDB ids returned by the search
-        
+
+    Examples
+    --------
+    This method usually gets used in tandem with make_query
+
+    >>> a = make_query('actin network')
+    >>> print (a)
+    {'orgPdbQuery': {'description': 'Text Search for: actin',
+    'keywords': 'actin',
+    'queryType': 'AdvancedKeywordQuery'}}
+
+
+    >>> search_dict = make_query('actin network')
+    >>> found_pdbs = do_search(search_dict)
+    >>> print(found_pdbs)
+    ['1D7M', '3W3D', '4A7H', '4A7L', '4A7N']
+
+    >>> search_dict = make_query('T[AG]AGGY',querytype='MotifQuery')
+    >>> found_pdbs = do_search(search_dict)
+    >>> print(found_pdbs)
+    ['3LEZ', '3SGH', '4F47']
     '''
     
     url = 'http://www.rcsb.org/pdb/rest/search'
@@ -169,7 +196,9 @@ def do_search(scan_params):
     req = urllib.request.Request(url, data=queryText)
     f = urllib.request.urlopen(req)
     result = f.read()
-    assert result
+
+    if not result:
+        warnings.warn('No results were obtained for this search')
 
     idlist = str(result)
     idlist =idlist.split('\\n')
@@ -209,7 +238,7 @@ def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
     Examples
     --------
 
-    >>> kk = do_protsym_search2('C9', min_rmsd=0.0, max_rmsd=1.0)
+    >>> kk = do_protsym_search('C9', min_rmsd=0.0, max_rmsd=1.0)
     >>> print(kk[:5])
     ['1KZU', '1NKZ', '2FKW', '3B8M', '3B8N']
 
@@ -229,53 +258,6 @@ def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
     return idlist
 
 
-# Functions for cleaning stuff up
-def to_dict(odict):
-    '''Convert OrderedDict to dict
-
-    Takes a nested, OrderedDict() object and outputs a 
-    normal dictionary of the lowest-level key:val pairs
-
-    Parameters
-    ----------
-    
-    odict : OrderedDict
-    
-    Returns
-    -------
-
-    out : dict
-
-        A dictionary corresponding to the flattened form of 
-        the inputs OrderedDict
-
-    '''
-
-    out = loads(dumps(odict))
-    return out
-
-def remove_at_sign(kk):
-    '''Remove the '@' character from the beginning of key names in a dict()
-
-    Parameters
-    ----------
-
-    kk : dict
-        A dictionary containing keys with the @ character
-        (this pops up a lot in converted XML)
-
-    Returns
-    -------
-
-    kk : dict (modified in place)
-        A dictionary where the @ character has been removed
-
-    '''
-    tagged_keys = [thing for thing in kk.keys() if thing.startswith('@')]
-    for tag_key in tagged_keys:
-        kk[tag_key[1:]] = kk.pop(tag_key)
-        
-    return kk
 
 # functions for obtaining information about PDB id files
 def get_all():
@@ -286,6 +268,13 @@ def get_all():
 
     out : list of str
         A list of all of the PDB IDs currently in the RCSB PDB
+
+    Examples
+    --------
+
+    >>> print(get_all()[:10])
+    ['100D', '101D', '101M', '102D', '102L', '102M', '103D', '103L', '103M', '104D']
+
     """
     
     url = 'http://www.rcsb.org/pdb/rest/getCurrent'
@@ -304,6 +293,12 @@ def get_all():
         out.append(item[-5:-1])
 
     return out
+
+'''
+=================
+Functions for looking up information given PDB ID
+=================
+'''
 
 def get_info(pdb_id, url_root='http://www.rcsb.org/pdb/rest/describeMol?structureId='):
     '''Look up all information about a given PDB ID
@@ -540,6 +535,7 @@ def get_blast2(pdb_id, chain_id='A', output_form='HTML'):
     out : 2-tuple
         A tuple consisting of a list of PDB matches, and a list
         of their alignment text files (unformatted)
+
 
     Examples
     --------
@@ -891,37 +887,6 @@ def get_clusters(pdb_id):
 
 # Higher-level functions for searching
 
-def remove_dupes(list_with_dupes):
-    '''Remove duplicate entries from a list while preserving order
-
-    This function uses Python's standard equivalence testing methods in
-    order to determine if two elements of a list are identical. So if in the list [a,b,c]
-    the condition a == b is True, then regardless of whether a and b are strings, ints, 
-    or other, then b will be removed from the list: [a, c]
-
-    Parameters
-    ----------
-
-    list_with_dupes : list
-        A list containing duplicate elements
-
-    Returns
-    ------- 
-    out : list
-        The list with the duplicate entries removed by the order preserved
-
-
-    Examples
-    --------
-    >>> a = [1,3,2,4,2]
-    >>> print(remove_dupes(a))
-    [1,3,2,4]
-
-    '''
-    visited = set()
-    visited_add = visited.add
-    out = [ entry for entry in list_with_dupes if not (entry in visited or visited_add(entry))]
-    return out
 
 def find_results_gen(search_term, field='title'):
     '''
@@ -936,6 +901,18 @@ def find_results_gen(search_term, field='title'):
         
     field : str
         The type of information to record about each entry
+
+    Examples
+    --------
+
+    >>> result_gen = find_results_gen('bleb')
+    >>> pprint.pprint([item for item in result_gen][:5])
+    ['MYOSIN II DICTYOSTELIUM DISCOIDEUM MOTOR DOMAIN S456Y BOUND WITH MGADP-BEFX',
+     'MYOSIN II DICTYOSTELIUM DISCOIDEUM MOTOR DOMAIN S456Y BOUND WITH MGADP-ALF4',
+     'DICTYOSTELIUM DISCOIDEUM MYOSIN II MOTOR DOMAIN S456E WITH BOUND MGADP-BEFX',
+     'MYOSIN II DICTYOSTELIUM DISCOIDEUM MOTOR DOMAIN S456E BOUND WITH MGADP-ALF4',
+     'The structural basis of blebbistatin inhibition and specificity for myosin '
+     'II']
         
     '''
     scan_params = make_query(search_term, querytype='AdvancedKeywordQuery')
@@ -1061,4 +1038,187 @@ def find_dates(search_term, max_results=100):
     return all_dates
 
 
+
+def list_taxa(pdb_list):
+    '''Given a list of PDB IDs, look up their associated species
+    
+    This function digs through the search results returned
+    by the get_all_info() function and returns any information on 
+    taxonomy included within the description.
+
+    The PDB website description of each entry includes the name 
+    of the species (and sometimes details of organ or body part)
+    for each protein structure sample. 
+
+    Parameters
+    ----------
+
+    pdb_list : list of str
+        List of PDB IDs
+
+        
+    Returns
+    -------
+
+    taxa : list of str
+        A list of the names or classifictions of species 
+        associated with entries
+
+    Examples
+    --------
+
+    >>> crispr_query = make_query('crispr')
+    >>> crispr_results = do_search(crispr_query)
+    >>> print(list_taxa(crispr_results[:10]))
+    ['Thermus thermophilus',
+     'Sulfolobus solfataricus P2',
+     'Hyperthermus butylicus DSM 5456',
+     'unidentified phage',
+     'Sulfolobus solfataricus P2',
+     'Pseudomonas aeruginosa UCBPP-PA14',
+     'Pseudomonas aeruginosa UCBPP-PA14',
+     'Pseudomonas aeruginosa UCBPP-PA14',
+     'Sulfolobus solfataricus',
+     'Thermus thermophilus HB8']
+
+
+    '''
+    taxa = []
+    for pdb_id in pdb_list:
+        all_info = get_all_info(pdb_id)['polymer']
+        if type(all_info)==list:
+            if type(all_info[0]['Taxonomy'])==dict:
+                taxa.append(all_info[0]['Taxonomy']['@name'])
+            elif type(all_info[0]['Taxonomy'])==list:
+                taxa.append(all_info[0]['Taxonomy'][0]['@name'])
+        elif type(all_info)==dict:
+            if type(all_info['Taxonomy'])==dict:
+                taxa.append(all_info['Taxonomy']['@name'])
+            elif type(all_info['Taxonomy'])==list:
+                taxa.append(all_info['Taxonomy'][0]['@name'])
+    return taxa
+
+
+def list_types(pdb_list):
+    '''Given a list of PDB IDs, look up their associated structure type
+    
+
+    Parameters
+    ----------
+
+    pdb_list : list of str
+        List of PDB IDs
+
+        
+    Returns
+    -------
+
+    infotypes : list of str
+        A list of the structure types associated with each PDB
+        in the list. For many entries in the RCSB PDB, this defaults
+        to 'protein'
+
+    Examples
+    --------
+
+    >>> crispr_query = make_query('crispr')
+    >>> crispr_results = do_search(crispr_query)
+    >>> print(list_types(crispr_results[:5]))
+    ['protein', 'protein', 'protein', 'protein', 'protein']
+    '''
+    infotypes = []
+    for pdb_id in pdb_list:
+        all_info = get_all_info(pdb_id)['polymer']
+        if type(all_info)==list:
+            infotypes.append(all_info[0]['@type'])
+        elif type(all_info)==dict:
+            infotypes.append(all_info['@type'])
+
+    return infotypes
+
+
+'''
+=================
+Helper Functions
+=================
+'''
+
+def to_dict(odict):
+    '''Convert OrderedDict to dict
+
+    Takes a nested, OrderedDict() object and outputs a 
+    normal dictionary of the lowest-level key:val pairs
+
+    Parameters
+    ----------
+    
+    odict : OrderedDict
+    
+    Returns
+    -------
+
+    out : dict
+
+        A dictionary corresponding to the flattened form of 
+        the input OrderedDict
+
+    '''
+
+    out = loads(dumps(odict))
+    return out
+
+def remove_at_sign(kk):
+    '''Remove the '@' character from the beginning of key names in a dict()
+
+    Parameters
+    ----------
+
+    kk : dict
+        A dictionary containing keys with the @ character
+        (this pops up a lot in converted XML)
+
+    Returns
+    -------
+
+    kk : dict (modified in place)
+        A dictionary where the @ character has been removed
+
+    '''
+    tagged_keys = [thing for thing in kk.keys() if thing.startswith('@')]
+    for tag_key in tagged_keys:
+        kk[tag_key[1:]] = kk.pop(tag_key)
+        
+    return kk
+
+def remove_dupes(list_with_dupes):
+    '''Remove duplicate entries from a list while preserving order
+
+    This function uses Python's standard equivalence testing methods in
+    order to determine if two elements of a list are identical. So if in the list [a,b,c]
+    the condition a == b is True, then regardless of whether a and b are strings, ints, 
+    or other, then b will be removed from the list: [a, c]
+
+    Parameters
+    ----------
+
+    list_with_dupes : list
+        A list containing duplicate elements
+
+    Returns
+    ------- 
+    out : list
+        The list with the duplicate entries removed by the order preserved
+
+
+    Examples
+    --------
+    >>> a = [1,3,2,4,2]
+    >>> print(remove_dupes(a))
+    [1,3,2,4]
+
+    '''
+    visited = set()
+    visited_add = visited.add
+    out = [ entry for entry in list_with_dupes if not (entry in visited or visited_add(entry))]
+    return out
 
