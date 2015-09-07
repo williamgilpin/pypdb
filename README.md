@@ -4,6 +4,11 @@ A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB)
 
 Full documentation is available in a separate repository [PyPDB_docs](http://www.wgilpin.com/pypdb_docs/html/)
 
+Note: If you use this module for any published work, please consider citing the accompanying paper
+
+      Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
+      Bioinformatics, Oxford Journals, 2015.
+
 
 ## Installation
 
