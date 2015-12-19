@@ -20,8 +20,8 @@ of its dependencies: matplotlib, numpy, and xmltodict
 
 '''
 
-from matplotlib.pyplot import *
-from numpy import *
+import matplotlib.pyplot as plt
+import numpy as np
 
 from collections import OrderedDict, Counter
 from itertools import repeat, chain
@@ -55,14 +55,14 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
 
     Parameters
     ----------
-    search_term : str 
-    
+    search_term : str
+
         The specific term to search in the database. For specific query types,
         the strings that will yield valid results are limited to:
 
         'HoldingsQuery' : A Ggeneral search of the metadata associated with PDB IDs
 
-        'ExpTypeQuery' : Experimental Method such as 'X-RAY', 'SOLID-STATE NMR', etc  
+        'ExpTypeQuery' : Experimental Method such as 'X-RAY', 'SOLID-STATE NMR', etc
 
         'AdvancedKeywordQuery' : Any string that appears in the title or abstract
 
@@ -75,24 +75,24 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
         'MotifQuery' : Search for a specific motif
 
         'NoLigandQuery' : Find full list of PDB IDs without free ligrands
-    
+
     querytype : str
-    
+
         The type of query to perform, the easiest is an AdvancedKeywordQuery but more
         specific types of searches may also be performed
 
     Returns
     -------
-        
+
     scan_params : dict
-        
+
         A dictionary representing the query
 
 
     Examples
     --------
     This method usually gets used in tandem with do_search
-    
+
     >>> a = make_query('actin network')
     >>> print (a)
     {'orgPdbQuery': {'description': 'Text Search for: actin',
@@ -116,42 +116,42 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
                          'ModifiedStructuresQuery', 'AdvancedAuthorQuery', 'MotifQuery',
                          'NoLigandQuery'
                         }
-  
+
     query_params = dict()
     query_params['queryType'] = querytype
-    
+
     if querytype=='AdvancedKeywordQuery':
         query_params['description'] = 'Text Search for: '+ search_term
         query_params['keywords'] = search_term
-        
+
     elif querytype=='NoLigandQuery':
         query_params['haveLigands'] = 'yes'
-    
+
     elif querytype=='AdvancedAuthorQuery':
         query_params['description'] = 'Author Name: '+ search_term
         query_params['searchType'] = 'All Authors'
         query_params['audit_author.name'] = search_term
         query_params['exactMatch'] = 'false'
-    
+
     elif querytype=='MotifQuery':
         query_params['description'] = 'Motif Query For: '+ search_term
         query_params['motif'] = search_term
-    
+
     # search for a specific structure
     elif querytype in ['StructureIdQuery','ModifiedStructuresQuery']:
         query_params['structureIdList'] = search_term
-    
-        
+
+
     elif querytype=='ExpTypeQuery':
         query_params['experimentalMethod'] = search_term
         query_params['description'] = 'Experimental Method Search : Experimental Method='+ search_term
         query_params['mvStructure.expMethod.value']= search_term
-        
-    
+
+
     scan_params = dict()
     scan_params['orgPdbQuery'] = query_params
-    
-    
+
+
     return scan_params
 
 def do_search(scan_params):
@@ -159,18 +159,18 @@ def do_search(scan_params):
 
     This function takes a valid query dict() object, converts it to XML,
     and then sends a request to the PDB for a list of IDs corresponding to search results
-    
+
     Parameters
     ----------
-    
+
     scan_params : dict
         A dictionary of query attributes to use for
         the search of the PDB
-    
-    
+
+
     Returns
     -------
-    
+
     idlist : list
         A list of PDB ids returned by the search
 
@@ -195,7 +195,7 @@ def do_search(scan_params):
     >>> print(found_pdbs)
     ['3LEZ', '3SGH', '4F47']
     '''
-    
+
     url = 'http://www.rcsb.org/pdb/rest/search'
 
     queryText = xmltodict.unparse(scan_params, pretty=False)
@@ -212,7 +212,7 @@ def do_search(scan_params):
     idlist =idlist.split('\\n')
     idlist[0] = idlist[0][-4:]
     kk = idlist.pop(-1)
-    
+
     return idlist
 
 def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
@@ -270,7 +270,7 @@ def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
 # functions for obtaining information about PDB id files
 def get_all():
     """Return a list of all PDB entries currently in the RCSB Protein Data Bank
-    
+
     Returns
     -------
 
@@ -284,14 +284,14 @@ def get_all():
     ['100D', '101D', '101M', '102D', '102L', '102M', '103D', '103L', '103M', '104D']
 
     """
-    
+
     url = 'http://www.rcsb.org/pdb/rest/getCurrent'
-    
+
     req = urllib.request.Request(url)
     f = urllib.request.urlopen(req)
     result = f.read()
     assert result
-    
+
     kk = str(result)
 
     p = re.compile('structureId=\"...."')
@@ -310,32 +310,32 @@ Functions for looking up information given PDB ID
 
 def get_info(pdb_id, url_root='http://www.rcsb.org/pdb/rest/describeMol?structureId='):
     '''Look up all information about a given PDB ID
-    
+
     Parameters
     ----------
 
     pdb_id : string
         A 4 character string giving a pdb entry of interest
-        
+
     url_root : string
         The string root of the specific url for the request type
-        
+
     Returns
     -------
-    
+
     out : OrderedDict
         An ordered dictionary object corresponding to bare xml
-        
+
     '''
-    
+
     url = url_root + pdb_id
     req = urllib.request.Request(url)
     f = urllib.request.urlopen(req)
     result = f.read()
     assert result
-    
+
     out = xmltodict.parse(result,process_namespaces=True)
-    
+
     return out
 
 def get_pdb_file(pdb_id, filetype='pdb', compression=False):
@@ -348,12 +348,12 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
         A 4 character string giving a pdb entry of interest
 
     filetype: string
-        The file type. 
-        'pdb' is the older file format, 
+        The file type.
+        'pdb' is the older file format,
         'cif' is the newer replacement.
         'xml' an also be obtained and parsed using the various xml tools included in PyPDB
         'structfact' is a test file containing structure information for certain entries
-    
+
     compression : bool
         Retrieve a compressed (gz) version of the file
 
@@ -370,11 +370,11 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
     >>> pdb_file = get_pdb_file('4lza', filetype='cif', compression=True)
     >>> print(pdb_file[:200])
     data_4LZA
-    # 
-    _entry.id   4LZA 
-    # 
-    _audit_conform.dict_name       mmcif_pdbx.dic 
-    _audit_conform.dict_version    4.032 
+    #
+    _entry.id   4LZA
+    #
+    _audit_conform.dict_name       mmcif_pdbx.dic
+    _audit_conform.dict_version    4.032
     _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx
 
     DEV NOTE:
@@ -399,7 +399,7 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
 
     return result
 
- 
+
 def get_all_info(pdb_id):
     '''A wrapper for get_info that cleans up the output slighly
 
@@ -408,7 +408,7 @@ def get_all_info(pdb_id):
 
     pdb_id : string
         A 4 character string giving a pdb entry of interest
-    
+
     Returns
     -------
 
@@ -421,11 +421,11 @@ def get_all_info(pdb_id):
     >>> all_info = get_all_info('4lza')
     >>> print(all_info)
     {'polymer': {'macroMolecule': {'@name': 'Adenine phosphoribosyltransferase', '
-    accession': {'@id': 'B0K969'}}, '@entityNr': '1', '@type': 'protein', 
-    'polymerDescription': {'@description': 'Adenine phosphoribosyltransferase'}, 
-    'synonym': {'@name': 'APRT'}, '@length': '195', 'enzClass': {'@ec': '2.4.2.7'}, 
-    'chain': [{'@id': 'A'}, {'@id': 'B'}], 
-    'Taxonomy': {'@name': 'Thermoanaerobacter pseudethanolicus ATCC 33223', 
+    accession': {'@id': 'B0K969'}}, '@entityNr': '1', '@type': 'protein',
+    'polymerDescription': {'@description': 'Adenine phosphoribosyltransferase'},
+    'synonym': {'@name': 'APRT'}, '@length': '195', 'enzClass': {'@ec': '2.4.2.7'},
+    'chain': [{'@id': 'A'}, {'@id': 'B'}],
+    'Taxonomy': {'@name': 'Thermoanaerobacter pseudethanolicus ATCC 33223',
     '@id': '340099'}, '@weight': '22023.9'}, 'id': '4LZA'}
 
     >>> results = get_all_info('2F5N')
@@ -433,16 +433,16 @@ def get_all_info(pdb_id):
     >>> first_polymer['polymerDescription']
     {'@description': "5'-D(*AP*GP*GP*TP*AP*GP*AP*CP*CP*TP*GP*GP*AP*CP*GP*C)-3'"}
 
-    ''' 
+    '''
     out = to_dict( get_info(pdb_id) )['molDescription']['structureId']
     out = remove_at_sign(out)
     return out
 
 def get_raw_blast(pdb_id, output_form='HTML', chain_id='A'):
     '''Look up full BLAST page for a given PDB ID
-        
+
     get_blast() uses this function internally
-    
+
     Parameters
     ----------
 
@@ -452,16 +452,16 @@ def get_raw_blast(pdb_id, output_form='HTML', chain_id='A'):
     chain_id : string
         A single character designating the chain ID of interest
 
-        
+
     output_form : string
         TXT, HTML, or XML formatting of the outputs
-        
+
     Returns
     -------
-    
+
     out : OrderedDict
         An ordered dictionary object corresponding to bare xml
-        
+
     '''
 
     url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB2?structureId='
@@ -471,7 +471,7 @@ def get_raw_blast(pdb_id, output_form='HTML', chain_id='A'):
     result = f.read()
     result = result.decode('unicode_escape')
     assert result
-    
+
     return result
 
 
@@ -480,32 +480,32 @@ def parse_blast(blast_string):
 
     This function requires BeautifulSoup and the re module
     It goes throught the complicated output returned by the BLAST
-    search and provides a list of matches, as well as the raw 
+    search and provides a list of matches, as well as the raw
     text file showing the alignments for each of the matches.
 
     This function works best with HTML formatted Inputs
     ------
-    
+
     get_blast() uses this function internally
-    
+
     Parameters
     ----------
-    
+
     blast_string : str
         A complete webpage of standard BLAST results
-        
+
     Returns
     -------
-    
+
     out : 2-tuple
         A tuple consisting of a list of PDB matches, and a list
         of their alignment text files (unformatted)
-    
-    
+
+
     '''
-    
+
     soup = BeautifulSoup(str(blast_string), "html.parser")
-    
+
     all_blasts = list()
     all_blast_ids = list()
 
@@ -517,7 +517,7 @@ def parse_blast(blast_string):
             all_blasts.append(item)
             blast_id = re.findall(pattern, str(item) )[0][-5:-1]
             all_blast_ids.append(blast_id)
-        
+
     out = (all_blast_ids, all_blasts)
     return out
 
@@ -525,7 +525,7 @@ def parse_blast(blast_string):
 def get_blast2(pdb_id, chain_id='A', output_form='HTML'):
     '''Alternative way to look up BLAST for a given PDB ID. This function is a wrapper
     for get_raw_blast and parse_blast
-    
+
     Parameters
     ----------
     pdb_id : string
@@ -536,10 +536,10 @@ def get_blast2(pdb_id, chain_id='A', output_form='HTML'):
 
     output_form : string
         TXT, HTML, or XML formatting of the BLAST page
-        
+
     Returns
     -------
-    
+
     out : 2-tuple
         A tuple consisting of a list of PDB matches, and a list
         of their alignment text files (unformatted)
@@ -561,12 +561,12 @@ def get_blast2(pdb_id, chain_id='A', output_form='HTML'):
                MPELPEVETIRRTLLPLIVGKTIEDVRIFWPNIIRHPRDSEAFAARMIGQTVRGLERRGK
     Sbjct: 1   MPELPEVETIRRTLLPLIVGKTIEDVRIFWPNIIRHPRDSEAFAARMIGQTVRGLERRGK 60
     ...
-        
+
     '''
 
     raw_results = get_raw_blast(pdb_id, chain_id=chain_id, output_form=output_form)
     out = parse_blast(raw_results)
-    
+
     return out
 
 def describe_pdb(pdb_id):
@@ -577,7 +577,7 @@ def describe_pdb(pdb_id):
 
     pdb_id : string
         A 4 character string giving a pdb entry of interest
-    
+
     Returns
     -------
     out : string
@@ -648,7 +648,7 @@ def describe_chemical(chem_id):
 
     chem_id : string
         A 4 character string representing the full chemical sequence of interest (ie, NAG)
-    
+
     Returns
     -------
 
@@ -659,12 +659,12 @@ def describe_chemical(chem_id):
     --------
     >>> chem_desc = describe_chemical('NAG')
     >>> print(chem_desc)
-    {'describeHet': {'ligandInfo': {'ligand': {'@molecularWeight': '221.208', 
-    'InChIKey': 'OVRNDRQMDRJTHS-FMDGEEDCSA-N', '@type': 'D-saccharide', 
-    'chemicalName': 'N-ACETYL-D-GLUCOSAMINE', '@chemicalID': 'NAG', 
+    {'describeHet': {'ligandInfo': {'ligand': {'@molecularWeight': '221.208',
+    'InChIKey': 'OVRNDRQMDRJTHS-FMDGEEDCSA-N', '@type': 'D-saccharide',
+    'chemicalName': 'N-ACETYL-D-GLUCOSAMINE', '@chemicalID': 'NAG',
     'smiles': 'CC(=O)N[C@@H]1[C@H]([C@@H]([C@H](O[C@H]1O)CO)O)O', '
     InChI': 'InChI=1S/C8H15NO6/c1-3(11)9-5-7(13)6(12)4(2-10)15-8(5)14/
-    h4-8,10,12-14H,2H2,1H3,(H,9,11)/t4-,5-,6-,7-,8-/m1/s1', 
+    h4-8,10,12-14H,2H2,1H3,(H,9,11)/t4-,5-,6-,7-,8-/m1/s1',
     'formula': 'C8 H15 N O6'}}}}
 
     """
@@ -762,7 +762,7 @@ def get_seq_cluster(pdb_id_chain):
     -------
 
     out : dict
-        A dictionary containing the sequence cluster associated with the PDB 
+        A dictionary containing the sequence cluster associated with the PDB
         entry and chain
 
     Examples
@@ -791,7 +791,7 @@ def get_seq_cluster(pdb_id_chain):
 def get_blast(pdb_id, chain_id='A'):
     """
     Return BLAST search results for a given PDB ID
-    The key of the output dict())that outputs the full search results is 
+    The key of the output dict())that outputs the full search results is
     'BlastOutput_iterations'
 
     To get a list of just the results without the metadata of the search use:
@@ -808,7 +808,7 @@ def get_blast(pdb_id, chain_id='A'):
 
     Returns
     -------
-    
+
     out : dict()
         A nested dict() consisting of the BLAST search results and all associated metadata
         If you just want the hits, look under four levels of keys:
@@ -855,8 +855,8 @@ def get_pfam(pdb_id):
 
     >>> pfam_info = get_pfam('2LME')
     >>> print(pfam_info)
-    {'pfamHit': {'@pfamAcc': 'PF03895.10', '@pfamName': 'YadA_anchor', 
-    '@structureId': '2LME', '@pdbResNumEnd': '105', '@pdbResNumStart': '28', 
+    {'pfamHit': {'@pfamAcc': 'PF03895.10', '@pfamName': 'YadA_anchor',
+    '@structureId': '2LME', '@pdbResNumEnd': '105', '@pdbResNumStart': '28',
     '@pfamDesc': 'YadA-like C-terminal region', '@eValue': '5.0E-22', '@chainId': 'A'}}
 
     """
@@ -877,7 +877,7 @@ def get_clusters(pdb_id):
 
     Returns
     -------
-    
+
     out : dict
         A dictionary containing the representative clusters for the specified PDB ID
 
@@ -900,13 +900,13 @@ def find_results_gen(search_term, field='title'):
     '''
     Return a generator of the results returned by a search of
     the protein data bank. This generator
-    
+
     Parameters
     ----------
 
     search_term : str
         The search keyword
-        
+
     field : str
         The type of information to record about each entry
 
@@ -921,29 +921,29 @@ def find_results_gen(search_term, field='title'):
      'MYOSIN II DICTYOSTELIUM DISCOIDEUM MOTOR DOMAIN S456E BOUND WITH MGADP-ALF4',
      'The structural basis of blebbistatin inhibition and specificity for myosin '
      'II']
-        
+
     '''
     scan_params = make_query(search_term, querytype='AdvancedKeywordQuery')
     search_result_ids = do_search(scan_params)
-    
+
     all_titles = []
     for pdb_result in search_result_ids:
         result= describe_pdb(pdb_result)
         if field in result.keys():
             yield result[field]
-            
-            
+
+
 def find_papers(search_term, max_results=100):
     '''
     Return an ordered list of the top papers returned by a keyword search of
     the RCSB PDB
-    
+
     Parameters
     ----------
 
     search_term : str
         The search keyword
-        
+
     max_results : int
         The maximum number of results to return
 
@@ -959,12 +959,12 @@ def find_papers(search_term, max_results=100):
 
     >>> matching_papers = find_papers('crispr',max_results=3)
     >>> print(matching_papers)
-    ['Crystal structure of a CRISPR-associated protein from thermus thermophilus', 
-    'CRYSTAL STRUCTURE OF HYPOTHETICAL PROTEIN SSO1404 FROM SULFOLOBUS SOLFATARICUS P2', 
+    ['Crystal structure of a CRISPR-associated protein from thermus thermophilus',
+    'CRYSTAL STRUCTURE OF HYPOTHETICAL PROTEIN SSO1404 FROM SULFOLOBUS SOLFATARICUS P2',
     'NMR solution structure of a CRISPR repeat binding protein']
-        
+
     '''
-    
+
     papers = find_results_gen(search_term, field='title')
     all_papers = [paper for ind, paper in enumerate(papers) if ind < max_results]
     return remove_dupes(all_papers)
@@ -974,19 +974,19 @@ def find_authors(search_term, max_results=100):
     the RCSB PDB
 
     This function is based on the number of unique PDB entries a given author has
-    his or her name associated with, and not author order or the ranking of the 
+    his or her name associated with, and not author order or the ranking of the
     entry in the keyword search results. So if an author tends to publish on topics
-    related to the search_term a lot, even if those papers are not the best match for 
-    the exact search, he or she will have priority in this function over an author 
+    related to the search_term a lot, even if those papers are not the best match for
+    the exact search, he or she will have priority in this function over an author
     who wrote the one paper that is most relevant to the search term. For the latter
     option, just do a standard keyword search using do_search.
-    
+
     Parameters
     ----------
 
     search_term : str
         The search keyword
-        
+
     max_results : int
         The maximum number of results to return
 
@@ -1011,7 +1011,7 @@ def find_authors(search_term, max_results=100):
         individual = individual.replace('.,', '.;')
         author_list_clean = [x.strip() for x in individual.split(';')]
         full_author_list+=author_list_clean
-    
+
     out = list(chain.from_iterable(repeat(ii, c) for ii,c in Counter(full_author_list).most_common()))
 
 
@@ -1019,19 +1019,19 @@ def find_authors(search_term, max_results=100):
 
 def find_dates(search_term, max_results=100):
     '''
-    Return an ordered list of the PDB submission dates returned by a 
+    Return an ordered list of the PDB submission dates returned by a
     keyword search of the RCSB PDB. This can be used to assess the
     popularity of a gievne keyword or topic
-    
+
     Parameters
     ----------
 
     search_term : str
         The search keyword
-        
+
     max_results : int
         The maximum number of results to return
-        
+
     Returns
     -------
 
@@ -1040,7 +1040,7 @@ def find_dates(search_term, max_results=100):
         be converted directly into time or datetime objects
 
     '''
-    
+
     dates = find_results_gen(search_term, field='deposition_date')
     all_dates = [date for ind, date in enumerate(dates) if ind < max_results]
     return all_dates
@@ -1049,14 +1049,14 @@ def find_dates(search_term, max_results=100):
 
 def list_taxa(pdb_list):
     '''Given a list of PDB IDs, look up their associated species
-    
+
     This function digs through the search results returned
-    by the get_all_info() function and returns any information on 
+    by the get_all_info() function and returns any information on
     taxonomy included within the description.
 
-    The PDB website description of each entry includes the name 
+    The PDB website description of each entry includes the name
     of the species (and sometimes details of organ or body part)
-    for each protein structure sample. 
+    for each protein structure sample.
 
     Parameters
     ----------
@@ -1064,12 +1064,12 @@ def list_taxa(pdb_list):
     pdb_list : list of str
         List of PDB IDs
 
-        
+
     Returns
     -------
 
     taxa : list of str
-        A list of the names or classifictions of species 
+        A list of the names or classifictions of species
         associated with entries
 
     Examples
@@ -1109,7 +1109,7 @@ def list_taxa(pdb_list):
 
 def list_types(pdb_list):
     '''Given a list of PDB IDs, look up their associated structure type
-    
+
 
     Parameters
     ----------
@@ -1117,7 +1117,7 @@ def list_types(pdb_list):
     pdb_list : list of str
         List of PDB IDs
 
-        
+
     Returns
     -------
 
@@ -1154,20 +1154,20 @@ Helper Functions
 def to_dict(odict):
     '''Convert OrderedDict to dict
 
-    Takes a nested, OrderedDict() object and outputs a 
+    Takes a nested, OrderedDict() object and outputs a
     normal dictionary of the lowest-level key:val pairs
 
     Parameters
     ----------
-    
+
     odict : OrderedDict
-    
+
     Returns
     -------
 
     out : dict
 
-        A dictionary corresponding to the flattened form of 
+        A dictionary corresponding to the flattened form of
         the input OrderedDict
 
     '''
@@ -1195,7 +1195,7 @@ def remove_at_sign(kk):
     tagged_keys = [thing for thing in kk.keys() if thing.startswith('@')]
     for tag_key in tagged_keys:
         kk[tag_key[1:]] = kk.pop(tag_key)
-        
+
     return kk
 
 def remove_dupes(list_with_dupes):
@@ -1203,7 +1203,7 @@ def remove_dupes(list_with_dupes):
 
     This function uses Python's standard equivalence testing methods in
     order to determine if two elements of a list are identical. So if in the list [a,b,c]
-    the condition a == b is True, then regardless of whether a and b are strings, ints, 
+    the condition a == b is True, then regardless of whether a and b are strings, ints,
     or other, then b will be removed from the list: [a, c]
 
     Parameters
@@ -1213,7 +1213,7 @@ def remove_dupes(list_with_dupes):
         A list containing duplicate elements
 
     Returns
-    ------- 
+    -------
     out : list
         The list with the duplicate entries removed by the order preserved
 
