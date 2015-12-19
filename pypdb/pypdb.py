@@ -1,5 +1,12 @@
 '''
 PyPDB: A Python API for the RCSB Protein Data Bank
+
+Written by William Gilpin, 2015. If you find this code useful,
+please consider citing our paper:
+
+  	Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
+  	Bioinformatics, Oxford Journals, 2015.
+
 -----
 
 GitHub: https://github.com/williamgilpin/pypdb
@@ -10,6 +17,7 @@ PyPI: https://pypi.python.org/pypi/pypdb
 
 Please heed the PyPDB's MIT license, as well as those
 of its dependencies: matplotlib, numpy, and xmltodict
+
 '''
 
 from matplotlib.pyplot import *
