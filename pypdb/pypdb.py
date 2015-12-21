@@ -26,6 +26,7 @@ import numpy as np
 from collections import OrderedDict, Counter
 from itertools import repeat, chain
 import urllib.request
+import time
 import re
 from json import loads, dumps
 import warnings
@@ -266,8 +267,6 @@ def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
     return idlist
 
 
-
-# functions for obtaining information about PDB id files
 def get_all():
     """Return a list of all PDB entries currently in the RCSB Protein Data Bank
 
@@ -893,13 +892,12 @@ def get_clusters(pdb_id):
     out = to_dict(out)
     return remove_at_sign(out['representatives'])
 
-# Higher-level functions for searching
 
 
 def find_results_gen(search_term, field='title'):
     '''
     Return a generator of the results returned by a search of
-    the protein data bank. This generator
+    the protein data bank. This generator is used internally.
 
     Parameters
     ----------
@@ -932,8 +930,52 @@ def find_results_gen(search_term, field='title'):
         if field in result.keys():
             yield result[field]
 
+def parse_results_gen(search_term, field='title', max_results = 100, sleep_time=.01):
+    '''
+    Query the PDB with a search term and field while respecting the query frequency
+     limitations of the API.
 
-def find_papers(search_term, max_results=100):
+    Parameters
+    ----------
+
+    search_term : str
+        The search keyword
+
+    field : str
+        The type of information to record about each entry
+
+    max_results : int
+        The maximum number of results to search through when 
+        determining the top results
+
+    sleep_time : float
+        Time (in seconds) to wait between requests. If this number is too small
+        the API will stop working, but it appears to vary among different systems
+
+
+    Returns
+    -------
+
+    all_data_raw : list of str
+
+    '''
+
+    if max_results*sleep_time > 30:
+        warnings.warn("Because of API limitations, this function\
+        will take at least " + str(max_results*sleep_time) + " seconds to return results.\
+        If you need greater speed, try modifying the optional argument sleep_time=.01, (although \
+        this may cause the search to time out)" )
+
+    all_data_raw = find_results_gen(search_term, field=field)
+    all_data =list()
+    while len(all_data) < max_results:
+        all_data.append(all_data_raw.send(None))
+        time.sleep(sleep_time)
+
+    return all_data
+
+
+def find_papers(search_term, **kwargs):
     '''
     Return an ordered list of the top papers returned by a keyword search of
     the RCSB PDB
@@ -964,12 +1006,10 @@ def find_papers(search_term, max_results=100):
     'NMR solution structure of a CRISPR repeat binding protein']
 
     '''
-
-    papers = find_results_gen(search_term, field='title')
-    all_papers = [paper for ind, paper in enumerate(papers) if ind < max_results]
+    all_papers = parse_results_gen(search_term, field='title', **kwargs)
     return remove_dupes(all_papers)
 
-def find_authors(search_term, max_results=100):
+def find_authors(search_term, **kwargs):
     '''Return an ordered list of the top authors returned by a keyword search of
     the RCSB PDB
 
@@ -1004,8 +1044,9 @@ def find_authors(search_term, max_results=100):
     ['Doudna, J.A.', 'Jinek, M.', 'Ke, A.', 'Li, H.', 'Nam, K.H.']
 
     '''
-    all_authors_raw = find_results_gen(search_term, field='citation_authors')
-    all_individuals = [item for ind, item in enumerate(all_authors_raw) if ind < max_results]
+
+    all_individuals = parse_results_gen(search_term, field='citation_authors', **kwargs)
+
     full_author_list = []
     for individual in all_individuals:
         individual = individual.replace('.,', '.;')
@@ -1014,10 +1055,9 @@ def find_authors(search_term, max_results=100):
 
     out = list(chain.from_iterable(repeat(ii, c) for ii,c in Counter(full_author_list).most_common()))
 
-
     return remove_dupes(out)
 
-def find_dates(search_term, max_results=100):
+def find_dates(search_term, **kwargs):
     '''
     Return an ordered list of the PDB submission dates returned by a
     keyword search of the RCSB PDB. This can be used to assess the
@@ -1040,9 +1080,7 @@ def find_dates(search_term, max_results=100):
         be converted directly into time or datetime objects
 
     '''
-
-    dates = find_results_gen(search_term, field='deposition_date')
-    all_dates = [date for ind, date in enumerate(dates) if ind < max_results]
+    all_dates = parse_results_gen(search_term, field='deposition_date', **kwargs)
     return all_dates
 
 
