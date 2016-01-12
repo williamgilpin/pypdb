@@ -930,7 +930,7 @@ def find_results_gen(search_term, field='title'):
         if field in result.keys():
             yield result[field]
 
-def parse_results_gen(search_term, field='title', max_results = 100, sleep_time=.01):
+def parse_results_gen(search_term, field='title', max_results = 100, sleep_time=.1):
     '''
     Query the PDB with a search term and field while respecting the query frequency
      limitations of the API.
@@ -963,7 +963,7 @@ def parse_results_gen(search_term, field='title', max_results = 100, sleep_time=
     if max_results*sleep_time > 30:
         warnings.warn("Because of API limitations, this function\
         will take at least " + str(max_results*sleep_time) + " seconds to return results.\
-        If you need greater speed, try modifying the optional argument sleep_time=.01, (although \
+        If you need greater speed, try modifying the optional argument sleep_time=.1, (although \
         this may cause the search to time out)" )
 
     all_data_raw = find_results_gen(search_term, field=field)
@@ -1085,7 +1085,7 @@ def find_dates(search_term, **kwargs):
 
 
 
-def list_taxa(pdb_list):
+def list_taxa2(pdb_list, sleep_time=.1):
     '''Given a list of PDB IDs, look up their associated species
 
     This function digs through the search results returned
@@ -1102,6 +1102,9 @@ def list_taxa(pdb_list):
     pdb_list : list of str
         List of PDB IDs
 
+    sleep_time : float
+        Time (in seconds) to wait between requests. If this number is too small
+        the API will stop working, but it appears to vary among different systems
 
     Returns
     -------
@@ -1129,23 +1132,23 @@ def list_taxa(pdb_list):
 
 
     '''
+    
+    if len(pdb_list)*sleep_time > 30:
+        warnings.warn("Because of API limitations, this function\
+        will take at least " + str(len(pdb_list)*sleep_time) + " seconds to return results.\
+        If you need greater speed, try modifying the optional argument sleep_time=.1, (although \
+        this may cause the search to time out)" )
+    
     taxa = []
     for pdb_id in pdb_list:
-        all_info = get_all_info(pdb_id)['polymer']
-        if type(all_info)==list:
-            if type(all_info[0]['Taxonomy'])==dict:
-                taxa.append(all_info[0]['Taxonomy']['@name'])
-            elif type(all_info[0]['Taxonomy'])==list:
-                taxa.append(all_info[0]['Taxonomy'][0]['@name'])
-        elif type(all_info)==dict:
-            if type(all_info['Taxonomy'])==dict:
-                taxa.append(all_info['Taxonomy']['@name'])
-            elif type(all_info['Taxonomy'])==list:
-                taxa.append(all_info['Taxonomy'][0]['@name'])
+        all_info = get_all_info(pdb_id)
+        species_results = walk_nested_dict(all_info, 'Taxonomy', maxdepth=25)
+        taxa.append(walk_nested_dict(species_results,'@name')[-1])
+        time.sleep(sleep_time)
+        
     return taxa
 
-
-def list_types(pdb_list):
+def list_types(pdb_list, sleep_time=.1):
     '''Given a list of PDB IDs, look up their associated structure type
 
 
@@ -1154,6 +1157,10 @@ def list_types(pdb_list):
 
     pdb_list : list of str
         List of PDB IDs
+        
+    sleep_time : float
+        Time (in seconds) to wait between requests. If this number is too small
+        the API will stop working, but it appears to vary among different systems
 
 
     Returns
@@ -1172,14 +1179,20 @@ def list_types(pdb_list):
     >>> print(list_types(crispr_results[:5]))
     ['protein', 'protein', 'protein', 'protein', 'protein']
     '''
+    
+    if len(pdb_list)*sleep_time > 30:
+        warnings.warn("Because of API limitations, this function\
+        will take at least " + str(len(pdb_list)*sleep_time) + " seconds to return results.\
+        If you need greater speed, try modifying the optional argument sleep_time=.1, (although \
+        this may cause the search to time out)" )
+    
     infotypes = []
     for pdb_id in pdb_list:
-        all_info = get_all_info(pdb_id)['polymer']
-        if type(all_info)==list:
-            infotypes.append(all_info[0]['@type'])
-        elif type(all_info)==dict:
-            infotypes.append(all_info['@type'])
-
+        all_info = get_all_info(pdb_id)
+        type_results = walk_nested_dict(all_info, '@type', maxdepth=25)
+        infotypes.append(type_results[-1])
+        time.sleep(sleep_time)
+        
     return infotypes
 
 
@@ -1268,3 +1281,64 @@ def remove_dupes(list_with_dupes):
     out = [ entry for entry in list_with_dupes if not (entry in visited or visited_add(entry))]
     return out
 
+def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
+    '''
+    For a nested dictionary that may itself comprise lists of 
+    dictionaries of unknown length, determine if a key is anywhere
+    in any of the dictionaries using a depth-first search
+    
+    Parameters
+    ----------
+    
+    my_result : dict
+        A nested dict containing lists, dicts, and other objects as vals
+        
+    term : str
+        The name of the key stored somewhere in the tree
+    
+    maxdepth : int
+        The maximum depth to search the results tree
+        
+    depth : int
+        The depth of the search so far. 
+        Users don't usually access this.
+        
+    outputs : list
+        All of the positive search results collected so far.
+        Users don't usually access this.
+        
+    Returns
+    -------
+    
+    outputs : list
+        All of the search results.
+    
+    '''
+    
+    if depth > maxdepth:
+        warnings.warn('Maximum recursion depth exceeded. Returned None for the search results,'+
+                      ' try increasing the maxdepth keyword argument.')
+        return None
+    
+
+    depth = depth + 1
+    
+    if type(my_result)==dict:
+        if term in my_result.keys():
+            outputs.append(my_result[term])
+
+        else:
+            new_results = list(my_result.values())
+            walk_nested_dict(new_results, term, outputs=outputs, depth=depth,maxdepth=maxdepth)
+    
+    elif type(my_result)==list:
+        for item in my_result:
+            walk_nested_dict(item, term, outputs=outputs, depth=depth,maxdepth=maxdepth)
+            
+    else:
+        pass
+        # dead leaf
+
+    
+    return outputs
+    
