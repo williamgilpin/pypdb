@@ -14,12 +14,15 @@ Note: If you use this module for any published work, please consider citing the 
 
 	$ pip install pypdb
 
-This code is designed for Python 3. The installation adds the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**BeautifulSoup**](http://www.crummy.com/software/BeautifulSoup/). Please follow the licenses associated with these libraries.
+To install the development version, which contains the latest bug fixes, install directly from GitHub using
 
-If you are installing directly from setup.py,
+   	$ pip install git+git://github.com/williamgilpin/pypdb
+
+If you need to  install directly from setup.py,
 
     $ python setup.py install
 
+This code is designed for Python 3. The installation adds the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**BeautifulSoup**](http://www.crummy.com/software/BeautifulSoup/). Please follow the licenses associated with these libraries.
 BeautifulSoup is only necessary to use one function, get_blast2.
 
 ## Usage
