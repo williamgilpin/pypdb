@@ -1085,7 +1085,7 @@ def find_dates(search_term, **kwargs):
 
 
 
-def list_taxa2(pdb_list, sleep_time=.1):
+def list_taxa(pdb_list, sleep_time=.1):
     '''Given a list of PDB IDs, look up their associated species
 
     This function digs through the search results returned
