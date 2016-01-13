@@ -1348,8 +1348,8 @@ def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
         pass
         # dead leaf
 
+    # this conditional may not be necessary    
     if outputs:
-        print('hit')
         return outputs
     else:
         return None
