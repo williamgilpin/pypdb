@@ -1140,10 +1140,16 @@ def list_taxa(pdb_list, sleep_time=.1):
         this may cause the search to time out)" )
     
     taxa = []
+
     for pdb_id in pdb_list:
         all_info = get_all_info(pdb_id)
-        species_results = walk_nested_dict(all_info, 'Taxonomy', maxdepth=25)
-        taxa.append(walk_nested_dict(species_results,'@name')[-1])
+        species_results = walk_nested_dict(all_info, 'Taxonomy', maxdepth=25,outputs=[])
+        first_result = walk_nested_dict(species_results,'@name',outputs=[])
+        if first_result:
+            taxa.append(first_result[-1])
+        else:
+            taxa.append('Unknown')
+
         time.sleep(sleep_time)
         
     return taxa
@@ -1189,8 +1195,11 @@ def list_types(pdb_list, sleep_time=.1):
     infotypes = []
     for pdb_id in pdb_list:
         all_info = get_all_info(pdb_id)
-        type_results = walk_nested_dict(all_info, '@type', maxdepth=25)
-        infotypes.append(type_results[-1])
+        type_results = walk_nested_dict(all_info, '@type', maxdepth=25,outputs=[])
+        if type_results:
+            infotypes.append(type_results[-1])
+        else:
+            infotypes.append('Unknown')
         time.sleep(sleep_time)
         
     return infotypes
@@ -1339,6 +1348,9 @@ def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
         pass
         # dead leaf
 
-    
-    return outputs
+    if outputs:
+        print('hit')
+        return outputs
+    else:
+        return None
     
