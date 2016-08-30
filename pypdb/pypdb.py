@@ -115,8 +115,8 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     assert querytype in {'HoldingsQuery', 'ExpTypeQuery',
                          'AdvancedKeywordQuery','StructureIdQuery',
                          'ModifiedStructuresQuery', 'AdvancedAuthorQuery', 'MotifQuery',
-                         'NoLigandQuery'
-                        }
+                         'NoLigandQuery', 'PubmedIdQuery'
+                        }, 'Query type %s not supported yet' % querytype
 
     query_params = dict()
     query_params['queryType'] = querytype
@@ -142,11 +142,14 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     elif querytype in ['StructureIdQuery','ModifiedStructuresQuery']:
         query_params['structureIdList'] = search_term
 
-
     elif querytype=='ExpTypeQuery':
         query_params['experimentalMethod'] = search_term
         query_params['description'] = 'Experimental Method Search : Experimental Method='+ search_term
         query_params['mvStructure.expMethod.value']= search_term
+
+    elif querytype=='PubmedIdQuery':
+        query_params['description'] = 'Pubmed Id Search for Pubmed Id '+ search_term
+        query_params['pubMedIdList'] = search_term
 
 
     scan_params = dict()
