@@ -3,6 +3,9 @@
 ###Temporary Files created by text editor###
 *~
 
+### Remove DS STORE
+.DS_Store
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
