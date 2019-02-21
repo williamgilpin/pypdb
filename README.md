@@ -12,7 +12,13 @@ Note: If you use this module for any published work, please consider citing the 
 
 ## Installation
 
+Install using pip:
+
 	$ pip install pypdb
+
+or, using conda:
+
+	$ conda install -c williamgilpin pypdb
 
 To install the development version, which contains the latest bug fixes, install directly from GitHub using
 
