@@ -1,0 +1,33 @@
+package:
+  name: pypdb
+  version: 1.102
+
+source:
+  path: ../../
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - python {{ python }}
+    - setuptools
+    - numpy
+
+  run:
+    - python  {{ python }}
+    - numpy
+    - xmltodict
+    - beautifulsoup4
+    - matplotlib
+    - urllib3
+    - jsonschema
+
+about:
+  home: http://www.wgilpin.com/pypdb_docs/html/
+  license: 'https://github.com/williamgilpin/pypdb/blob/master/LICENSE'
+  summary: "This is a copy of https://github.com/williamgilpin/pypdb, developed by William Gilpin, built here to be installed with conda."
+  description: |
+    This is a copy of https://github.com/williamgilpin/pypdb, developed by William Gilpin.
+  dev_url: https://github.com/williamgilpin/pypdb
+  doc_url: http://www.wgilpin.com/pypdb_docs/html/
