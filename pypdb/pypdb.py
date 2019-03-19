@@ -354,7 +354,7 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
         'pdb' is the older file format,
         'cif' is the newer replacement.
         'xml' an also be obtained and parsed using the various xml tools included in PyPDB
-        'structfact' is a test file containing structure information for certain entries
+        'structfact' retrieves structure factors (only available for certain PDB entries)
 
     compression : bool
         Retrieve a compressed (gz) version of the file
@@ -364,8 +364,6 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
 
     result : string
         The string representing the full PDB file in the given format
-
-    http://www.rcsb.org/pdb/download/downloadFile.do?fileFormat=structfact&structureId=2F5N
 
     Examples
     --------
@@ -379,25 +377,31 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
     _audit_conform.dict_version    4.032
     _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx
 
-    DEV NOTE:
-    http://www.rcsb.org/pdb/files/2F5N.pdb1.gz
-
     '''
 
-    fullurl = 'http://www.rcsb.org/pdb/download/downloadFile.do?fileFormat='
-    fullurl += filetype
+    full_url = "https://files.rcsb.org/download/"
+
+    full_url += pdb_id
+
+    if (filetype == 'structfact'):
+        full_url += "-sf.cif"
+    else:
+        full_url += "." + filetype
 
     if compression:
-        fullurl += '&compression=YES'
+        full_url += ".gz"
     else:
-        fullurl += '&compression=NO'
+        pass
 
-    fullurl += '&structureId=' + pdb_id
-    # url = 'http://www.rcsb.org/pdb/files/'+pdb_id+'.pdb'
-    req = urllib.request.Request(fullurl)
+
+    req = urllib.request.Request(full_url)
     f = urllib.request.urlopen(req)
     result = f.read()
-    result = result.decode('unicode_escape')
+
+    if not compression:
+        result = result.decode('ascii')
+    else:
+        pass
 
     return result
 
