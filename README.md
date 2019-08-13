@@ -2,9 +2,10 @@
 
 A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB) using its XML-based API. This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed within Python scripts, allowing it to supplement existing tools (i.e. Biopython) that are designed for manipulating .pdb files.
 
-Full documentation is available in a separate repository [PyPDB_docs](http://www.wgilpin.com/pypdb_docs/html/)
+Examples of each function and its associated output can be found in `demos/demos.nb`. Full documentation for each function can also be accessed via `help(function_name)`
+Slightly out-of-date documentation may also be viewed in the separate repository [pypdb_docs](http://www.wgilpin.com/pypdb_docs/html/)
 
-Note: If you use this module for any published work, please consider citing the accompanying paper
+If you use this module for any published work, please consider citing the accompanying paper
 
       Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
       Bioinformatics, Oxford Journals, 2015.

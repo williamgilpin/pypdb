@@ -25,7 +25,7 @@ import numpy as np
 
 from collections import OrderedDict, Counter
 from itertools import repeat, chain
-import urllib.request
+import requests
 import time
 import re
 from json import loads, dumps
@@ -39,13 +39,146 @@ except ImportError:
     try:
         import BeautifulSoup
     except ImportError:
-        print ("pypdb can't find BeautifulSoup. You cannot parse BLAST search results without this module")
+        print ("pypdb can't find BeautifulSoup. BLAST search results will not" 
+            + " be parse without this module.")
 
 '''
 =================
 Functions for searching the RCSB PDB for lists of PDB IDs
 =================
 '''
+
+class Query(object):
+    """
+    
+    This objects takes search terms and specifications and creates object that 
+    can be used to query the Protein Data Bank
+
+    Parameters
+    ----------
+    search_term : str
+
+        The specific term to search in the database. For specific query types,
+        the strings that will yield valid results are limited to:
+
+        'HoldingsQuery' : A Ggeneral search of the metadata associated with PDB IDs
+
+        'ExpTypeQuery' : Experimental Method such as 'X-RAY', 'SOLID-STATE NMR', etc
+
+        'AdvancedKeywordQuery' : Any string that appears in the title or abstract
+
+        'StructureIdQuery' :  Perform a search for a specific Structure ID
+
+        'ModifiedStructuresQuery' : Search for related structures
+
+        'AdvancedAuthorQuery' : Search by the names of authors associated with entries
+
+        'MotifQuery' : Search for a specific motif
+
+        'NoLigandQuery' : Find full list of PDB IDs without free ligrands
+
+    query_type : str
+
+        The type of query to perform, the easiest is an AdvancedKeywordQuery but more
+        specific types of searches may also be performed
+
+    scan_params (optional) : dict() 
+            An XML structured dictionary. If this is provided, then the 
+            constructor ignores the inputs above, and structures a query using
+            this exact input dictionary
+
+    Examples
+    --------
+
+    >>> found_pdbs = Query('actin network').search()
+    >>> print(found_pdbs)
+    ['1D7M', '3W3D', '4A7H', '4A7L', '4A7N']
+
+    >>> found_pdbs = Query('3W3D', query_type='ModifiedStructuresQuery').search()
+    >>> print(found_pdbs[:5])
+    ['1A2N', '1ACF', '1AGX', '1APM', '1ARL']
+
+    >>> found_pdbs = found_pdbs = Query('T[AG]AGGY', query_type='MotifQuery').search()
+    >>> print(found_pdbs)
+    ['3LEZ', '3SGH', '4F47']
+  
+    """
+
+    def __init__(self, search_term, query_type='AdvancedKeywordQuery', 
+        scan_params=None):
+        """See help(Query) for documentation"""
+
+        assert query_type in {'HoldingsQuery', 'ExpTypeQuery',
+                             'AdvancedKeywordQuery','StructureIdQuery',
+                             'ModifiedStructuresQuery', 'AdvancedAuthorQuery', 
+                             'MotifQuery','NoLigandQuery', 'PubmedIdQuery'
+                             }, 'Query type %s not supported yet' % querytype
+
+        self.query_type = query_type
+        self.search_term = search_term
+        self.url = 'http://www.rcsb.org/pdb/rest/search'
+        
+        if not scan_params:
+            query_params = dict()
+            query_params['queryType'] = query_type
+
+            if query_type=='AdvancedKeywordQuery':
+                query_params['description'] = 'Text Search for: '+ search_term
+                query_params['keywords'] = search_term
+
+            elif query_type=='NoLigandQuery':
+                query_params['haveLigands'] = 'yes'
+
+            elif query_type=='AdvancedAuthorQuery':
+                query_params['description'] = 'Author Name: '+ search_term
+                query_params['searchType'] = 'All Authors'
+                query_params['audit_author.name'] = search_term
+                query_params['exactMatch'] = 'false'
+
+            elif query_type=='MotifQuery':
+                query_params['description'] = 'Motif Query For: '+ search_term
+                query_params['motif'] = search_term
+
+            # search for a specific structure
+            elif query_type in ['StructureIdQuery','ModifiedStructuresQuery']:
+                query_params['structureIdList'] = search_term
+
+            elif query_type=='ExpTypeQuery':
+                query_params['experimentalMethod'] = search_term
+                query_params['description'] = 'Experimental Method Search : Experimental Method='+ search_term
+                query_params['mvStructure.expMethod.value']= search_term
+
+            elif query_type=='PubmedIdQuery':
+                query_params['description'] = 'Pubmed Id Search for Pubmed Id '+ search_term
+                query_params['pubMedIdList'] = search_term
+
+            self.scan_params = dict()
+            self.scan_params['orgPdbQuery'] = query_params
+        else:
+            self.scan_params = scan_params
+
+    def search(self):
+        """
+        Perform a search of the Protein Data Bank using the REST API
+        """
+
+        queryText = xmltodict.unparse(self.scan_params, pretty=False)
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        response = requests.post(self.url, data=queryText, headers=headers)
+
+        if response.status_code == 200:
+            pass
+        else:
+            warnings.warn("Retrieval failed, returning None")
+            return None
+
+        result  = response.text
+
+        idlist = str(result)
+        idlist = idlist.split('\n')[:-1]
+
+        return idlist
+
 
 # functions for conducting searches and obtaining lists of PDB ids
 def make_query(search_term, querytype='AdvancedKeywordQuery'):
@@ -77,7 +210,7 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
 
         'NoLigandQuery' : Find full list of PDB IDs without free ligrands
 
-    querytype : str
+    query_type : str
 
         The type of query to perform, the easiest is an AdvancedKeywordQuery but more
         specific types of searches may also be performed
@@ -112,51 +245,9 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     ['3LEZ', '3SGH', '4F47']
 
     '''
-    assert querytype in {'HoldingsQuery', 'ExpTypeQuery',
-                         'AdvancedKeywordQuery','StructureIdQuery',
-                         'ModifiedStructuresQuery', 'AdvancedAuthorQuery', 'MotifQuery',
-                         'NoLigandQuery', 'PubmedIdQuery'
-                        }, 'Query type %s not supported yet' % querytype
 
-    query_params = dict()
-    query_params['queryType'] = querytype
-
-    if querytype=='AdvancedKeywordQuery':
-        query_params['description'] = 'Text Search for: '+ search_term
-        query_params['keywords'] = search_term
-
-    elif querytype=='NoLigandQuery':
-        query_params['haveLigands'] = 'yes'
-
-    elif querytype=='AdvancedAuthorQuery':
-        query_params['description'] = 'Author Name: '+ search_term
-        query_params['searchType'] = 'All Authors'
-        query_params['audit_author.name'] = search_term
-        query_params['exactMatch'] = 'false'
-
-    elif querytype=='MotifQuery':
-        query_params['description'] = 'Motif Query For: '+ search_term
-        query_params['motif'] = search_term
-
-    # search for a specific structure
-    elif querytype in ['StructureIdQuery','ModifiedStructuresQuery']:
-        query_params['structureIdList'] = search_term
-
-    elif querytype=='ExpTypeQuery':
-        query_params['experimentalMethod'] = search_term
-        query_params['description'] = 'Experimental Method Search : Experimental Method='+ search_term
-        query_params['mvStructure.expMethod.value']= search_term
-
-    elif querytype=='PubmedIdQuery':
-        query_params['description'] = 'Pubmed Id Search for Pubmed Id '+ search_term
-        query_params['pubMedIdList'] = search_term
-
-
-    scan_params = dict()
-    scan_params['orgPdbQuery'] = query_params
-
-
-    return scan_params
+    q = Query(search_term, querytype)
+    return q.scan_params
 
 def do_search(scan_params):
     '''Convert dict() to XML object an then send query to the RCSB PDB
@@ -199,25 +290,9 @@ def do_search(scan_params):
     >>> print(found_pdbs)
     ['3LEZ', '3SGH', '4F47']
     '''
+    q = Query('search_term', 'HoldingsQuery', scan_params=scan_params)
+    return q.search()
 
-    url = 'http://www.rcsb.org/pdb/rest/search'
-
-    queryText = xmltodict.unparse(scan_params, pretty=False)
-    queryText = queryText.encode()
-
-    req = urllib.request.Request(url, data=queryText)
-    f = urllib.request.urlopen(req)
-    result = f.read()
-
-    if not result:
-        warnings.warn('No results were obtained for this search')
-
-    idlist = str(result)
-    idlist =idlist.split('\\n')
-    idlist[0] = idlist[0][-4:]
-    kk = idlist.pop(-1)
-
-    return idlist
 
 def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
     '''Performs a protein symmetry search of the PDB
@@ -255,7 +330,6 @@ def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
     ['1KZU', '1NKZ', '2FKW', '3B8M', '3B8N']
 
     '''
-
     query_params = dict()
     query_params['queryType'] = 'PointGroupQuery'
     query_params['rMSDComparator'] = 'between'
@@ -288,13 +362,15 @@ def get_all():
     """
 
     url = 'http://www.rcsb.org/pdb/rest/getCurrent'
+    response = requests.get(url)
 
-    req = urllib.request.Request(url)
-    f = urllib.request.urlopen(req)
-    result = f.read()
-    assert result
+    if response.status_code == 200:
+        pass
+    else:
+        warnings.warn("Retrieval failed, returning None")
+        return None
 
-    kk = str(result)
+    result  = str(response.text)
 
     p = re.compile('structureId=\"...."')
     matches = p.findall(str(result))
@@ -329,14 +405,18 @@ def get_info(pdb_id, url_root='http://www.rcsb.org/pdb/rest/describeMol?structur
         An ordered dictionary object corresponding to bare xml
 
     '''
-
     url = url_root + pdb_id
-    req = urllib.request.Request(url)
-    f = urllib.request.urlopen(req)
-    result = f.read()
-    assert result
+    response = requests.get(url)
 
-    out = xmltodict.parse(result,process_namespaces=True)
+    if response.status_code == 200:
+        pass
+    else:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    result  = str(response.text)
+
+    out = xmltodict.parse(result, process_namespaces=True)
 
     return out
 
@@ -393,15 +473,24 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
     else:
         pass
 
+    response = requests.get(full_url)
 
-    req = urllib.request.Request(full_url)
-    f = urllib.request.urlopen(req)
-    result = f.read()
-
-    if not compression:
-        result = result.decode('ascii')
-    else:
+    if response.status_code == 200:
         pass
+    else:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    if compression:
+        result  = response.content
+    else:
+        result = response.text
+
+    ## return raw file only
+    # if compression:
+    #     result = result.decode('utf-8')
+    # else:
+    #     pass
 
     return result
 
@@ -472,11 +561,16 @@ def get_raw_blast(pdb_id, output_form='HTML', chain_id='A'):
 
     url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB2?structureId='
     url = url_root + pdb_id + '&chainId='+ chain_id +'&outputFormat=' + output_form
-    req = urllib.request.Request(url)
-    f = urllib.request.urlopen(req)
-    result = f.read()
-    result = result.decode('unicode_escape')
-    assert result
+    
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        pass
+    else:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    result  = response.text
 
     return result
 
@@ -614,6 +708,141 @@ def describe_pdb(pdb_id):
     out = remove_at_sign(out['PDBdescription']['PDB'])
     return out
 
+
+def blast_from_sequence_full(seq, e_cutoff, output_form='XML'):
+    """
+    Search a sequence, and return the raw output of the search
+    
+    Adapted from @danolson1, see original code here:
+    https://github.com/williamgilpin/pypdb/issues/10
+    
+    
+    Parameters
+    ----------
+
+    seq : string
+        A sequence to use to perform a BLAST search
+        
+    e_cutoff : float
+        The e-value to use to cut off the search
+        
+    output_form : string
+        TXT, HTML, or XML formatting of the BLAST page
+        
+    Returns
+    -------
+    
+    out : string
+        The raw output returned by the BLAST search. If XML form, this
+        can be parsed using to_dict(xmltodict.parse(out, process_namespaces=True))
+
+    Examples
+    --------
+    
+    >>> ids_and_scores = blast_from_sequence_full('MTKIANKYEVIDNVEKLEKALKRLREAQSVYATY'
+                     + 'TQEQVDKIFFEAAMAANKMRIPLAKMAVE'
+                     + 'ETGMGVVEDKVIKNHYASEYIYNAYKNTKTCGVIEEDPAFGIKKIAEPLGVIAAVIPTTNP'
+                     + 'TSTAIFKTLIALKTRNAIIISPHPRAKNSTIEAAKIVLEAAVKAGAPEGIIGWIDVPSLEL'
+                     + 'TNLVMREADVILATGGPGLVKAAYSSGKPAIGVGAGNTPAIIDDSADIVLAVNSIIHSKTF'
+                     + 'DNGMICASEQSVIVLDGVYKEVKKEFEKRGCYFLNEDETEKVRKTIIINGALNAKIVGQKA'
+                     + 'HTIANLAGFEVPETTKILIGEVTSVDISEEFAHEKLCPVLAMYRAKDFDDALDKAERLVAD'
+                     + 'GGFGHTSSLYIDTVTQKEKLQKFSERMKTCRILVNTPSSQGGIGDLYNFKLAPSL',
+                         1e-20)
+    >>> print(raw_blast[:292])
+    <HTML>
+    <TITLE>BLAST Search Results</TITLE>
+    <BODY BGCOLOR="#FFFFFF" LINK="#0000FF" VLINK="#660099" ALINK="#660099">
+    <PRE>
+    <b>BLASTP 2.2.18 [Mar-02-2008]</b>
+
+
+    <b><a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Retrieve&list_uids
+    =9254694&dopt=Citation">Reference</a>:</b>
+
+    """
+    
+    payload = {
+            'sequence': seq,
+            'eCutoff':str(e_cutoff),
+            'matrix':'BLOSUM62',
+            'outputFormat': output_form # or 'HTML' or nothing for text format
+            }
+
+    url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB1'
+    response = requests.get(url_root, params=payload)
+    
+    if response.status_code == 200:
+        pass
+    else:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+    
+    out = response.text
+    
+    return out
+
+
+
+
+
+def blast_from_sequence(seq, e_cutoff):
+    """
+    Search a sequence, and obtain a list of matching PDB IDs and 
+    their associated BLAST scores
+        
+    Adapted from @danolson1, see original code here:
+    https://github.com/williamgilpin/pypdb/issues/10
+
+    Parameters
+    ----------
+
+    seq : string
+        A sequence to use to perform a BLAST search
+        
+    e_cutoff : float
+        The e-value to use to cut off the search
+
+    Returns
+    -------
+    
+    out : list
+        Pairs of PDB IDs and their associated scores
+    
+    Examples
+    --------
+    >>> ids_and_scores = blast_from_sequence('MTKIANKYEVIDNVEKLEKALKRLREAQSVYATYTQEQVDKIF'
+                         + 'FEAAMAANKMRIPLAKMAVE'
+                         + 'ETGMGVVEDKVIKNHYASEYIYNAYKNTKTCGVIEEDPAFGIKKIAEPLGVIAAVIPTTNP'
+                         + 'TSTAIFKTLIALKTRNAIIISPHPRAKNSTIEAAKIVLEAAVKAGAPEGIIGWIDVPSLEL'
+                         + 'TNLVMREADVILATGGPGLVKAAYSSGKPAIGVGAGNTPAIIDDSADIVLAVNSIIHSKTF'
+                         + 'DNGMICASEQSVIVLDGVYKEVKKEFEKRGCYFLNEDETEKVRKTIIINGALNAKIVGQKA'
+                         + 'HTIANLAGFEVPETTKILIGEVTSVDISEEFAHEKLCPVLAMYRAKDFDDALDKAERLVAD'
+                         + 'GGFGHTSSLYIDTVTQKEKLQKFSERMKTCRILVNTPSSQGGIGDLYNFKLAPSL',
+                             1e-20)
+    >>> print(ids_and_scores)
+    [('3MY7', 5.37615e-141), ('5J7I', 1.5985e-94), ('5J78', 1.5985e-94), 
+    ('3K9D', 4.58325e-87), ('4C3S', 1.74478e-51), ('5DRU', 6.52042e-51), 
+    ('5DBV', 2.37652e-50), ('5JFM', 9.59336e-43), ('5JFL', 9.59336e-43), 
+    ('5JFN', 1.62325e-41), ('6GVS', 2.83986e-40)]
+
+    """
+    
+    raw_blast = blast_from_sequence_full(seq, e_cutoff, output_form='XML')
+    
+    blast_dict = to_dict(xmltodict.parse(raw_blast, process_namespaces=True))
+    all_hits = walk_nested_dict(blast_dict.copy(), 'Hit')[0]
+    
+    all_ids = [item['Hit_def'].split(':')[0] for item in all_hits]
+    all_scores = [float(item['Hit_hsps']['Hsp']['Hsp_evalue']) for item in all_hits]
+
+    out_raw = list(zip(all_ids, all_scores))
+    out = [item for item in out_raw if item[1] < e_cutoff]
+    
+    return out    
+    
+
+
+
 def get_entity_info(pdb_id):
     """Return pdb id information
 
@@ -645,6 +874,7 @@ def get_entity_info(pdb_id):
     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/getEntityInfo?structureId=')
     out = to_dict(out)
     return remove_at_sign( out['entityInfo']['PDB'] )
+
 
 def describe_chemical(chem_id):
     """
@@ -1330,7 +1560,7 @@ def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
         All of the search results.
     
     '''
-    
+
     if depth > maxdepth:
         warnings.warn('Maximum recursion depth exceeded. Returned None for the search results,'+
                       ' try increasing the maxdepth keyword argument.')
@@ -1345,11 +1575,13 @@ def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
 
         else:
             new_results = list(my_result.values())
-            walk_nested_dict(new_results, term, outputs=outputs, depth=depth,maxdepth=maxdepth)
+            walk_nested_dict(new_results, term, outputs=outputs, 
+                            depth=depth, maxdepth=maxdepth)
     
     elif type(my_result)==list:
         for item in my_result:
-            walk_nested_dict(item, term, outputs=outputs, depth=depth,maxdepth=maxdepth)
+            walk_nested_dict(item, term, outputs=outputs, 
+                            depth=depth, maxdepth=maxdepth)
             
     else:
         pass
