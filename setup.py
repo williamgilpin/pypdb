@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
   name = 'pypdb',
   packages = ['pypdb'], # same as 'name'
-  version = '1.200',
+  version = '1.300',
   install_requires=[
         'xmltodict', 
         'beautifulsoup4'
