@@ -1,8 +1,7 @@
 '''
 PyPDB: A Python API for the RCSB Protein Data Bank
 
-Written by William Gilpin, 2015. If you find this code useful,
-please consider citing our paper:
+If you find this code useful, please consider citing the paper:
 
   	Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
   	Bioinformatics, Oxford Journals, 2015.
@@ -16,13 +15,9 @@ Documentation: http://williamgilpin.github.io/pypdb_docs/html
 PyPI: https://pypi.python.org/pypi/pypdb
 
 Please heed the PyPDB's MIT license, as well as those
-of its dependencies: matplotlib, numpy, and xmltodict
+of its dependencies: xmltodict, BeautifulSoup
 
 '''
-
-import matplotlib.pyplot as plt
-import numpy as np
-
 from collections import OrderedDict, Counter
 from itertools import repeat, chain
 import requests
@@ -40,7 +35,7 @@ except ImportError:
         import BeautifulSoup
     except ImportError:
         print ("pypdb can't find BeautifulSoup. BLAST search results will not" 
-            + " be parse without this module.")
+            + " be parsed without this module.")
 
 '''
 =================
@@ -253,7 +248,8 @@ def do_search(scan_params):
     '''Convert dict() to XML object an then send query to the RCSB PDB
 
     This function takes a valid query dict() object, converts it to XML,
-    and then sends a request to the PDB for a list of IDs corresponding to search results
+    and then sends a request to the PDB for a list of IDs corresponding 
+    to search results
 
     Parameters
     ----------
@@ -308,13 +304,12 @@ def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
         abbreviations for symmetry point groups (e.g., C1, C2, D2, T, O, I, H, A1)
 
     min_rmsd : float
-        The smallest allowed total deviation (in Angstroms) for a result to be classified
-        as having a matching symmetry
+        The smallest allowed total deviation (in Angstroms) for a result 
+        to be classified as having a matching symmetry
 
     max_rmsd : float
-        The largest allowed total deviation (in Angstroms) for a result to be classified
-        as having a matching symmetry
-
+        The largest allowed total deviation (in Angstroms) for a result 
+        to be classified as having a matching symmetry
 
     Returns
     -------
