@@ -105,6 +105,7 @@ class Query(object):
 
         assert query_type in {'HoldingsQuery', 'ExpTypeQuery',
                              'AdvancedKeywordQuery','StructureIdQuery',
+                              'OrganismQuery', 'TreeEntityQuery',
                              'ModifiedStructuresQuery', 'AdvancedAuthorQuery', 
                              'MotifQuery','NoLigandQuery', 'PubmedIdQuery'
                              }, 'Query type %s not supported yet' % querytype
@@ -112,7 +113,7 @@ class Query(object):
         self.query_type = query_type
         self.search_term = search_term
         self.url = 'http://www.rcsb.org/pdb/rest/search'
-        
+        composite_query = False
         if not scan_params:
             query_params = dict()
             query_params['queryType'] = query_type
@@ -133,8 +134,19 @@ class Query(object):
             elif query_type=='MotifQuery':
                 query_params['description'] = 'Motif Query For: '+ search_term
                 query_params['motif'] = search_term
+            
+            elif query_type=='OrganismQuery':
+                query_params['version'] = 'head'
+                query_params['description'] = 'Organism Search: Organism Name='+ search_term
+                query_params['OrganismName'] = search_term
+                composite_query = True
+            
+            elif query_type=='TreeEntityQuery':
+                query_params['t'] = "1"
+                query_params['description'] = 'TaxonomyTree Search for OTHER SEQUENCES'
+                query_params['n'] = search_term
+                query_params['nodeDesc'] = "OTHER SEQUENCES"
 
-            # search for a specific structure
             elif query_type in ['StructureIdQuery','ModifiedStructuresQuery']:
                 query_params['structureIdList'] = search_term
 
@@ -146,9 +158,23 @@ class Query(object):
             elif query_type=='PubmedIdQuery':
                 query_params['description'] = 'Pubmed Id Search for Pubmed Id '+ search_term
                 query_params['pubMedIdList'] = search_term
-
+            
             self.scan_params = dict()
             self.scan_params['orgPdbQuery'] = query_params
+            if composite_query:
+                self.scan_params = dict()
+                inner_query = dict()
+                inner_query['orgPdbQuery'] = query_params
+                inner_query['queryRefinementLevel'] = "0"
+#                 intermediate_query = dict()
+#                 intermediate_query[]
+                outer_query = dict()
+                outer_query['queryRefinement'] = inner_query
+                self.scan_params['orgPdbCompositeQuery'] = outer_query
+#                 self.scan_params['queryRefinementLevel'] = 0
+#                 self.scan_params['queryRefinement'] = self.scan_params
+#                 self.scan_params['orgPdbCompositeQuery version="1.0"'] = self.scan_params
+                
         else:
             self.scan_params = scan_params
 
@@ -240,7 +266,6 @@ def make_query(search_term, querytype='AdvancedKeywordQuery'):
     ['3LEZ', '3SGH', '4F47']
 
     '''
-
     q = Query(search_term, querytype)
     return q.scan_params
 
