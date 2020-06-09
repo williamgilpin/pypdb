@@ -29,6 +29,11 @@ If you need to  install directly from setup.py,
 
     $ python setup.py install
 
+
+Test the installation, and check that the code successfully connects to the PDB
+
+	$ python tests/test_pypdb.py
+
 This code is designed for Python 3. The installation adds the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**BeautifulSoup**](http://www.crummy.com/software/BeautifulSoup/). Please follow the licenses associated with these libraries.
 BeautifulSoup is only necessary to use one function, get_blast2.
 

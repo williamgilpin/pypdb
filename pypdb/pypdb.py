@@ -3,8 +3,8 @@ PyPDB: A Python API for the RCSB Protein Data Bank
 
 If you find this code useful, please consider citing the paper:
 
-  	Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
-  	Bioinformatics, Oxford Journals, 2015.
+    Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
+    Bioinformatics, Oxford Journals, 2015.
 
 -----
 
@@ -16,6 +16,9 @@ PyPI: https://pypi.python.org/pypi/pypdb
 
 Please heed the PyPDB's MIT license, as well as those
 of its dependencies: xmltodict, BeautifulSoup
+
+Dev: Remove bs4 dependency, add a CompositeQuery class,
+include rate-limiting
 
 '''
 from collections import OrderedDict, Counter
@@ -178,14 +181,24 @@ class Query(object):
         else:
             self.scan_params = scan_params
 
-    def search(self):
+    def search(self, num_attempts=1, sleep_time=0.5):
         """
         Perform a search of the Protein Data Bank using the REST API
+        
+        Parameters
+        ----------
+
+        num_attempts : int
+            In case of a failed retrieval, the number of attempts to try again
+        sleep_time : int
+            The amount of time to wait between requests, in case of 
+            API rate limits
         """
 
         queryText = xmltodict.unparse(self.scan_params, pretty=False)
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        response = requests.post(self.url, data=queryText, headers=headers)
+        #response = requests.post(self.url, data=queryText, headers=headers)
+        response = post_limited(self.url, data=queryText, headers=headers)
 
         if response.status_code == 200:
             pass
@@ -382,7 +395,8 @@ def get_all():
     """
 
     url = 'http://www.rcsb.org/pdb/rest/getCurrent'
-    response = requests.get(url)
+    #response = requests.get(url)
+    response = get_limited(url)
 
     if response.status_code == 200:
         pass
@@ -426,8 +440,9 @@ def get_info(pdb_id, url_root='http://www.rcsb.org/pdb/rest/describeMol?structur
 
     '''
     url = url_root + pdb_id
-    response = requests.get(url)
-
+    #response = requests.get(url)
+    response = get_limited(url)
+    
     if response.status_code == 200:
         pass
     else:
@@ -493,7 +508,8 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
     else:
         pass
 
-    response = requests.get(full_url)
+    #response = requests.get(full_url)
+    response = get_limited(full_url)
 
     if response.status_code == 200:
         pass
@@ -582,7 +598,9 @@ def get_raw_blast(pdb_id, output_form='HTML', chain_id='A'):
     url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB2?structureId='
     url = url_root + pdb_id + '&chainId='+ chain_id +'&outputFormat=' + output_form
     
-    response = requests.get(url)
+    #response = requests.get(url)
+    response = get_limited(url)
+    
 
     if response.status_code == 200:
         pass
@@ -789,7 +807,8 @@ def blast_from_sequence_full(seq, e_cutoff, output_form='XML'):
             }
 
     url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB1'
-    response = requests.get(url_root, params=payload)
+    #response = requests.get(url_root, params=payload)
+    response = get_limited(url_root, params=payload)
     
     if response.status_code == 200:
         pass
@@ -1612,4 +1631,111 @@ def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
         return outputs
     else:
         return None
+
+def request_limited(url, rtype="GET", num_attempts=3, sleep_time=0.5, **kwargs):
+    """
+    HTML request with rate-limiting base on response code
     
+            
+    Parameters
+    ----------
+    url : str
+        The URL for the request
+    rtype : str
+        The request type: GET, POST
+    num_attempts : int
+        In case of a failed retrieval, the number of attempts to try again
+    sleep_time : int
+        The amount of time to wait between requests, in case of 
+        API rate limits
+    **kwargs : dict
+        The keyword arguments to pass to the request
+    
+    Returns
+    -------
+    
+    response : requests.models.Response
+        The server response object
+    
+    """
+    
+    if rtype not in ["GET", "POST"]:
+        warnings.warn("Request type not recognized")
+    
+    total_attempts = 0
+    while (total_attempts <= num_attempts):
+        
+        if rtype == "GET":
+            response = requests.get(url, **kwargs)
+        elif rtype == "POST":
+            response = requests.post(url, **kwargs)
+            
+        if 200 <= response.status_code < 300:
+            break
+        elif response.status_code == 429:
+            curr_sleep = (1 + total_attempts)*sleep_time
+            warnings.warn("Too many requests, waiting " + str(curr_sleep) + " s")
+            time.sleep(curr_sleep)
+        elif 500 <= response.status_code < 600:
+            warnings.warn("Server error encountered. Retrying")
+        else:
+            pass
+        total_attempts += 1
+        
+    return response
+
+def get_limited(url, **kwargs):
+    """
+    GET request with rate-limiting base on response code
+    For more information, see the function requests_limited
+    """
+    return request_limited(url, rtype="GET", **kwargs)
+
+def post_limited(url, **kwargs):
+    """
+    POST request with rate-limiting base on response code
+    For more information, see the function requests_limited
+    """
+    return request_limited(url, rtype="POST", **kwargs)
+
+# def get_limited(url, params=None, num_attempts=3, sleep_time=0.5):
+#     """
+#     GET request with rate-limiting base on response code
+    
+            
+#     Parameters
+#     ----------
+#     url : str
+#         The URL for the GET request
+#     params : dict
+#         The payload for the request
+#     num_attempts : int
+#         In case of a failed retrieval, the number of attempts to try again
+#     sleep_time : int
+#         The amount of time to wait between requests, in case of 
+#         API rate limits
+    
+#     Returns
+#     -------
+    
+#     response : requests.models.Response
+#         The server response object
+    
+#     """
+    
+#     total_attempts = 0
+#     while (total_attempts <= num_attempts):
+#         response = requests.get(url, params=params)
+#         if 200 <= response.status_code < 300:
+#             break
+#         elif response.status_code == 429:
+#             curr_sleep = (1 + total_attempts)*sleep_time
+#             warnings.warn("Too many requests, waiting " + str(curr_sleep) + " s")
+#             time.sleep(curr_sleep)
+#         elif 500 <= response.status_code < 600:
+#             warnings.warn("Server error encountered. Retrying")
+#         else:
+#             pass
+#         total_attempts += 1
+        
+#     return response
