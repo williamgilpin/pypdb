@@ -7,7 +7,8 @@ setup(
   version = '1.300',
   install_requires=[
         'xmltodict', 
-        'beautifulsoup4'
+        'beautifulsoup4',
+		'requests'
   ],
   description = 'A Python wrapper for the RCSB Protein Data Bank (PDB) API',
   author = 'William Gilpin',
