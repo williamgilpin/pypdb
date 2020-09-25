@@ -139,11 +139,10 @@ class Query(object):
                 query_params['motif'] = search_term
             
             elif query_type=='OrganismQuery':
-                query_params['version'] = 'head'
+#                 query_params['version'] = "B0905"
                 query_params['description'] = 'Organism Search: Organism Name='+ search_term
-                query_params['OrganismName'] = search_term
-                composite_query = True
-            
+                query_params['organismName'] = search_term
+#                 composite_query = True
             elif query_type=='TreeEntityQuery':
                 query_params['t'] = "1"
                 query_params['description'] = 'TaxonomyTree Search for OTHER SEQUENCES'
