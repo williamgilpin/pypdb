@@ -17,21 +17,21 @@ class TestSearchFunctions(unittest.TestCase):
         # an error page would be a longer string
         self.assertTrue(len(found_pdbs[0]) < 10)
         
-    def test_blast(self):
-        found_pdbs = blast_from_sequence(
-            'MTKIANKYEVIDNVEKLEKALKRLREAQSVYATYTQEQVDKIFFEAAMAANKMRIPLAKMAVE'
-            + 'ETGMGVVEDKVIKNHYASEYIYNAYKNTKTCGVIEEDPAFGIKKIAEPLGVIAAVIPTTNP'
-            + 'TSTAIFKTLIALKTRNAIIISPHPRAKNSTIEAAKIVLEAAVKAGAPEGIIGWIDVPSLEL'
-            + 'TNLVMREADVILATGGPGLVKAAYSSGKPAIGVGAGNTPAIIDDSADIVLAVNSIIHSKTF'
-            + 'DNGMICASEQSVIVLDGVYKEVKKEFEKRGCYFLNEDETEKVRKTIIINGALNAKIVGQKA'
-            + 'HTIANLAGFEVPETTKILIGEVTSVDISEEFAHEKLCPVLAMYRAKDFDDALDKAERLVAD'
-            + 'GGFGHTSSLYIDTVTQKEKLQKFSERMKTCRILVNTPSSQGGIGDLYNFKLAPSL',
-            1e-20) 
-        self.assertTrue(len(found_pdbs) > 0) 
-        self.assertTrue(type(found_pdbs[0][0]) == str)
+    # def test_blast(self):
+    #     found_pdbs = blast_from_sequence(
+    #         'MTKIANKYEVIDNVEKLEKALKRLREAQSVYATYTQEQVDKIFFEAAMAANKMRIPLAKMAVE'
+    #         + 'ETGMGVVEDKVIKNHYASEYIYNAYKNTKTCGVIEEDPAFGIKKIAEPLGVIAAVIPTTNP'
+    #         + 'TSTAIFKTLIALKTRNAIIISPHPRAKNSTIEAAKIVLEAAVKAGAPEGIIGWIDVPSLEL'
+    #         + 'TNLVMREADVILATGGPGLVKAAYSSGKPAIGVGAGNTPAIIDDSADIVLAVNSIIHSKTF'
+    #         + 'DNGMICASEQSVIVLDGVYKEVKKEFEKRGCYFLNEDETEKVRKTIIINGALNAKIVGQKA'
+    #         + 'HTIANLAGFEVPETTKILIGEVTSVDISEEFAHEKLCPVLAMYRAKDFDDALDKAERLVAD'
+    #         + 'GGFGHTSSLYIDTVTQKEKLQKFSERMKTCRILVNTPSSQGGIGDLYNFKLAPSL',
+    #         1e-20) 
+    #     self.assertTrue(len(found_pdbs) > 0) 
+    #     self.assertTrue(type(found_pdbs[0][0]) == str)
         
-        # an error page would be a longer string
-        self.assertTrue(len(found_pdbs[0][0]) < 10)
+    #     # an error page would be a longer string
+    #     self.assertTrue(len(found_pdbs[0][0]) < 10)
 
 
   

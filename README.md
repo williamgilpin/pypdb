@@ -1,7 +1,6 @@
 # PyPDB
 
-
-## As of November, 2020, the RCSB REST API upon which pypdb relies [has been discontinued](https://www.rcsb.org/pages/webservices/rest-search). All applications using pypdb will not function. If you would like to help fix pypdb to use the new APIs, please consider reaching out via an issue or PR
+*As of November 2020, pypdb has been significantly refactored in order to accomodate significant changes to the RCSB PDB API. The new API works much better, but required changes that will break applications dependent on previous versions of pypdb. The previous version of pypdb is available [here](https://github.com/williamgilpin/pypdb_legacy); however, it will no longer function to to the RCSB API being changed.*
 
 A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB) using its XML-based API. This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed within Python scripts, allowing it to supplement existing tools (i.e. Biopython) that are designed for manipulating .pdb files.
 
@@ -37,8 +36,7 @@ Test the installation, and check that the code successfully connects to the PDB
 
 	$ python tests/test_pypdb.py
 
-This code is designed for Python 3. The installation adds the libraries [**xmltodict**](https://github.com/martinblech/xmltodict) and [**BeautifulSoup**](http://www.crummy.com/software/BeautifulSoup/). Please follow the licenses associated with these libraries.
-BeautifulSoup is only necessary to use one function, get_blast2.
+This code has been designed and tested for Python 3.
 
 ## Usage
 

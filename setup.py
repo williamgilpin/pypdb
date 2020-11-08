@@ -4,10 +4,8 @@ from setuptools import setup
 setup(
   name = 'pypdb',
   packages = ['pypdb'], # same as 'name'
-  version = '1.310',
+  version = '2.0',
   install_requires=[
-        'xmltodict', 
-        'beautifulsoup4',
 		'requests'
   ],
   description = 'A Python wrapper for the RCSB Protein Data Bank (PDB) API',
