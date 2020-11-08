@@ -1,11 +1,10 @@
 # PyPDB
 
-*As of November 2020, pypdb has been significantly refactored in order to accomodate significant changes to the RCSB PDB API. The new API works much better, but required changes that will break applications dependent on previous versions of pypdb. The previous version of pypdb is available [here](https://github.com/williamgilpin/pypdb_legacy); however, it will no longer function to to the RCSB API being changed.*
+*As of November 2020, pypdb has been significantly refactored in order to accomodate significant changes to the RCSB PDB API. The new API works much better, but required changes that will break applications dependent on previous versions of pypdb. We will work on restoring and extending functionality over the next few months. The previous version of pypdb is available [here](https://github.com/williamgilpin/pypdb_legacy); however, it will no longer function to to the RCSB API being changed.*
 
 A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB) using its XML-based API. This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed within Python scripts, allowing it to supplement existing tools (i.e. Biopython) that are designed for manipulating .pdb files.
 
-Examples of each function and its associated output can be found in `demos/demos.nb`. Full documentation for each function can also be accessed via `help(function_name)`
-Slightly out-of-date documentation may also be viewed in the separate repository [pypdb_docs](http://www.wgilpin.com/pypdb_docs/html/)
+Examples of each function and its associated output can be found in `demos/demos.nb`.
 
 If you use this module for any published work, please consider citing the accompanying paper
 
