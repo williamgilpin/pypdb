@@ -4,14 +4,7 @@ import unittest
 from unittest import mock
 import warnings
 
-# TODO(ejwilliams): Write generic testing script to allow tests to live with
-# their associated implementations
-
-# Import from local directory
-import sys
-sys.path.insert(0, '../pypdb')
-
-from util import http_requests
+import http_requests
 
 
 class TestHTTPRequests(unittest.TestCase):

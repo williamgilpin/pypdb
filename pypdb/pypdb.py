@@ -29,7 +29,7 @@ import re
 import json
 import warnings
 
-from pypdb.util import http_requests
+from util import http_requests
 
 
 '''
