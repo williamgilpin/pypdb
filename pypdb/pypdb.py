@@ -3,7 +3,7 @@ PyPDB: A Python API for the RCSB Protein Data Bank
 
 If you find this code useful, please consider citing the paper:
 
-    Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
+    Gilpin, W. "PyPDB: A Python API for the Protein Data Bank."
     Bioinformatics, Oxford Journals, 2015.
 
 -----
@@ -29,6 +29,8 @@ import re
 import json
 import warnings
 
+from util import http_requests
+
 
 '''
 =================
@@ -38,8 +40,8 @@ Functions for searching the RCSB PDB for lists of PDB IDs
 
 class Query(object):
     """
-    
-    xThis objects takes search terms and specifications and creates object that 
+
+    xThis objects takes search terms and specifications and creates object that
     can be used to query the Protein Data Bank
 
     Parameters
@@ -72,9 +74,9 @@ class Query(object):
 
     return type : str
         The type of search result to return. Default "entry" returns a list of PDB IDs
-    
-    scan_params (optional) : dict() 
-            A dictionary containing an explicit nested search term. Use this option if you want to 
+
+    scan_params (optional) : dict()
+            A dictionary containing an explicit nested search term. Use this option if you want to
             use pypdb's rate handling and other functions, but need to structure a complex JSON
             query not covered in the existing python package
 
@@ -92,17 +94,17 @@ class Query(object):
     >>> found_pdbs = found_pdbs = Query('T[AG]AGGY', query_type='MotifQuery').search()
     >>> print(found_pdbs)
     ['3LEZ', '3SGH', '4F47']
-  
+
     """
 
-    def __init__(self, 
-                 search_term, 
+    def __init__(self,
+                 search_term,
                  query_type="text",
                  return_type="entry",
                  scan_params=None):
         """See help(Query) for documentation"""
-        
-        
+
+
         if query_type == "PubmedIdQuery":
             query_type = "text"
             query_subtype = "pmid"
@@ -129,12 +131,12 @@ class Query(object):
             query_subtype = "pfam"
         else:
             query_subtype = None
-            
+
         assert query_type in {"text", "structure", "sequence", "seqmotif", "chemical"
                              }, "Query type %s not recognized." % query_type
-        
+
         assert return_type in {"entry", "polymer_entity"}, "Return type %s not supported." % return_type
-        
+
 
         self.query_type = query_type
         self.search_term = search_term
@@ -150,10 +152,10 @@ class Query(object):
                 query_params['parameters'] = {"value" : search_term}
 
             elif query_type=="sequence":
-                query_params['parameters'] = {"target": "pdb_protein_sequence", 
+                query_params['parameters'] = {"target": "pdb_protein_sequence",
                                               "value" : search_term}
             elif query_type=="structure":
-                query_params['parameters'] = {"operator": "relaxed_shape_match", 
+                query_params['parameters'] = {"operator": "relaxed_shape_match",
                                               "value" : {"entry_id" : search_term, "assembly_id": "1"}
                                              }
 
@@ -166,7 +168,7 @@ class Query(object):
 #             elif query_type=='MotifQuery':
 #                 query_params['description'] = 'Motif Query For: '+ search_term
 #                 query_params['motif'] = search_term
-            
+
 #             elif query_type=='OrganismQuery':
 # #                 query_params['version'] = "B0905"
 #                 query_params['description'] = 'Organism Search: Organism Name='+ search_term
@@ -188,7 +190,7 @@ class Query(object):
             if query_subtype:
 
                 if query_subtype == "pmid":
-                    query_params['parameters'] = {"operator" : "in", 
+                    query_params['parameters'] = {"operator" : "in",
                                                   "negation": False,
                                                   "value" : [search_term],
                                                   "attribute": "rcsb_pubmed_container_identifiers.pubmed_id"
@@ -223,44 +225,45 @@ class Query(object):
                                                   "value" : str(search_term),
                                                   "attribute": "rcsb_polymer_entity_annotation.annotation_id"
                                                  }
-                    
+
 
 
             self.scan_params = dict()
             self.scan_params["query"] = query_params
             self.scan_params["return_type"] = return_type
-            
+
             if return_type == "entry":
                 self.scan_params["request_options"] = {"return_all_hits" : True}
-                
+
         else:
             self.scan_params = scan_params
 
     def search(self, num_attempts=1, sleep_time=0.5):
         """
         Perform a search of the Protein Data Bank using the REST API
-        
+
         Parameters
         ----------
 
         num_attempts : int
             In case of a failed retrieval, the number of attempts to try again
         sleep_time : int
-            The amount of time to wait between requests, in case of 
+            The amount of time to wait between requests, in case of
             API rate limits
         """
 
         query_text = json.dumps(self.scan_params, indent=4)
-        response = post_limited(self.url, data=query_text)
+        response = http_requests.request_limited(self.url, rtype="POST",
+         data=query_text)
 
         if response.status_code == 200:
             pass
         else:
             warnings.warn("Retrieval failed, returning None")
             return None
-        
+
         response_val = json.loads(response.text)
-        
+
         if self.return_type == "entry":
             idlist = walk_nested_dict(response_val, "identifier", maxdepth=25, outputs=[])
             return idlist
@@ -272,7 +275,7 @@ class Query(object):
 #     '''Convert dict() to XML object an then send query to the RCSB PDB
 
 #     This function takes a valid query dict() object, converts it to XML,
-#     and then sends a request to the PDB for a list of IDs corresponding 
+#     and then sends a request to the PDB for a list of IDs corresponding
 #     to search results
 
 #     Parameters
@@ -328,11 +331,11 @@ class Query(object):
 #         abbreviations for symmetry point groups (e.g., C1, C2, D2, T, O, I, H, A1)
 
 #     min_rmsd : float
-#         The smallest allowed total deviation (in Angstroms) for a result 
+#         The smallest allowed total deviation (in Angstroms) for a result
 #         to be classified as having a matching symmetry
 
 #     max_rmsd : float
-#         The largest allowed total deviation (in Angstroms) for a result 
+#         The largest allowed total deviation (in Angstroms) for a result
 #         to be classified as having a matching symmetry
 
 #     Returns
@@ -382,7 +385,7 @@ class Query(object):
 
 #     url = 'http://www.rcsb.org/pdb/rest/getCurrent'
 #     #response = requests.get(url)
-#     response = get_limited(url)
+#     response = http_requests.request_limited(url)
 
 #     if response.status_code == 200:
 #         pass
@@ -427,8 +430,8 @@ def get_info(pdb_id, url_root='https://data.rcsb.org/rest/v1/core/entry/'):
     '''
     pdb_id = pdb_id.replace(":", "/") # replace old entry identifier
     url = url_root + pdb_id
-    response = get_limited(url)
-    
+    response = http_requests.request_limited(url)
+
     if response.status_code == 200:
         pass
     else:
@@ -499,7 +502,7 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
         pass
 
     #response = requests.get(full_url)
-    response = get_limited(full_url)
+    response = http_requests.request_limited(full_url)
 
     if response.status_code == 200:
         pass
@@ -548,10 +551,10 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
 
 #     url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB2?structureId='
 #     url = url_root + pdb_id + '&chainId='+ chain_id +'&outputFormat=' + output_form
-    
+
 #     #response = requests.get(url)
-#     response = get_limited(url)
-    
+#     response = http_requests.request_limited(url)
+
 
 #     if response.status_code == 200:
 #         pass
@@ -896,7 +899,7 @@ def find_results_gen(search_term, field='title'):
 
     '''
     search_result_ids = Query(search_term).search()
-    
+
     all_titles = []
     for pdb_id in search_result_ids:
         result = get_info(pdb_id)
@@ -1109,132 +1112,66 @@ def remove_dupes(list_with_dupes):
 
 def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
     '''
-    For a nested dictionary that may itself comprise lists of 
+    For a nested dictionary that may itself comprise lists of
     dictionaries of unknown length, determine if a key is anywhere
     in any of the dictionaries using a depth-first search
-    
+
     Parameters
     ----------
-    
+
     my_result : dict
         A nested dict containing lists, dicts, and other objects as vals
-        
+
     term : str
         The name of the key stored somewhere in the tree
-    
+
     maxdepth : int
         The maximum depth to search the results tree
-        
+
     depth : int
-        The depth of the search so far. 
+        The depth of the search so far.
         Users don't usually access this.
-        
+
     outputs : list
         All of the positive search results collected so far.
         Users don't usually access this.
-        
+
     Returns
     -------
-    
+
     outputs : list
         All of the search results.
-    
+
     '''
 
     if depth > maxdepth:
         warnings.warn('Maximum recursion depth exceeded. Returned None for the search results,'+
                       ' try increasing the maxdepth keyword argument.')
         return None
-    
+
 
     depth = depth + 1
-    
+
     if type(my_result)==dict:
         if term in my_result.keys():
             outputs.append(my_result[term])
 
         else:
             new_results = list(my_result.values())
-            walk_nested_dict(new_results, term, outputs=outputs, 
+            walk_nested_dict(new_results, term, outputs=outputs,
                             depth=depth, maxdepth=maxdepth)
-    
+
     elif type(my_result)==list:
         for item in my_result:
-            walk_nested_dict(item, term, outputs=outputs, 
+            walk_nested_dict(item, term, outputs=outputs,
                             depth=depth, maxdepth=maxdepth)
-            
+
     else:
         pass
         # dead leaf
 
-    # this conditional may not be necessary    
+    # this conditional may not be necessary
     if outputs:
         return outputs
     else:
         return None
-
-def request_limited(url, rtype="GET", num_attempts=3, sleep_time=0.5, **kwargs):
-    """
-    HTML request with rate-limiting base on response code
-    
-            
-    Parameters
-    ----------
-    url : str
-        The url for the request
-    rtype : str
-        The request type: GET, POST
-    num_attempts : int
-        In case of a failed retrieval, the number of attempts to try again
-    sleep_time : int
-        The amount of time to wait between requests, in case of 
-        API rate limits
-    **kwargs : dict
-        The keyword arguments to pass to the request
-    
-    Returns
-    -------
-    
-    response : requests.models.Response
-        The server response object
-    
-    """
-    
-    if rtype not in ["GET", "POST"]:
-        warnings.warn("Request type not recognized")
-    
-    total_attempts = 0
-    while (total_attempts <= num_attempts):
-        
-        if rtype == "GET":
-            response = requests.get(url, **kwargs)
-        elif rtype == "POST":
-            response = requests.post(url, **kwargs)
-            
-        if 200 <= response.status_code < 300:
-            break
-        elif response.status_code == 429:
-            curr_sleep = (1 + total_attempts)*sleep_time
-            warnings.warn("Too many requests, waiting " + str(curr_sleep) + " s")
-            time.sleep(curr_sleep)
-        elif 500 <= response.status_code < 600:
-            warnings.warn("Server error encountered. Retrying")
-        else:
-            pass
-        total_attempts += 1
-        
-    return response
-
-def get_limited(url, **kwargs):
-    """
-    GET request with rate-limiting base on response code
-    For more information, see the function requests_limited
-    """
-    return request_limited(url, rtype="GET", **kwargs)
-
-def post_limited(url, **kwargs):
-    """
-    POST request with rate-limiting base on response code
-    For more information, see the function requests_limited
-    """
-    return request_limited(url, rtype="POST", **kwargs)
