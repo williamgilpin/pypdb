@@ -4,8 +4,8 @@ import unittest
 from unittest import mock
 import warnings
 
-# DO NOT APPROVE: Consider writing generic testing script to change to
-# Google-style tests next to libraries.
+# TODO(ejwilliams): Write generic testing script to allow tests to live with
+# their associated implementations
 
 # Import from local directory
 import sys
@@ -14,7 +14,7 @@ sys.path.insert(0, '../pypdb')
 from util import http_requests
 
 
-class TestStringMethods(unittest.TestCase):
+class TestHTTPRequests(unittest.TestCase):
 
     @mock.patch.object(warnings, "warn", autospec=True)
     @mock.patch.object(time, "sleep", autospec=True)
@@ -95,13 +95,6 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(len(mock_post.mock_calls), 4)
         mock_post.assert_called_with("http://protein_data_bank.com")
         self.assertEqual(len(mock_sleep.mock_calls), 4)
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
