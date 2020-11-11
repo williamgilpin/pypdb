@@ -13,6 +13,7 @@ requirements:
     - python {{ python }}
     - setuptools
     - numpy
+    - pytest
 
   run:
     - python  {{ python }}
