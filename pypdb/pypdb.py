@@ -1,24 +1,18 @@
 '''
 PyPDB: A Python API for the RCSB Protein Data Bank
 
-If you find this code useful, please consider citing the paper:
-
-    Gilpin, W. "PyPDB: A Python API for the Protein Data Bank."
-    Bioinformatics, Oxford Journals, 2015.
-
 -----
 
 GitHub: https://github.com/williamgilpin/pypdb
 
-Documentation: http://williamgilpin.github.io/pypdb_docs/html
-
 PyPI: https://pypi.python.org/pypi/pypdb
 
-Please heed the PyPDB's MIT license, as well as those
-of its dependencies: xmltodict, BeautifulSoup
+-----
 
-Dev: Remove bs4 dependency, add a CompositeQuery class,
-include rate-limiting
+If you find this code useful, please consider citing the paper:
+
+    Gilpin, W. "PyPDB: A Python API for the Protein Data Bank."
+    Bioinformatics, Oxford Journals, 2015.
 
 '''
 from collections import OrderedDict, Counter
@@ -29,7 +23,7 @@ import re
 import json
 import warnings
 
-from pypdb.util import http_requests
+from util import http_requests
 
 
 '''
