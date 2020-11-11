@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 import warnings
 
-import http_requests
+from pypdb.util import http_requests
 
 
 class TestHTTPRequests(unittest.TestCase):
