@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
   name = 'pypdb',
-  packages = ['pypdb'], # same as 'name'
+  packages = ['pypdb', 'pypdb.util'], # same as 'name'
   version = '2.0',
   install_requires=[
 		'requests'

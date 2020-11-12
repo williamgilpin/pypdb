@@ -23,9 +23,7 @@ import re
 import json
 import warnings
 
-import sys
-sys.path.insert(0, './util')
-from util import http_requests
+from pypdb.util import http_requests
 
 
 '''
