@@ -1,7 +1,7 @@
 """Implementation of SearchOperators for text queries against RCSB API."""
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Union, List
+from typing import Any, Dict, Union, List
 
 # --- Implementations of RCSB Queries for each SearchOperators ---
 # See: https://search.rcsb.org/index.html#search-operators for details
@@ -133,7 +133,7 @@ class RangeOperator:
     include_lower: bool = True # Default inclusive
     include_upper: bool = True # Default inclusive
 
-    def to_dict(self) -> Dict[str,str]:
+    def to_dict(self) -> Dict[str,Any]:
         return {
         "operator": "range",
         "attribute": self.attribute,

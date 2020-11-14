@@ -13,6 +13,7 @@ from enum import Enum
 import json
 import requests
 from typing import Any, Dict, List, Optional, Union
+import warnings
 
 from pypdb.clients.search.operators import text_operators
 from pypdb.clients.search.operators.text_operators import TextSearchOperator
@@ -177,7 +178,7 @@ def perform_search(search_service: SearchService,
                              data=json.dumps(rcsb_query_dict))
 
     if not response.ok:
-        warnings.warn("It appears request failed with:", response.text)
+        warnings.warn("It appears request failed with:" + response.text)
         response.raise_for_status()
 
     # If specified, returns raw JSON response from RCSB as Dict
