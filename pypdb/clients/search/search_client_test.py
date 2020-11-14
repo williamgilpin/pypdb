@@ -9,14 +9,6 @@ from pypdb.clients.search.operators import text_operators
 
 class TestHTTPRequests(unittest.TestCase):
 
-    # DO NOT APPROVE add tests for:
-
-    # TextSearchOperator = Union[
-    #     RangeOperator,
-    #     ExistsOperator
-    # ]
-
-
     @mock.patch.object(requests, "post")
     def test_default_operator_with_entry_return_value(self,
                                                      mock_post):
