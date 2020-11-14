@@ -22,7 +22,4 @@ def search_graphql(graphql_json_query : str) -> Any:
             matter. e.g. "{entry(entry_id:"4HHB"){exptl{method}}}"
     """
 
-    # Strips all whitespace from JSON string, for URL encode
-    stripped_json_query = "".join(graphql_json_query.split())
-    URL_REQUEST = f"{RSCB_GRAPHQL_URL}{stripped_json_query}"
-    print(URL_REQUEST)
+    raise UnimplementedError("Currently unimplemented")
