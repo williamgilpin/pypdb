@@ -196,12 +196,24 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
                               return_raw_json_dict: bool = False) -> List[str]:
     """Performs specified search using RCSB's search node logic.
 
+    Essentially, this allows you to ask multiple questions in one RCSB query.
+
+    For example, you can ask for structures that satisfy all of the following
+    conditions at once:
+        * Are either from Mus musculus or from Homo sapiens lineage
+        * Are both under 4 angstroms of resolution, and published after 2019
+        * Are labelled as "actin-binding protein" OR
+            contain "actin" AND "calmodulin" in their titles.
+
     See https://search.rcsb.org/index.html#building-search-request under
-    "Terminal node" and "Group node" for details.
+    "Terminal node" and "Group node" for more details.
 
     Args:
         query_object: Fully-specified QueryNode or QueryGroup
             object corresponding to the desired search.
+        return_type: Type of entities to return.
+        return_raw_json_dict: Whether to return raw JSON response.
+            (for example, to analyze the scores of various matches)
 
     Returns:
         List of strings, corresponding to hits in the database. Will be of the
