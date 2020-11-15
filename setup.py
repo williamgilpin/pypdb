@@ -3,7 +3,8 @@ from setuptools import setup
 
 setup(
   name = 'pypdb',
-  packages = ['pypdb', 'pypdb.util'], # same as 'name'
+  packages = ['pypdb', 'pypdb.util', 'pypdb.clients'], # same as 'name'
+  py_modules = ['pypdb', 'pypdb.util', 'pypdb.clients'],
   version = '2.0',
   install_requires=[
 		'requests'
