@@ -141,7 +141,7 @@ RawJSONDictResponse = Dict[str, Any]
 
 def perform_search(search_service: SearchService,
                    search_operator: SearchOperator,
-                   return_type: ReturnType,
+                   return_type: ReturnType = ReturyType.ENTRY,
                    return_raw_json_dict: bool = False
                    ) -> Union[List[str],
                               RawJSONDictResponse]:
@@ -192,7 +192,7 @@ def perform_search(search_service: SearchService,
 
 
 def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
-                              return_type: ReturnType,
+                              return_type: ReturnType = ReturnType.ENTRY,
                               return_raw_json_dict: bool = False) -> List[str]:
     """Performs specified search using RCSB's search node logic.
 
