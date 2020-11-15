@@ -25,9 +25,9 @@ class ExactMatchOperator:
     """Exact match operator indicates that the input value should match a field
     value exactly (including whitespaces, special characters and case)."""
     attribute: str
-    value: str
+    value: Any
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "attribute": self.attribute,
             "operator": "exact_match",
@@ -41,9 +41,9 @@ class InOperator:
     expression. It returns results if any value in a list of input values
     matches. It can be used instead of multiple OR conditions."""
     attribute: str
-    values: List[str]  # List of strings, numbers or dates in string format
+    values: List[Any]  # List of strings, numbers or date strings
 
-    def to_dict(self) -> Dict[str, Union[str, List[str]]]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "attribute": self.attribute,
             "operator": "in",
@@ -113,10 +113,10 @@ class ComparisonOperator:
     """
 
     attribute: str
-    value: str
+    value: Any
     comparison_type: ComparisonType
 
-    def to_dict(self) -> Dict[str,str]:
+    def to_dict(self) -> Dict[str,Any]:
         return {
             "attribute": self.attribute,
             "operator": self.comparison_type.value,
@@ -128,8 +128,8 @@ class ComparisonOperator:
 class RangeOperator:
     """Returns results with attributes within range."""
     attribute: str
-    from_value: str
-    to_value: str
+    from_value: Any
+    to_value: Any
     include_lower: bool = True # Default inclusive
     include_upper: bool = True # Default inclusive
 
