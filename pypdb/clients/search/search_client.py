@@ -18,7 +18,8 @@ import warnings
 from pypdb.clients.search.operators import text_operators
 from pypdb.clients.search.operators.text_operators import TextSearchOperator
 
-SEARCH_URL_ENDPOINT : str = "https://search.rcsb.org/rcsbsearch/v1/query"
+SEARCH_URL_ENDPOINT: str = "https://search.rcsb.org/rcsbsearch/v1/query"
+
 
 class SearchService(Enum):
     """Which type of field is being searched."""
@@ -33,6 +34,7 @@ class LogicalOperator(Enum):
     """Operation used to combine `QueryGroup` results."""
     AND = "and"
     OR = "or"
+
 
 # SearchOperators correspond to individual search operations, that can be
 # aggregated using a `QueryGroup`.
@@ -57,6 +59,25 @@ class QueryNode:
             "service": self.search_service.value,
             "parameters": self.search_operator.to_dict()
         }
+
+    def _validate(self):
+        """Validates queries to SearchService use a supporting SearchOperator.
+
+        Used to raise Errors notifying users of invalid RCSB queries before
+        those queries hit RCSB's Search servers."""
+
+        if self.search_service != SearchService.TEXT:
+            raise NotImplementedError(
+                "Not currently implemented (but watch this space)")
+
+        if self.search_service is SearchService.TEXT:
+            # Uses undocumented `__args__` to check if operator is TEXT
+            # (see: https://stackoverflow.com/questions/45957615/ )
+            if not type(
+                    self.search_operator) in text_operators.TEXT_SEARCH_OPERATORS:
+                raise InappropriateSearchOperatorException(
+                    "Searches against the 'text' service should have SearchOperators "
+                    "that are TextSearchOperators, as in `text_search_operators.py`.")
 
 
 @dataclass
@@ -88,6 +109,14 @@ class QueryGroup:
             "nodes": [query.to_dict() for query in self.queries]
         }
 
+    def _validate(self):
+        """Validates nodes within the QueryGroup contain valid queries
+
+        Used to raise Errors notifying users of invalid RCSB queries before
+        those queries hit RCSB's Search servers."""
+        for query in self.queries:
+            query._validate()
+
 
 class ReturnType(Enum):
     """For details, see: https://search.rcsb.org/index.html#return-type"""
@@ -106,12 +135,14 @@ class InappropriateSearchOperatorException(Exception):
     SEQMOTIF service using the RangeOperator, as that's not supported by the
     RCSB Search API."""
 
+
 RawJSONDictResponse = Dict[str, Any]
+
 
 def perform_search(search_service: SearchService,
                    search_operator: SearchOperator,
                    return_type: ReturnType,
-                   return_raw_json_dict: bool=False
+                   return_raw_json_dict: bool = False
                    ) -> Union[List[str],
                               RawJSONDictResponse]:
     """Performs search specified by `search_operator`, against `search_service`.
@@ -152,27 +183,43 @@ def perform_search(search_service: SearchService,
     ```
     """
 
-    if search_service != SearchService.TEXT:
-        raise NotImplementedError(
-            "Not currently implemented (but watch this space)")
+    query_node = QueryNode(search_service=search_service,
+                           search_operator=search_operator)
 
-    if search_service is SearchService.TEXT:
-        # Uses undocumented `__args__` to check if operator is TEXT
-        # (see: https://stackoverflow.com/questions/45957615/ )
-        if not type(search_operator) in text_operators.TEXT_SEARCH_OPERATORS:
-            raise InappropriateSearchOperatorException(
-                "Searches against the 'text' service should have SearchOperators "
-                "that are TextSearchOperators, as in `text_search_operators.py`.")
+    return perform_search_with_graph(query_object=query_node,
+                                     return_type=return_type,
+                                     return_raw_json_dict=return_raw_json_dict)
+
+
+def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
+                              return_type: ReturnType,
+                              return_raw_json_dict: bool = False) -> List[str]:
+    """Performs specified search using RCSB's search node logic.
+
+    See https://search.rcsb.org/index.html#building-search-request under
+    "Terminal node" and "Group node" for details.
+
+    Args:
+        query_object: Fully-specified QueryNode or QueryGroup
+            object corresponding to the desired search.
+
+    Returns:
+        List of strings, corresponding to hits in the database. Will be of the
+        format specified by the `return_type`.
+    """
+
+    # Validates that, to the best of our knowledge, the `query_object`
+    # is a valid query against the RCSB Search API.
+    query_object._validate()
 
     rcsb_query_dict = {
-        "query": QueryNode(search_service=search_service,
-                           search_operator=search_operator).to_dict(),
+        "query": query_object.to_dict(),
         "request_options": {"return_all_hits": True},
         "return_type": return_type.value
     }
 
     print("Querying RCSB Search using the following parameters:\n %s" %
-    json.dumps(rcsb_query_dict))
+          json.dumps(rcsb_query_dict))
 
     response = requests.post(url=SEARCH_URL_ENDPOINT,
                              data=json.dumps(rcsb_query_dict))
@@ -193,21 +240,3 @@ def perform_search(search_service: SearchService,
         identifiers.append(query_hit["identifier"])
 
     return identifiers
-
-def perform_search_with_graph(query_object) -> List[str]:
-    """Performs specified search using RCSB's search node logic.
-
-    See https://search.rcsb.org/index.html#building-search-request under
-    "Terminal node" and "Group node" for details.
-
-    Args:
-        query_object: Fully-specified QueryNode or QueryGroup
-            object corresponding to the desired search.
-
-    Returns:
-        List of strings, corresponding to hits in the database. Will be of the
-        format specified by the `return_type`.
-    """
-    raise NotImplementedError("Not currently implemented.")
-
-    # TODO(lacoperon): Implement this.

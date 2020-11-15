@@ -26,6 +26,7 @@ Two querying functions are currently supported by PyPDB:
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.DefaultOperator(value="ribosome")
@@ -38,6 +39,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ExactMatchOperator(value="Mus musculus",
@@ -51,6 +53,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_operator = text_operators.InOperator(values=["Mus musculus", "Homo sapiens"],
                                             attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
@@ -63,6 +66,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ContainsWordsOperator(value="actin-binding protein",
@@ -80,6 +84,7 @@ but "protein binding actin" will not.
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ContainsPhraseOperator(value="actin-binding protein",
@@ -89,10 +94,11 @@ return_type = ReturnType.ASSEMBLY
 results = perform_search(search_service, search_operator, return_type)
 ```
 
-# Search for entries released in 2019 or later
+### Search for entries released in 2019 or later
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ComparisonOperator(
@@ -104,10 +110,11 @@ return_type = ReturnType.ENTRY
 results = perform_search(search_service, search_operator, return_type)
 ```
 
-# Search for entries released only in 2019
+### Search for entries released only in 2019
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.RangeOperator(
@@ -121,7 +128,7 @@ return_type = ReturnType.ENTRY
 results = perform_search(search_service, search_operator, return_type)
 ```
 
-# Search for structures with a given attribute.
+### Search for structures with a given attribute.
 
 (Admittedly every structure has a release date, but the same logic would
  apply for a more sparse RCSB attribute).
@@ -129,6 +136,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ExistsOperator(
@@ -138,6 +146,54 @@ return_type = ReturnType.ENTRY
 results = perform_search(search_service, search_operator, return_type)
 ```
 
-## `perform_search_with_graph` Examples
+## `perform_search_with_graph` Example
 
-Currently unimplemented.
+### Search for 'Mus musculus' or 'Homo sapiens' structures after 2019
+
+```
+from pypdb.clients.search.search_client import perform_search
+from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client import QueryNode, QueryGroup
+from pypdb.clients.search.search_client.operators import text_operators
+
+# QueryNode associated with structures published after 2019
+after_2019_service = SearchService.TEXT
+after_2019_operator = text_operators.ComparisonOperator(
+       value="2019-01-01T00:00:00Z",
+       attribute="rcsb_accession_info.initial_release_date",
+       comparison_type=text_operators.ComparisonType.GREATER)
+after_2019_query_node = QueryNode(after_2019_service, after_2019_operator)
+
+# QueryNode associated with entities containing 'Mus musculus' lineage
+is_mus_service = SearchService.TEXT
+is_mus_operator = text_operators.ExactMatchOperator(
+            value="Mus musculus",
+            attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
+is_mus_query_node = QueryNode(is_mus_service, is_mus_operator)
+
+# QueryNode associated with entities containing 'Homo sapiens' lineage
+is_human_service = SearchService.TEXT
+is_human_operator = text_operators.ExactMatchOperator(
+            value="Homo sapiens",
+            attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
+is_human_query_node = QueryNode(is_human_service, is_human_operator)
+
+# QueryGroup associated with being either human or `Mus musculus`
+is_human_or_mus_group = QueryGroup(
+    queries = [is_mus_query_node, is_human_query_node],
+    logical_operator = LogicalOperator.OR
+)
+
+# QueryGroup associated with being ((Human OR Mus) AND (Published after 2019))
+is_after_2019_and_human_or_mus_group = QueryGroup(
+    queries = [is_human_or_mus_group, after_2019_query_node],
+    logical_operator = LogicalOperator.AND
+)
+
+return_type = ReturnType.ENTRY
+
+results = perform_search_with_graph(
+query_object=is_after_2019_and_human_or_mus_group,
+                             return_type=return_type)
+print(results) # Huzzah
+```
