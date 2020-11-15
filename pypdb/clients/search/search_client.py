@@ -224,6 +224,10 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
     response = requests.post(url=SEARCH_URL_ENDPOINT,
                              data=json.dumps(rcsb_query_dict))
 
+
+    # If your search queries are failing here, it could be that your attribute
+    # doesn't support the SearchOperator you're using.
+    # See: https://search.rcsb.org/search-attributes.html
     if not response.ok:
         warnings.warn("It appears request failed with:" + response.text)
         response.raise_for_status()

@@ -454,7 +454,51 @@ class TestHTTPRequests(unittest.TestCase):
         self.assertEqual(results,
                          ["5JUP", "5JUS", "5JUO"])
 
+    @mock.patch.object(requests, "post")
+    def test_query_structure_resolution(self, mock_post):
+        # Creates a mock HTTP response, as wrapped by `requests`
+        canned_json_return_as_dict = {
+            "result_set": [
+                {"identifier": "5JUP"},
+                {"identifier": "5JUS"},
+                {"identifier": "5JUO"}
+            ]
+        }
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = canned_json_return_as_dict
+        mock_post.return_value = mock_response
 
+
+        search_service = search_client.SearchService.TEXT
+        search_operator = text_operators.ComparisonOperator(
+               value=4,
+               attribute="rcsb_entry_info.resolution_combined",
+               comparison_type=text_operators.ComparisonType.LESS)
+        return_type = search_client.ReturnType.ENTRY
+
+        results = search_client.perform_search(search_service,
+                                     search_operator,
+                                     return_type,
+                                     return_raw_json_dict=True)
+
+        expected_json_dict = {
+          "query": {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "rcsb_entry_info.resolution_combined",
+              "operator": "less",
+              "value": 4
+            }
+          },
+          "request_options": {"return_all_hits": True},
+          "return_type": "entry"
+        }
+
+        mock_post.assert_called_once_with(url=search_client.SEARCH_URL_ENDPOINT,
+                                          data=json.dumps(expected_json_dict))
+        self.assertEqual(results,
+                         canned_json_return_as_dict)
 
 
 if __name__ == '__main__':

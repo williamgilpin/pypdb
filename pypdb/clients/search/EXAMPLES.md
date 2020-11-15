@@ -110,7 +110,7 @@ return_type = ReturnType.ENTRY
 results = perform_search(search_service, search_operator, return_type)
 ```
 
-### Search for entries released only in 2019
+### Search for entries released only in 2019 or later
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
@@ -127,6 +127,22 @@ return_type = ReturnType.ENTRY
 
 results = perform_search(search_service, search_operator, return_type)
 ```
+### Search for structures under 4 angstroms of resolution
+```
+from pypdb.clients.search.search_client import perform_search
+from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client.operators import text_operators
+
+search_service = search_client.SearchService.TEXT
+search_operator = text_operators.ComparisonOperator(
+           value=4,
+           attribute="rcsb_entry_info.resolution_combined",
+           comparison_type=text_operators.ComparisonType.LESS)
+return_type = search_client.ReturnType.ENTRY
+
+results = perform_search(search_service, search_operator, return_type)
+```
+
 
 ### Search for structures with a given attribute.
 
@@ -156,27 +172,25 @@ from pypdb.clients.search.search_client import SearchService, ReturnType
 from pypdb.clients.search.search_client import QueryNode, QueryGroup
 from pypdb.clients.search.search_client.operators import text_operators
 
-# QueryNode associated with structures published after 2019
-after_2019_service = SearchService.TEXT
-after_2019_operator = text_operators.ComparisonOperator(
-       value="2019-01-01T00:00:00Z",
-       attribute="rcsb_accession_info.initial_release_date",
+# QueryNode associated with structures with under 4 Angstroms of resolution
+under_4A_resolution_operator = text_operators.ComparisonOperator(
+       value=4,
+       attribute="rcsb_entry_info.resolution_combined",
        comparison_type=text_operators.ComparisonType.GREATER)
-after_2019_query_node = QueryNode(after_2019_service, after_2019_operator)
+under_4A_query_node = QueryNode(SearchService.TEXT,
+                                  under_4A_resolution_operator)
 
 # QueryNode associated with entities containing 'Mus musculus' lineage
-is_mus_service = SearchService.TEXT
 is_mus_operator = text_operators.ExactMatchOperator(
             value="Mus musculus",
             attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
-is_mus_query_node = QueryNode(is_mus_service, is_mus_operator)
+is_mus_query_node = QueryNode(SearchService.TEXT, is_mus_operator)
 
 # QueryNode associated with entities containing 'Homo sapiens' lineage
-is_human_service = SearchService.TEXT
 is_human_operator = text_operators.ExactMatchOperator(
             value="Homo sapiens",
             attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
-is_human_query_node = QueryNode(is_human_service, is_human_operator)
+is_human_query_node = QueryNode(SearchService.TEXT, is_human_operator)
 
 # QueryGroup associated with being either human or `Mus musculus`
 is_human_or_mus_group = QueryGroup(
@@ -184,16 +198,16 @@ is_human_or_mus_group = QueryGroup(
     logical_operator = LogicalOperator.OR
 )
 
-# QueryGroup associated with being ((Human OR Mus) AND (Published after 2019))
-is_after_2019_and_human_or_mus_group = QueryGroup(
-    queries = [is_human_or_mus_group, after_2019_query_node],
+# QueryGroup associated with being ((Human OR Mus) AND (Under 4 Angstroms))
+is_under_4A_and_human_or_mus_group = QueryGroup(
+    queries = [is_human_or_mus_group, under_4A_query_node],
     logical_operator = LogicalOperator.AND
 )
 
 return_type = ReturnType.ENTRY
 
 results = perform_search_with_graph(
-query_object=is_after_2019_and_human_or_mus_group,
-                             return_type=return_type)
+  query_object=is_under_4A_and_human_or_mus_group,
+  return_type=return_type)
 print(results) # Huzzah
 ```
