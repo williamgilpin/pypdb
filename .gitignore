@@ -2,7 +2,7 @@
 *~
 
 ### Remove DS STORE
-.DS_Store
+*.DS_Store
 
 ### Local development files
 scratch*
