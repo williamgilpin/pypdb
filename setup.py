@@ -1,10 +1,14 @@
 from setuptools import setup
 
+modules_list = ['pypdb', 'pypdb.util', 'pypdb.clients', 
+                'pypdb.clients.search',
+                'pypdb.clients.search.operators', 
+                'pypdb.clients.data']
 
 setup(
   name = 'pypdb',
-  packages = ['pypdb', 'pypdb.util', 'pypdb.clients'], # same as 'name'
-  py_modules = ['pypdb', 'pypdb.util', 'pypdb.clients'],
+  packages = modules_list, # same as 'name'
+  py_modules = modules_list,
   version = '2.0',
   install_requires=[
 		'requests'

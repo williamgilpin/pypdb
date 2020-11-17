@@ -26,7 +26,7 @@ Two querying functions are currently supported by PyPDB:
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.DefaultOperator(value="ribosome")
@@ -39,7 +39,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ExactMatchOperator(value="Mus musculus",
@@ -53,7 +53,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_operator = text_operators.InOperator(values=["Mus musculus", "Homo sapiens"],
                                             attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
@@ -66,7 +66,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ContainsWordsOperator(value="actin-binding protein",
@@ -84,7 +84,7 @@ but "protein binding actin" will not.
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ContainsPhraseOperator(value="actin-binding protein",
@@ -98,7 +98,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ComparisonOperator(
@@ -114,12 +114,12 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.RangeOperator(
-    from_value="2020-01-01T00:00:00Z",
-    to_value="2019-01-01T00:00:00Z",
+    from_value="2019-01-01T00:00:00Z",
+    to_value="2020-01-01T00:00:00Z",
     include_lower=True,
     include_upper=False,
     attribute="rcsb_accession_info.initial_release_date")
@@ -131,14 +131,14 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
-search_service = search_client.SearchService.TEXT
+search_service = SearchService.TEXT
 search_operator = text_operators.ComparisonOperator(
            value=4,
            attribute="rcsb_entry_info.resolution_combined",
            comparison_type=text_operators.ComparisonType.LESS)
-return_type = search_client.ReturnType.ENTRY
+return_type = ReturnType.ENTRY
 
 results = perform_search(search_service, search_operator, return_type)
 ```
@@ -152,7 +152,7 @@ results = perform_search(search_service, search_operator, return_type)
 ```
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.operators import text_operators
 
 search_service = SearchService.TEXT
 search_operator = text_operators.ExistsOperator(
@@ -167,10 +167,10 @@ results = perform_search(search_service, search_operator, return_type)
 ### Search for 'Mus musculus' or 'Homo sapiens' structures after 2019
 
 ```
-from pypdb.clients.search.search_client import perform_search
+from pypdb.clients.search.search_client import perform_search_with_graph
 from pypdb.clients.search.search_client import SearchService, ReturnType
-from pypdb.clients.search.search_client import QueryNode, QueryGroup
-from pypdb.clients.search.search_client.operators import text_operators
+from pypdb.clients.search.search_client import QueryNode, QueryGroup, LogicalOperator
+from pypdb.clients.search.operators import text_operators
 
 # QueryNode associated with structures with under 4 Angstroms of resolution
 under_4A_resolution_operator = text_operators.ComparisonOperator(
@@ -209,5 +209,4 @@ return_type = ReturnType.ENTRY
 results = perform_search_with_graph(
   query_object=is_under_4A_and_human_or_mus_group,
   return_type=return_type)
-print(results) # Huzzah
 ```
