@@ -1,16 +1,17 @@
 # PyPDB
 
-*As of November 2020, pypdb has been significantly refactored in order to accomodate significant changes to the RCSB PDB API. The new API works much better, but required changes that will break applications dependent on previous versions of pypdb. We will work on restoring and extending functionality over the next few months. The previous version of pypdb is available [here](https://github.com/williamgilpin/pypdb_legacy); however, it will no longer function to to the RCSB API being changed.*
+A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB). This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed from within Python scripts.
 
-A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB) using its XML-based API. This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed within Python scripts, allowing it to supplement existing tools (i.e. Biopython) that are designed for manipulating .pdb files.
-
-Examples of each function and its associated output can be found in `demos/demos.ipynb`.
+Examples of each function and its associated output can be found in [`demos/demos.ipynb`](demos/demos.ipynb).
 
 If you use this module for any published work, please consider citing the accompanying paper
 
       Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
       Bioinformatics, Oxford Journals, 2015.
 
+*As of November 2020, pypdb is undergoing significantly refactoring in order to accomodate changes to the RCSB PDB API and extend functionality. We regret any breaking changes that occur along the way. The previous version of pypdb is available [here](https://github.com/williamgilpin/pypdb_legacy); however, it will no longer function to to the RCSB API being changed.*
+
+**We very much welcome contributors and pull requests**
 
 ## Installation
 
@@ -18,18 +19,13 @@ Install using pip:
 
 	$ pip install pypdb
 
-or, using conda:
-
-	$ conda install -c williamgilpin pypdb
-
-To install the development version, which contains the latest bug fixes, install directly from GitHub using
+To install the development version, which contains the latest features and fixes, install directly from GitHub using
 
    	$ pip install git+git://github.com/williamgilpin/pypdb
 
 If you need to  install directly from setup.py,
 
     $ python setup.py install
-
 
 Test the installation, and check that the code successfully connects to the PDB
 
@@ -45,12 +41,12 @@ Given a list of PDBs, this package can be used to fetch any data associated with
 
 A set of demos is included in the iPython notebook **demos.ipynb**. A static version of this notebook (for viewing) is available as **demos.html**
 
-## Development
+## Issues and Feature Requests
 
-This package has not been refined for every use case (there are many elaborate request types allowed through the PDB's xml-based API), but I believe that enough of the basic structure is present that any additional features may be easily implemented. I encourage forks and pull requests.
+If you run into an issue, or if you find a workaround for an existing issue, we would very much appreciate it if you could post your question or code as a GitHub issue.
 
-More information about the PDB's API and request format can be found at this page:
+If posting a feature request, please check that your request is possible using [the current GUI on current RCSB website](https://www.rcsb.org/search/advanced). If so, please perform your search, and then click the link that says `JSON` in the upper right hand corner of the Advanced Search box. Please post that JSON code with your feature request.
 
-[The RCSB PDB RESTful Web Service interface](http://www.rcsb.org/pdb/software/rest.do)
+
 
 
