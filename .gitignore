@@ -4,6 +4,9 @@
 ### Remove DS STORE
 *.DS_Store
 
+### Remove autosave files
+\#*
+
 ### Local development files
 scratch*
 
