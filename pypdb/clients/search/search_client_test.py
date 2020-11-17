@@ -248,8 +248,8 @@ class TestHTTPRequests(unittest.TestCase):
             {'type': 'terminal',
              'service': 'text',
              'parameters':
-                {'attribute': 'rcsb_accession_info.initial_release_date',
-                'operator': 'greater',
+                {'operator': 'greater',
+                'attribute': 'rcsb_accession_info.initial_release_date',
                 'value': '2019-01-01T00:00:00Z'}
             },
         'request_options': {'return_all_hits': True},
@@ -439,8 +439,8 @@ class TestHTTPRequests(unittest.TestCase):
                 {'type': 'terminal',
                  'service': 'text',
                  'parameters':
-                    {'attribute': 'rcsb_accession_info.initial_release_date',
-                    'operator': 'greater',
+                    {'operator': 'greater',
+                    'attribute': 'rcsb_accession_info.initial_release_date',
                     'value': '2019-01-01T00:00:00Z'}
                 }
             ]
@@ -486,8 +486,8 @@ class TestHTTPRequests(unittest.TestCase):
             "type": "terminal",
             "service": "text",
             "parameters": {
-              "attribute": "rcsb_entry_info.resolution_combined",
               "operator": "less",
+              "attribute": "rcsb_entry_info.resolution_combined",
               "value": 4
             }
           },
