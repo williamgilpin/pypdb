@@ -27,9 +27,9 @@ If you need to  install directly from setup.py,
 
     $ python setup.py install
 
-Test the installation, and check that the code successfully connects to the PDB, navigate to the root directory and run
+Test the installation, and check that the code successfully connects to the PDB, navigate to the roo
 
-	$ pytest 
+	$ pytest
 
 This code has been designed and tested for Python 3.
 
