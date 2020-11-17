@@ -90,6 +90,7 @@ class ComparisonType(Enum):
     GREATER = "greater"
     GREATER_OR_EQUAL = "greater_or_equal"
     EQUAL = "equal"
+    NOT_EQUAL = "not_equal"
     LESS_OR_EQUAL = "less_or_equal"
     LESS = "less"
 
@@ -117,12 +118,20 @@ class ComparisonOperator:
     comparison_type: ComparisonType
 
     def to_dict(self) -> Dict[str,Any]:
-        return {
-            "attribute": self.attribute,
-            "operator": self.comparison_type.value,
-            "value": self.value
-        }
+        if self.comparison_type is ComparisonType.NOT_EQUAL:
+            param_dict = {
+                "operator": "equals",
+                "negation": True
+            }
+        else:
+            param_dict = {
+                "operator": self.comparison_type.value
+            }
 
+        param_dict["attribute"] = self.attribute
+        param_dict["value"] = self.value
+
+        return param_dict
 
 @dataclass
 class RangeOperator:
