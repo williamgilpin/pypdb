@@ -18,10 +18,10 @@ class SequenceOperator:
     sequence_type: SequenceType
     # Maximum E Value allowed for results
     # (see: https://www.ncbi.nlm.nih.gov/BLAST/tutorial/Altschul-1.html)
-    evalue_cutoff: float
+    evalue_cutoff: float = 100
     # Minimum identity cutoff allowed for results
     # (see: https://www.ncbi.nlm.nih.gov/books/NBK62051/def-item/identity/)
-    identity_cutoff: float
+    identity_cutoff: float = 0.95
 
     def _to_dict(self) -> Dict[str, Any]:
         return {
