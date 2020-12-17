@@ -64,18 +64,6 @@ class QueryNode:
             "parameters": self.search_operator._to_dict()
         }
 
-    def _check_operator_is_in_appropriate_set(
-                self,
-                search_operator: SearchOperator,
-                appropriate_operator_list: List[Any],
-                search_service: SearchService,
-                operator_file: str) -> None:
-        """Raises Exception if an inappropriate search is attempted."""
-        if not type(search_operator) in appropriate_operator_list:
-            raise InappropriateSearchOperatorException(
-                "Searches against the '{}' service should only use ".format(search_service),
-                " SearchOperators defined in in `{}`.".format(operator_file))
-
     def _validate(self) -> None:
         """Validates queries to SearchService use a supporting SearchOperator.
 
@@ -88,19 +76,22 @@ class QueryNode:
                 "This service isn't yet implemented in the RCSB 2.0 API "
                 "(but watch this space)")
 
+        # Each SearchService is assocaited with a list of valid search operators
         if self.search_service is SearchService.TEXT:
-            self._check_operator_is_in_appropriate_set(
-            search_operator=self.search_operator,
-            appropriate_operator_list=text_operators.TEXT_SEARCH_OPERATORS,
-            search_service=self.search_service,
-            operator_file="text_operators.py")
-        if self.search_service is SearchService.SEQUENCE:
-            self._check_operator_is_in_appropriate_set(
-            search_operator=self.search_operator,
-            appropriate_operator_list=sequence_operators.SEQUENCE_SEARCH_OPERATORS,
-            search_service=self.search_service,
-            operator_file="sequence_operators.py")
+            appropriate_operator_list = text_operators.TEXT_SEARCH_OPERATORS # type: ignore
+            operator_file="pypdb/clients/search/operators/text_operators.py"
+        elif self.search_service is SearchService.SEQUENCE:
+            appropriate_operator_list = sequence_operators.SEQUENCE_SEARCH_OPERATORS # type: ignore
+            operator_file="pypdb/clients/search/operators/sequence_operators.py"
+        else:
+            # Default to search being OK if there's no validation for
+            # this operator defined yet
+            return
 
+        if not type(self.search_operator) in appropriate_operator_list:
+            raise InappropriateSearchOperatorException(
+                "Searches against the '{}' service should only use ".format(self.search_service),
+                " SearchOperators defined in in `{}`.".format(operator_file))
 
 @dataclass
 class QueryGroup:
