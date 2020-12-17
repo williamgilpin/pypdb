@@ -18,7 +18,8 @@ import warnings
 from pypdb.clients.search.operators import text_operators
 from pypdb.clients.search.operators import sequence_operators
 from pypdb.clients.search.operators.text_operators import TextSearchOperator
-from pypdb.clients.search.operators.sequence_operators import SequenceSearchOperator
+from pypdb.clients.search.operators.sequence_operators import SequenceOperator
+from pypdb.clients.search.operators.structure_operators import StructureOperator
 
 SEARCH_URL_ENDPOINT: str = "https://search.rcsb.org/rcsbsearch/v1/query"
 
@@ -46,7 +47,8 @@ class LogicalOperator(Enum):
 # see: https://search.rcsb.org/index.html#search-services
 SearchOperator = Union[
     TextSearchOperator,
-    SequenceSearchOperator]
+    SequenceOperator,
+    StructureOperator]
 
 
 @dataclass
@@ -71,7 +73,8 @@ class QueryNode:
         those queries hit RCSB's Search servers."""
 
         if self.search_service not in [SearchService.TEXT,
-                                       SearchService.SEQUENCE]:
+                                       SearchService.SEQUENCE,
+                                       SearchService.STRUCTURE]:
             raise NotImplementedError(
                 "This service isn't yet implemented in the RCSB 2.0 API "
                 "(but watch this space)")
@@ -81,8 +84,11 @@ class QueryNode:
             appropriate_operator_list = text_operators.TEXT_SEARCH_OPERATORS # type: ignore
             operator_file="pypdb/clients/search/operators/text_operators.py"
         elif self.search_service is SearchService.SEQUENCE:
-            appropriate_operator_list = sequence_operators.SEQUENCE_SEARCH_OPERATORS # type: ignore
+            appropriate_operator_list = [SequenceOperator] # type: ignore
             operator_file="pypdb/clients/search/operators/sequence_operators.py"
+        elif self.search_service is SearchService.STRUCTURE:
+            appropriate_operator_list = [StructureOperator] # type: ignore
+            operator_file="pypdb/clients/search/operators/structure_operators.py"
         else:
             # Default to search being OK if there's no validation for
             # this operator defined yet

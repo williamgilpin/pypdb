@@ -242,3 +242,42 @@ results = perform_search_with_graph(
   query_object=is_under_4A_and_human_or_mus_group,
   return_type=return_type)
 ```
+
+## Search for Calcium-Bound Calmodulin Structures
+
+Note that "1CLL" corresponds to a Calmodulin structure bound to Ca2+.
+
+Also, searching for `rcsb_chem_comp_container_identifiers.comp_id` with
+an exact match to `"CA"` yields only structures in complex with Ca2+
+(filtering out structures in complex with other metals like strontium).
+
+```
+from pypdb.clients.search.search_client import perform_search_with_graph
+from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.search_client import QueryNode, QueryGroup, LogicalOperator
+from pypdb.clients.search.operators import text_operators, structure_operators
+
+is_similar_to_1CLL = QueryNode(
+  search_service=SearchService.STRUCTURE,
+  search_operator=structure_operators.StructureOperator(
+      pdb_entry_id="1CLL",
+      assembly_id=1,
+      search_mode=structure_operators.StructureSearchMode.STRICT_SHAPE_MATCH
+  )
+)
+
+is_in_complex_with_calcium = QueryNode(
+  search_service=SearchService.TEXT,
+  search_operator=text_operators.ExactMatchOperator(
+    attribute="rcsb_chem_comp_container_identifiers.comp_id",
+    value="CA"
+  )
+)
+
+results = perform_search_with_graph(
+  query_object=QueryGroup(
+    logical_operator=LogicalOperator.AND,
+    queries=[is_similar_to_1CLL, is_in_complex_with_calcium]
+  ),
+  return_type=ReturnType.ENTRY
+)

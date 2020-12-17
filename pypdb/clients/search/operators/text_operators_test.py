@@ -6,7 +6,7 @@ import unittest
 
 from pypdb.clients.search.operators import text_operators
 
-class TestHTTPRequests(unittest.TestCase):
+class TestTextOperators(unittest.TestCase):
 
     def test_not_equals_operator(self):
         not_equals_operator = text_operators.ComparisonOperator(

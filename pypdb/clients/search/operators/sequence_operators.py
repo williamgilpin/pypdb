@@ -30,15 +30,3 @@ class SequenceOperator:
             "target": self.sequence_type.value,
             "value": self.sequence
         }
-
-# An object of type `SequenceSearchOperator` can be any of the following classes:
-SequenceSearchOperator = Union[
-    SequenceOperator
-]
-
-# List of all SequenceSearchOperator-associated classes, for backwards compatability
-# in terms of checking SearchOperator validity
-# (please change this when you change the `Union` definition)
-SEQUENCE_SEARCH_OPERATORS = [
-    SequenceOperator
-]
