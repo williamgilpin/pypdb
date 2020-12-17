@@ -560,6 +560,30 @@ class TestHTTPRequests(unittest.TestCase):
                 ),
                 return_type=search_client.ReturnType.ENTRY)
 
+    def test_request_options_to_dict(self):
+        request_options = search_client.RequestOptions(
+            result_start_index = 42,
+            num_results = 8675309,
+            sort_by="fake.rcsb.attribute",
+            desc=False
+        )
+
+        self.assertEqual(
+            request_options._to_dict(),
+            {
+                "pager": {
+                    "start": 42,
+                    "rows": 8675309
+                },
+                "sort": [
+                    {
+                        "sort_by": "fake.rcsb.attribute",
+                        "direction": "asc"
+                    }
+                ]
+            }
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

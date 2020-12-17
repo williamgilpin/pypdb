@@ -162,12 +162,12 @@ return_type = ReturnType.ENTRY
 results = perform_search(search_service, search_operator, return_type)
 ```
 
-### Search for structures matching the given protein sequence
+### Search for top 100 structures matching the given protein sequence, by date
 
 (this sequence matches the SARS-CoV-2 NSP3 macrodomain)
 
 ```
-from pypdb.clients.search.search_client import perform_search
+from pypdb.clients.search.search_client import perform_search, RequestOptions
 from pypdb.clients.search.search_client import SearchService, ReturnType
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
 from pypdb.clients.search.operators.sequence_operators import SequenceType
@@ -183,7 +183,14 @@ results = perform_search(
           "IHSLRVCVDTVRTNVYLAVFDKNLYDKLVSSFL"),
         identity_cutoff=0.99,
         evalue_cutoff=1000
-      )
+      ),
+    request_options=RequestOptions(
+        result_start_index=0,
+        num_results=100,
+        sort_by="rcsb_accession_info.initial_release_date",
+        desc=False
+      ),
+    return_with_scores=True
 )
 ```
 
