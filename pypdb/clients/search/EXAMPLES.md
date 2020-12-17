@@ -162,6 +162,31 @@ return_type = ReturnType.ENTRY
 results = perform_search(search_service, search_operator, return_type)
 ```
 
+### Search for structures matching the given protein sequence
+
+(this sequence matches the SARS-CoV-2 NSP3 macrodomain)
+
+```
+from pypdb.clients.search.search_client import perform_search
+from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.operators.sequence_operators import SequenceOperator
+from pypdb.clients.search.operators.sequence_operators import SequenceType
+
+results = perform_search(
+    search_service=SearchService.SEQUENCE,
+    return_type=ReturnType.ENTRY,
+    search_operator=SequenceOperator(
+        sequence_type=SequenceType.PROTEIN,
+        sequence=(
+          "SMVNSFSGYLKLTDNVYIKNADIVEEAKKVKPTVVVNAANVYLKHGGGVAGALNKATNNAMQVESDDY"
+          "IATNGPLKVGGSCVLSGHNLAKHCLHVVGPNVNKGEDIQLLKSAYENFNQHEVLLAPLLSAGIFGADP"
+          "IHSLRVCVDTVRTNVYLAVFDKNLYDKLVSSFL"),
+        identity_cutoff=0.99,
+        evalue_cutoff=1000
+      )
+)
+```
+
 ## `perform_search_with_graph` Example
 
 ### Search for 'Mus musculus' or 'Homo sapiens' structures after 2019

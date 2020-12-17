@@ -16,7 +16,9 @@ from typing import Any, Dict, List, Optional, Union
 import warnings
 
 from pypdb.clients.search.operators import text_operators
+from pypdb.clients.search.operators import sequence_operators
 from pypdb.clients.search.operators.text_operators import TextSearchOperator
+from pypdb.clients.search.operators.sequence_operators import SequenceSearchOperator
 
 SEARCH_URL_ENDPOINT: str = "https://search.rcsb.org/rcsbsearch/v1/query"
 
@@ -42,7 +44,9 @@ class LogicalOperator(Enum):
 # Currently, the only available search operators are associated with the
 # 'text' service. For the list of available RCSB services,
 # see: https://search.rcsb.org/index.html#search-services
-SearchOperator = TextSearchOperator
+SearchOperator = Union[
+    TextSearchOperator,
+    SequenceSearchOperator]
 
 
 @dataclass
@@ -53,31 +57,49 @@ class QueryNode:
     search_service: SearchService
     search_operator: SearchOperator
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             "type": "terminal",
             "service": self.search_service.value,
-            "parameters": self.search_operator.to_dict()
+            "parameters": self.search_operator._to_dict()
         }
 
-    def _validate(self):
+    def _check_operator_is_in_appropriate_set(
+                self,
+                search_operator: SearchOperator,
+                appropriate_operator_list: List[SearchOperator],
+                search_service: SearchService,
+                operator_file: str) -> None:
+        """Raises Exception if an inappropriate search is attempted."""
+        if not type(search_operator) in appropriate_operator_list:
+            raise InappropriateSearchOperatorException(
+                "Searches against the '{}' service should only use ".format(search_service),
+                " SearchOperators defined in in `{}`.".format(operator_file))
+
+    def _validate(self) -> None:
         """Validates queries to SearchService use a supporting SearchOperator.
 
         Used to raise Errors notifying users of invalid RCSB queries before
         those queries hit RCSB's Search servers."""
 
-        if self.search_service != SearchService.TEXT:
+        if self.search_service not in [SearchService.TEXT,
+                                       SearchService.SEQUENCE]:
             raise NotImplementedError(
-                "Not currently implemented (but watch this space)")
+                "This service isn't yet implemented in the RCSB 2.0 API "
+                "(but watch this space)")
 
         if self.search_service is SearchService.TEXT:
-            # Uses undocumented `__args__` to check if operator is TEXT
-            # (see: https://stackoverflow.com/questions/45957615/ )
-            if not type(
-                    self.search_operator) in text_operators.TEXT_SEARCH_OPERATORS:
-                raise InappropriateSearchOperatorException(
-                    "Searches against the 'text' service should have SearchOperators "
-                    "that are TextSearchOperators, as in `text_search_operators.py`.")
+            self._check_operator_is_in_appropriate_set(
+            search_operator=self.search_operator,
+            appropriate_operator_list=text_operators.TEXT_SEARCH_OPERATORS,
+            search_service=self.search_service,
+            operator_file="text_operators.py")
+        if self.search_service is SearchService.SEQUENCE:
+            self._check_operator_is_in_appropriate_set(
+            search_operator=self.search_operator,
+            appropriate_operator_list=sequence_operators.SEQUENCE_SEARCH_OPERATORS,
+            search_service=self.search_service,
+            operator_file="sequence_operators.py")
 
 
 @dataclass
@@ -102,11 +124,11 @@ class QueryGroup:
     # Boolean to aggregate the results of `queries`.
     logical_operator: LogicalOperator
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             "type": "group",
             "logical_operator": self.logical_operator.value,
-            "nodes": [query.to_dict() for query in self.queries]
+            "nodes": [query._to_dict() for query in self.queries]
         }
 
     def _validate(self):
@@ -225,7 +247,7 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
     query_object._validate()
 
     rcsb_query_dict = {
-        "query": query_object.to_dict(),
+        "query": query_object._to_dict(),
         "request_options": {"return_all_hits": True},
         "return_type": return_type.value
     }

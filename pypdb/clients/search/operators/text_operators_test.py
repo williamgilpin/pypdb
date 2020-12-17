@@ -15,7 +15,7 @@ class TestHTTPRequests(unittest.TestCase):
             comparison_type = text_operators.ComparisonType.NOT_EQUAL
         )
 
-        self.assertEqual(not_equals_operator.to_dict(),
+        self.assertEqual(not_equals_operator._to_dict(),
                          {
                             "attribute": "struct.favourite_marvel_movie",
                             "value": "Thor: Ragnarok",
