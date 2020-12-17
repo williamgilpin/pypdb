@@ -67,7 +67,7 @@ class QueryNode:
     def _check_operator_is_in_appropriate_set(
                 self,
                 search_operator: SearchOperator,
-                appropriate_operator_list: List[SearchOperator],
+                appropriate_operator_list: List[Any],
                 search_service: SearchService,
                 operator_file: str) -> None:
         """Raises Exception if an inappropriate search is attempted."""
