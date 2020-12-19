@@ -6,7 +6,7 @@ import unittest
 
 from pypdb.clients.search.operators import text_operators
 
-class TestHTTPRequests(unittest.TestCase):
+class TestTextOperators(unittest.TestCase):
 
     def test_not_equals_operator(self):
         not_equals_operator = text_operators.ComparisonOperator(
@@ -15,7 +15,7 @@ class TestHTTPRequests(unittest.TestCase):
             comparison_type = text_operators.ComparisonType.NOT_EQUAL
         )
 
-        self.assertEqual(not_equals_operator.to_dict(),
+        self.assertEqual(not_equals_operator._to_dict(),
                          {
                             "attribute": "struct.favourite_marvel_movie",
                             "value": "Thor: Ragnarok",
