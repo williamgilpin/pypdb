@@ -20,6 +20,7 @@ from pypdb.clients.search.operators import sequence_operators
 from pypdb.clients.search.operators.text_operators import TextSearchOperator
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
 from pypdb.clients.search.operators.structure_operators import StructureOperator
+from pypdb.clients.search.operators.seqmotif_operators import SeqMotifOperator
 
 SEARCH_URL_ENDPOINT: str = "https://search.rcsb.org/rcsbsearch/v1/query"
 
@@ -74,7 +75,8 @@ class QueryNode:
 
         if self.search_service not in [SearchService.TEXT,
                                        SearchService.SEQUENCE,
-                                       SearchService.STRUCTURE]:
+                                       SearchService.STRUCTURE,
+                                       SearchService.SEQMOTIF]:
             raise NotImplementedError(
                 "This service isn't yet implemented in the RCSB 2.0 API "
                 "(but watch this space)")
@@ -89,6 +91,9 @@ class QueryNode:
         elif self.search_service is SearchService.STRUCTURE:
             appropriate_operator_list = [StructureOperator] # type: ignore
             operator_file="pypdb/clients/search/operators/structure_operators.py"
+        elif self.search_service is SearchService.SEQMOTIF:
+            appropriate_operator_list = [SeqMotifOperator] # type: ignore
+            operator_file="pypdb/clients/search/operators/seqmotif_operators.py"
         else:
             # Default to search being OK if there's no validation for
             # this operator defined yet
