@@ -6,7 +6,7 @@ from pypdb.clients.search.operators import seqmotif_operators
 
 class TestSeqMotifOperators(unittest.TestCase):
 
-    def test_not_equals_operator(self):
+    def test_seqmotif_operator_to_dict(self):
         seqmotif_operator = seqmotif_operators.SeqMotifOperator(
             pattern_type=seqmotif_operators.PatternType.PROSITE,
             sequence_type=seqmotif_operators.SequenceType.PROTEIN,
