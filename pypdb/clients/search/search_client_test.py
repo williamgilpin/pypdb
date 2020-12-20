@@ -1,11 +1,12 @@
 """Tests for RCSB Search API Python wrapper."""
 import json
+import pytest
 import requests
 import unittest
 from unittest import mock
 
 from pypdb.clients.search import search_client
-from pypdb.clients.search.operators import text_operators
+from pypdb.clients.search.operators import sequence_operators, text_operators
 
 class TestHTTPRequests(unittest.TestCase):
 
@@ -499,6 +500,89 @@ class TestHTTPRequests(unittest.TestCase):
                                           data=json.dumps(expected_json_dict))
         self.assertEqual(results,
                          canned_json_return_as_dict)
+
+    @mock.patch.object(requests, "post")
+    def test_sequence_operator_search(self,
+                                                 mock_post):
+        # Creates a mock HTTP response, as wrapped by `requests`
+        canned_json_return_as_dict = {
+            "result_set": [
+                {"identifier": "5JUP"},
+                {"identifier": "5JUS"},
+                {"identifier": "5JUO"}
+            ]
+        }
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = canned_json_return_as_dict
+        mock_post.return_value = mock_response
+
+        results = search_client.perform_search(
+            search_service=search_client.SearchService.SEQUENCE,
+            search_operator=sequence_operators.SequenceOperator(
+                sequence="ATGAGGTAA",
+                sequence_type=sequence_operators.SequenceType.DNA,
+                evalue_cutoff=100,
+                identity_cutoff=0.90
+            ),
+            return_type=search_client.ReturnType.ENTRY)
+
+
+
+        expected_json_dict = {
+        'query':
+            {'type': 'terminal',
+             'service': 'sequence',
+             'parameters':
+                {
+                'evalue_cutoff': 100,
+                'identity_cutoff': 0.90,
+                'target': 'pdb_dna_sequence',
+                'value': 'ATGAGGTAA'
+                }
+            },
+        'request_options': {'return_all_hits': True},
+        'return_type': 'entry'}
+
+        mock_post.assert_called_once_with(url=search_client.SEARCH_URL_ENDPOINT,
+                                          data=json.dumps(expected_json_dict))
+        self.assertEqual(results,
+                         ["5JUP", "5JUS", "5JUO"])
+
+    def test_inappropriate_operator_raises_exception(self):
+        with pytest.raises(search_client.InappropriateSearchOperatorException):
+            search_client.perform_search(
+                search_service=search_client.SearchService.TEXT,
+                search_operator=sequence_operators.SequenceOperator(
+                    sequence="ATGAGGTAA",
+                    sequence_type=sequence_operators.SequenceType.DNA,
+                    evalue_cutoff=100,
+                    identity_cutoff=0.90
+                ),
+                return_type=search_client.ReturnType.ENTRY)
+
+    def test_request_options_to_dict(self):
+        request_options = search_client.RequestOptions(
+            result_start_index = 42,
+            num_results = 8675309,
+            sort_by="fake.rcsb.attribute",
+            desc=False
+        )
+
+        self.assertEqual(
+            request_options._to_dict(),
+            {
+                "pager": {
+                    "start": 42,
+                    "rows": 8675309
+                },
+                "sort": [
+                    {
+                        "sort_by": "fake.rcsb.attribute",
+                        "direction": "asc"
+                    }
+                ]
+            }
+        )
 
 
 if __name__ == '__main__':

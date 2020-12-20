@@ -15,7 +15,7 @@ class DefaultOperator:
     and returns a hit if a match happens in any field."""
     value: str
 
-    def to_dict(self) -> Dict[str, str]:
+    def _to_dict(self) -> Dict[str, str]:
         return {
             "value": self.value
         }
@@ -27,7 +27,7 @@ class ExactMatchOperator:
     attribute: str
     value: Any
 
-    def to_dict(self) -> Dict[str, Any]:
+    def _to_dict(self) -> Dict[str, Any]:
         return {
             "attribute": self.attribute,
             "operator": "exact_match",
@@ -43,7 +43,7 @@ class InOperator:
     attribute: str
     values: List[Any]  # List of strings, numbers or date strings
 
-    def to_dict(self) -> Dict[str, Any]:
+    def _to_dict(self) -> Dict[str, Any]:
         return {
             "attribute": self.attribute,
             "operator": "in",
@@ -61,7 +61,7 @@ class ContainsWordsOperator:
     attribute: str
     value: str
 
-    def to_dict(self) -> Dict[str,str]:
+    def _to_dict(self) -> Dict[str,str]:
         return {
             "attribute": self.attribute,
             "operator": "contains_words",
@@ -79,7 +79,7 @@ class ContainsPhraseOperator:
     attribute: str
     value: str
 
-    def to_dict(self) -> Dict[str,str]:
+    def _to_dict(self) -> Dict[str,str]:
         return {
             "attribute": self.attribute,
             "operator": "contains_phrase",
@@ -117,7 +117,7 @@ class ComparisonOperator:
     value: Any
     comparison_type: ComparisonType
 
-    def to_dict(self) -> Dict[str,Any]:
+    def _to_dict(self) -> Dict[str,Any]:
         if self.comparison_type is ComparisonType.NOT_EQUAL:
             param_dict = {
                 "operator": "equals",
@@ -142,7 +142,7 @@ class RangeOperator:
     include_lower: bool = True # Default inclusive
     include_upper: bool = True # Default inclusive
 
-    def to_dict(self) -> Dict[str,Any]:
+    def _to_dict(self) -> Dict[str,Any]:
         return {
         "operator": "range",
         "attribute": self.attribute,
@@ -158,7 +158,7 @@ class RangeOperator:
 class ExistsOperator:
     attribute: str
 
-    def to_dict(self) -> Dict[str,str]:
+    def _to_dict(self) -> Dict[str,str]:
         return {
             "operator": "exists",
             "attribute": self.attribute
