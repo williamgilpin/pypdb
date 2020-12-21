@@ -24,7 +24,11 @@ import json
 import warnings
 
 from pypdb.util import http_requests
+from pypdb.clients.fasta import fasta_client
+from pypdb.clients.search import search_client
+from pypdb.clients.search.operators import sequence_operators
 
+warnings.simplefilter('always', DeprecationWarning)
 
 '''
 =================
@@ -517,97 +521,6 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
 
     return result
 
-# def get_raw_blast(pdb_id, output_form='HTML', chain_id='A'):
-#     '''Look up full BLAST page for a given PDB ID
-
-#     get_blast() uses this function internally
-
-#     Parameters
-#     ----------
-
-#     pdb_id : string
-#         A 4 character string giving a pdb entry of interest
-
-#     chain_id : string
-#         A single character designating the chain ID of interest
-
-
-#     output_form : string
-#         TXT, HTML, or XML formatting of the outputs
-
-#     Returns
-#     -------
-
-#     out : OrderedDict
-#         An ordered dictionary object corresponding to bare xml
-
-#     '''
-
-#     url_root = 'http://www.rcsb.org/pdb/rest/getBlastPDB2?structureId='
-#     url = url_root + pdb_id + '&chainId='+ chain_id +'&outputFormat=' + output_form
-
-#     #response = requests.get(url)
-#     response = http_requests.request_limited(url)
-
-
-#     if response.status_code == 200:
-#         pass
-#     else:
-#         warnings.warn("Retrieval failed, returning None")
-#         return None
-
-#     result  = response.text
-
-#     return result
-
-
-# def parse_blast(blast_string):
-#     '''Clean up HTML BLAST results
-
-#     This function requires BeautifulSoup and the re module
-#     It goes throught the complicated output returned by the BLAST
-#     search and provides a list of matches, as well as the raw
-#     text file showing the alignments for each of the matches.
-
-#     This function works best with HTML formatted Inputs
-#     ------
-
-#     get_blast() uses this function internally
-
-#     Parameters
-#     ----------
-
-#     blast_string : str
-#         A complete webpage of standard BLAST results
-
-#     Returns
-#     -------
-
-#     out : 2-tuple
-#         A tuple consisting of a list of PDB matches, and a list
-#         of their alignment text files (unformatted)
-
-
-#     '''
-
-#     soup = BeautifulSoup(str(blast_string), "html.parser")
-
-#     all_blasts = list()
-#     all_blast_ids = list()
-
-#     pattern = '></a>....:'
-#     prog = re.compile(pattern)
-
-#     for item in soup.find_all('pre'):
-#         if len(item.find_all('a'))==1:
-#             all_blasts.append(item)
-#             blast_id = re.findall(pattern, str(item) )[0][-5:-1]
-#             all_blast_ids.append(blast_id)
-
-#     out = (all_blast_ids, all_blasts)
-#     return out
-
-
 # https://data.rcsb.org/migration-guide.html#chem-comp-description
 # def describe_chemical(chem_id):
 #     """
@@ -757,52 +670,67 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
 #     out = to_dict(out)
 #     return remove_at_sign(out['sequenceCluster'])
 
-# def get_blast(pdb_id, chain_id='A'):
-#     """
-#     Return BLAST search results for a given PDB ID
-#     The key of the output dict())that outputs the full search results is
-#     'BlastOutput_iterations'
+def get_blast(pdb_id, chain_id='A'):
+    """
+    ---
+    WARNING: this function is deprecated and slated to be deleted due to RCSB
+    API changes.
 
-#     To get a list of just the results without the metadata of the search use:
-#     hits = full_results['BlastOutput_iterations']['Iteration']['Iteration_hits']['Hit']
+    See `pypdb/clients/search/EXAMPLES.md` for examples to use a
+    `SequenceOperator` search to similar effect
+    ---
 
-#     Parameters
-#     ----------
-#     pdb_id : string
-#         A 4 character string giving a pdb entry of interest
+    Return BLAST search results for a given PDB ID.
 
-#     chain_id : string
-#         A single character designating the chain ID of interest
+    Parameters
+    ----------
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
 
-
-#     Returns
-#     -------
-
-#     out : dict()
-#         A nested dict() consisting of the BLAST search results and all associated metadata
-#         If you just want the hits, look under four levels of keys:
-#         results['BlastOutput_iterations']['Iteration']['Iteration_hits']['Hit']
-
-#     Examples
-#     --------
-
-#     >>> blast_results = get_blast('2F5N', chain_id='A')
-#     >>> just_hits = blast_results['BlastOutput_iterations']['Iteration']['Iteration_hits']['Hit']
-#     >>> print(just_hits[50]['Hit_hsps']['Hsp']['Hsp_hseq'])
-#     PELPEVETVRRELEKRIVGQKIISIEATYPRMVL--TGFEQLKKELTGKTIQGISRRGKYLIFEIGDDFRLISHLRMEGKYRLATLDAPREKHDHL
-#     TMKFADG-QLIYADVRKFGTWELISTDQVLPYFLKKKIGPEPTYEDFDEKLFREKLRKSTKKIKPYLLEQTLVAGLGNIYVDEVLWLAKIHPEKET
-#     NQLIESSIHLLHDSIIEILQKAIKLGGSSIRTY-SALGSTGKMQNELQVYGKTGEKCSRCGAEIQKIKVAGRGTHFCPVCQQ
+    chain_id : string
+        A single character designating the chain ID of interest
 
 
-#     """
+    Returns
+    -------
 
-#     raw_results = get_raw_blast(pdb_id, output_form='XML', chain_id=chain_id)
+    out : List of PDB IDs that match the given search.
 
-#     out = xmltodict.parse(raw_results, process_namespaces=True)
-#     out = to_dict(out)
-#     out = out['BlastOutput']
-#     return out
+    Examples
+    --------
 
+    >>> blast_results = get_blast('2F5N', chain_id='A')
+    >>> print(blast_results[50])
+    PELPEVETVRRELEKRIVGQKIISIEATYPRMVL--TGFEQLKKELTGKTIQGISRRGKYLIFEIGDDFRLISHLRMEGKYRLATLDAPREKHDHL
+    TMKFADG-QLIYADVRKFGTWELISTDQVLPYFLKKKIGPEPTYEDFDEKLFREKLRKSTKKIKPYLLEQTLVAGLGNIYVDEVLWLAKIHPEKET
+    NQLIESSIHLLHDSIIEILQKAIKLGGSSIRTY-SALGSTGKMQNELQVYGKTGEKCSRCGAEIQKIKVAGRGTHFCPVCQQ
+    """
+
+    warnings.warn("The `get_blast` function is slated for deprecation."
+                "See `pypdb/clients/search/EXAMPLES.md` for examples to use a"
+                "`SequenceOperator` search to similar effect", DeprecationWarning)
+
+    fasta_entries = fasta_client.get_fasta_from_rcsb_entry(pdb_id)
+    valid_sequences = [fasta_entry.sequence for fasta_entry in fasta_entries
+                       if chain_id in fasta_entry.chains]
+
+    matches_any_sequence_in_chain_query = search_client.QueryGroup(
+        logical_operator=search_client.LogicalOperator.OR,
+        queries = []
+    )
+    for valid_sequence in valid_sequences:
+        matches_any_sequence_in_chain_query.queries.append(
+            search_client.QueryNode(
+            search_service=search_client.SearchService.SEQUENCE,
+            search_operator=sequence_operators.SequenceOperator(
+                sequence=valid_sequence,
+                identity_cutoff=0.99,
+                evalue_cutoff=1000
+            )))
+
+    return search_client.perform_search_with_graph(
+        query_object=matches_any_sequence_in_chain_query
+    )
 
 # def get_pfam(pdb_id):
 #     """Return PFAM annotations of given PDB_ID
