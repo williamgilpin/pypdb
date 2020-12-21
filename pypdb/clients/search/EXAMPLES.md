@@ -176,7 +176,7 @@ results = perform_search(
     search_service=SearchService.SEQUENCE,
     return_type=ReturnType.ENTRY,
     search_operator=SequenceOperator(
-        sequence_type=SequenceType.PROTEIN,
+        sequence_type=SequenceType.PROTEIN, # if not explicitly specified, this will autoresolve
         sequence=(
           "SMVNSFSGYLKLTDNVYIKNADIVEEAKKVKPTVVVNAANVYLKHGGGVAGALNKATNNAMQVESDDY"
           "IATNGPLKVGGSCVLSGHNLAKHCLHVVGPNVNKGEDIQLLKSAYENFNQHEVLLAPLLSAGIFGADP"
@@ -189,6 +189,29 @@ results = perform_search(
         num_results=100,
         sort_by="rcsb_accession_info.initial_release_date",
         desc=False
+      ),
+    return_with_scores=True
+)
+```
+
+### Search for structures that match the sequence of an existing RCSB entry
+```
+from pypdb.clients.fasta.fasta_client import get_fasta_from_rcsb_entry
+from pypdb.clients.search.search_client import perform_search
+from pypdb.clients.search.search_client import SearchService, ReturnType
+from pypdb.clients.search.operators.sequence_operators import SequenceOperator
+
+# Fetches the first sequence in the "6TML" fasta file
+fasta_sequence = get_fasta_from_rcsb_entry("6TML")["6TML_1"].sequence
+
+# Performs sequence search ('BLAST'-like) using the FASTA sequence
+results = perform_search(
+    search_service=SearchService.SEQUENCE,
+    return_type=ReturnType.ENTRY,
+    search_operator=SequenceOperator(
+        sequence=fasta_sequence,
+        identity_cutoff=0.99,
+        evalue_cutoff=1000
       ),
     return_with_scores=True
 )
