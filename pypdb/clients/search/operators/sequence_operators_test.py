@@ -2,6 +2,7 @@
 (admittedly, a lot is tested in `search_client_test.py` too)
 """
 
+import pytest
 import unittest
 
 from pypdb.clients.search.operators import sequence_operators
@@ -25,3 +26,19 @@ class TestSequenceOperators(unittest.TestCase):
                 "value": "AUGAUUCGGCGCUAAAAAAAA",
             }
         )
+
+    def test_autoresolve_sequence_type(self):
+        self.assertEqual(
+            sequence_operators.SequenceOperator("ATGGGGTAA").sequence_type,
+            sequence_operators.SequenceType.DNA
+        )
+        self.assertEqual(
+            sequence_operators.SequenceOperator("AUGGGGCCCUAA").sequence_type,
+            sequence_operators.SequenceType.RNA
+        )
+        self.assertEqual(
+            sequence_operators.SequenceOperator("MAETREGGQSGAAS").sequence_type,
+            sequence_operators.SequenceType.PROTEIN
+        )
+        with pytest.raises(sequence_operators.CannotAutoresolveSequenceTypeError):
+            sequence_operators.SequenceOperator("AAAAAAAA")
