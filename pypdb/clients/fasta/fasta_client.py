@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import re
 import requests
 from typing import Dict, List
+import warnings
 
 FASTA_BASE_URL = "https://www.rcsb.org/fasta/entry/"
 

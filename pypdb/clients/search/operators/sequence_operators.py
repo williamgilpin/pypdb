@@ -58,6 +58,6 @@ class SequenceOperator:
         return {
             "evalue_cutoff": self.evalue_cutoff,
             "identity_cutoff": self.identity_cutoff,
-            "target": self.sequence_type.value,
+            "target": self.sequence_type.value, # type: ignore
             "value": self.sequence
         }
