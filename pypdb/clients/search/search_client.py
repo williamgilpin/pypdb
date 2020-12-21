@@ -33,76 +33,23 @@ class SearchService(Enum):
     STRUCTURE = "structure"
     CHEMICAL = "chemical"
 
+"""SearchOperators correspond to individual search operations.
+
+These can be used to search on their own using `perform_search`, or they can be
+aggregated together into a `QueryGroup` to search using multiple operators at
+once using `perform_search_with_graph`.
+"""
+SearchOperator = Union[
+    TextSearchOperator,
+    SequenceOperator,
+    StructureOperator,
+    SeqMotifOperator]
+
 
 class LogicalOperator(Enum):
     """Operation used to combine `QueryGroup` results."""
     AND = "and"
     OR = "or"
-
-
-# SearchOperators correspond to individual search operations, that can be
-# aggregated using a `QueryGroup`.
-#
-# Currently, the only available search operators are associated with the
-# 'text' service. For the list of available RCSB services,
-# see: https://search.rcsb.org/index.html#search-services
-SearchOperator = Union[
-    TextSearchOperator,
-    SequenceOperator,
-    StructureOperator]
-
-
-@dataclass
-class QueryNode:
-    """Individual query node, associated with a search using `search_service`
-    using logic defined in the `search_operator`.
-    """
-    search_service: SearchService
-    search_operator: SearchOperator
-
-    def _to_dict(self):
-        return {
-            "type": "terminal",
-            "service": self.search_service.value,
-            "parameters": self.search_operator._to_dict()
-        }
-
-    def _validate(self) -> None:
-        """Validates queries to SearchService use a supporting SearchOperator.
-
-        Used to raise Errors notifying users of invalid RCSB queries before
-        those queries hit RCSB's Search servers."""
-
-        if self.search_service not in [SearchService.TEXT,
-                                       SearchService.SEQUENCE,
-                                       SearchService.STRUCTURE,
-                                       SearchService.SEQMOTIF]:
-            raise NotImplementedError(
-                "This service isn't yet implemented in the RCSB 2.0 API "
-                "(but watch this space)")
-
-        # Each SearchService is assocaited with a list of valid search operators
-        if self.search_service is SearchService.TEXT:
-            appropriate_operator_list = text_operators.TEXT_SEARCH_OPERATORS # type: ignore
-            operator_file="pypdb/clients/search/operators/text_operators.py"
-        elif self.search_service is SearchService.SEQUENCE:
-            appropriate_operator_list = [SequenceOperator] # type: ignore
-            operator_file="pypdb/clients/search/operators/sequence_operators.py"
-        elif self.search_service is SearchService.STRUCTURE:
-            appropriate_operator_list = [StructureOperator] # type: ignore
-            operator_file="pypdb/clients/search/operators/structure_operators.py"
-        elif self.search_service is SearchService.SEQMOTIF:
-            appropriate_operator_list = [SeqMotifOperator] # type: ignore
-            operator_file="pypdb/clients/search/operators/seqmotif_operators.py"
-        else:
-            # Default to search being OK if there's no validation for
-            # this operator defined yet
-            return
-
-        if not type(self.search_operator) in appropriate_operator_list:
-            raise InappropriateSearchOperatorException(
-                "Searches against the '{}' service should only use ".format(self.search_service),
-                " SearchOperators defined in in `{}`.".format(operator_file))
 
 @dataclass
 class QueryGroup:
@@ -116,12 +63,12 @@ class QueryGroup:
     `logical_operator=LogicalOperator.OR` would return results that match any
     of n1, n2 or n3's queries.
     """
-    # Elements within the list of `queries` can either be `QueryNode` instances
-    # (corresponding to individual queries)
+    # Elements within the list of `queries` can either be `SearchOperator`
+    # instances (corresponding to individual queries)
     # or `QueryGroup` instances (corresponding to groups of queries).
     #
     # This allows building arbitrarily complex query logic in the search tree.
-    queries: List[Union[QueryNode, "QueryGroup"]]
+    queries: List[Union[SearchOperator, "QueryGroup"]]
 
     # Boolean to aggregate the results of `queries`.
     logical_operator: LogicalOperator
@@ -130,17 +77,10 @@ class QueryGroup:
         return {
             "type": "group",
             "logical_operator": self.logical_operator.value,
-            "nodes": [query._to_dict() for query in self.queries]
+            "nodes": [_QueryNode(query)._to_dict() if type(query) is not QueryGroup
+                       else query._to_dict()
+                       for query in self.queries]
         }
-
-    def _validate(self):
-        """Validates nodes within the QueryGroup contain valid queries
-
-        Used to raise Errors notifying users of invalid RCSB queries before
-        those queries hit RCSB's Search servers."""
-        for query in self.queries:
-            query._validate()
-
 
 class ReturnType(Enum):
     """For details, see: https://search.rcsb.org/index.html#return-type"""
@@ -189,20 +129,11 @@ class ScoredResult:
     entity_id: str  # PDB Entity ID (e.g. 5JUP for the entry return type)
     score: float
 
-class InappropriateSearchOperatorException(Exception):
-    """Raised when the provided SearchService and SearchOperator are
-    mutually incompatible.
-
-    For example, you can't search against the
-    SEQMOTIF service using the RangeOperator, as that's not supported by the
-    RCSB Search API."""
-
 
 RawJSONDictResponse = Dict[str, Any]
 
 
-def perform_search(search_service: SearchService,
-                   search_operator: SearchOperator,
+def perform_search(search_operator: SearchOperator,
                    return_type: ReturnType = ReturnType.ENTRY,
                    request_options: Optional[RequestOptions] = None,
                    return_with_scores: bool = False,
@@ -210,7 +141,7 @@ def perform_search(search_service: SearchService,
                    ) -> Union[List[str],
                               List[ScoredResult],
                               RawJSONDictResponse]:
-    """Performs search specified by `search_operator`, against `search_service`.
+    """Performs search specified by `search_operator`.
     Returns entity strings of type `return_type` that match the resulting hits.
 
     Strictly a subset of the functionality exposed in
@@ -221,7 +152,6 @@ def perform_search(search_service: SearchService,
     instead.
 
     Args:
-        search_service: What type of RCSB Search Service to query.
         search_operator: Parameters defining the search condition.
         return_type: What type of RCSB entity to return.
         request_options: Object containing information for result pagination
@@ -244,10 +174,9 @@ def perform_search(search_service: SearchService,
     Example usage to search for PDB entries that are from 'Mus musculus':
     ```
     from pypdb.clients.search. import perform_search
-    from pypdb.clients.search. import SearchService, ReturnType
+    from pypdb.clients.search. import ReturnType
     from pypdb.clients.search.operators.text_operators import ExactMatchOperator
     pdb_ids = perform_search(
-               search_service=SearchService.TEXT,
                search_operator=text_operators.ExactMatchOperator(
                  attribute="rcsb_entity_source_organism.taxonomy_lineage.name",
                  value="Mus musculus"
@@ -258,17 +187,14 @@ def perform_search(search_service: SearchService,
     ```
     """
 
-    query_node = QueryNode(search_service=search_service,
-                           search_operator=search_operator)
-
-    return perform_search_with_graph(query_object=query_node,
+    return perform_search_with_graph(query_object=search_operator,
                                      return_type=return_type,
                                      request_options=request_options,
                                      return_with_scores=return_with_scores,
                                      return_raw_json_dict=return_raw_json_dict)
 
 
-def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
+def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
                               return_type: ReturnType = ReturnType.ENTRY,
                               request_options: Optional[RequestOptions] = None,
                               return_with_scores: bool = False,
@@ -291,7 +217,7 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
     "Terminal node" and "Group node" for more details.
 
     Args:
-        query_object: Fully-specified QueryNode or QueryGroup
+        query_object: Fully-specified SearchOperator or QueryGroup
             object corresponding to the desired search.
         return_type: Type of entities to return.
         return_with_scores: Whether or not to return the entity results with
@@ -308,9 +234,10 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
         If `return_raw_json_dict=True`, returns the raw JSON response from RCSB.
     """
 
-    # Validates that, to the best of our knowledge, the `query_object`
-    # is a valid query against the RCSB Search API.
-    query_object._validate()
+    if type(query_object) is SearchOperator:
+        cast_query_object = _QueryNode(query_object) # type: ignore
+    else:
+        cast_query_object = query_object # type: ignore
 
     if request_options is not None:
         request_options_dict = request_options._to_dict()
@@ -318,7 +245,7 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
         request_options_dict = {'return_all_hits': True}
 
     rcsb_query_dict = {
-        "query": query_object._to_dict(),
+        "query": cast_query_object._to_dict(),
         "request_options": request_options_dict,
         "return_type": return_type.value
     }
@@ -355,3 +282,34 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
             results.append(query_hit["identifier"])
 
     return results
+
+class CannotInferSearchServiceException(Exception):
+    """Raised when the RCSB Search API Service cannot be inferred."""
+
+def _infer_search_service(search_operator: SearchOperator) -> SearchService:
+
+    if type(search_operator) in text_operators.TEXT_SEARCH_OPERATORS:
+        return SearchService.TEXT
+    elif type(search_operator) is SequenceOperator:
+        return SearchService.SEQUENCE
+    elif type(search_operator) is StructureOperator:
+        return SearchService.STRUCTURE
+    elif type(search_operator) is SeqMotifOperator:
+        return SearchService.SEQMOTIF
+    else:
+        raise CannotInferSearchServiceException(
+            "Cannot infer Search Service for {}".format(type(search_operator)))
+
+@dataclass
+class _QueryNode:
+    """Individual query node, performing a query defined by the provided
+    `search_operator`
+    """
+    search_operator: SearchOperator
+
+    def _to_dict(self):
+        return {
+            "type": "terminal",
+            "service": _infer_search_service(self.search_operator).value,
+            "parameters": self.search_operator._to_dict()
+        }
