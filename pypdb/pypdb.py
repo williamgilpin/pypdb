@@ -670,7 +670,7 @@ def get_pdb_file(pdb_id, filetype='pdb', compression=False):
 #     out = to_dict(out)
 #     return remove_at_sign(out['sequenceCluster'])
 
-def get_blast(pdb_id, chain_id='A'):
+def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99):
     """
     ---
     WARNING: this function is deprecated and slated to be deleted due to RCSB
@@ -689,6 +689,8 @@ def get_blast(pdb_id, chain_id='A'):
 
     chain_id : string
         A single character designating the chain ID of interest
+    identity_cutoff: float
+        Identity % at which to cut off results.
 
 
     Returns
@@ -724,7 +726,7 @@ def get_blast(pdb_id, chain_id='A'):
             search_service=search_client.SearchService.SEQUENCE,
             search_operator=sequence_operators.SequenceOperator(
                 sequence=valid_sequence,
-                identity_cutoff=0.99,
+                identity_cutoff=identity_cutoff,
                 evalue_cutoff=1000
             )))
 
