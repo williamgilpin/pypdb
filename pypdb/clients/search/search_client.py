@@ -45,7 +45,6 @@ SearchOperator = Union[
     StructureOperator,
     SeqMotifOperator]
 
-
 class LogicalOperator(Enum):
     """Operation used to combine `QueryGroup` results."""
     AND = "and"
@@ -193,6 +192,12 @@ def perform_search(search_operator: SearchOperator,
                                      return_with_scores=return_with_scores,
                                      return_raw_json_dict=return_raw_json_dict)
 
+_SEARCH_OPERATORS = text_operators.TEXT_SEARCH_OPERATORS + [
+    SequenceOperator,
+    StructureOperator,
+    SeqMotifOperator
+]
+
 
 def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
                               return_type: ReturnType = ReturnType.ENTRY,
@@ -234,9 +239,12 @@ def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
         If `return_raw_json_dict=True`, returns the raw JSON response from RCSB.
     """
 
-    if type(query_object) is SearchOperator:
+    if type(query_object) in _SEARCH_OPERATORS:
+        print("HIT HERE")
         cast_query_object = _QueryNode(query_object) # type: ignore
     else:
+        print("HIT THERE")
+        print(type(query_object))
         cast_query_object = query_object # type: ignore
 
     if request_options is not None:
