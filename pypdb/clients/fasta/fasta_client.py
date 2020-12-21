@@ -25,12 +25,12 @@ class FastaSequence:
     # (e.g. `5RU3_1|Chains A,B|Non-structural protein 3|Severe acute respiratory syndrome coronavirus 2 (2697049)`)
     fasta_header: str
 
-def _parse_fasta_text_to_dict(raw_fasta_text: str) -> Dict[PolymerEntity, FastaSequence]:
+def _parse_fasta_text_to_list(raw_fasta_text: str) -> List[FastaSequence]:
     """Parses raw FASTA response into easy-to-use dict representation."""
     # Gets list of FASTA chunks (one per sequence)
     fasta_sequence_chunks = raw_fasta_text.strip().split(">")[1:]
 
-    fasta_dict = {}
+    fasta_list = []
     for fasta_sequence_chunk in fasta_sequence_chunks:
         chunk_lines = fasta_sequence_chunk.split("\n")
         fasta_header = chunk_lines[0]
@@ -41,15 +41,15 @@ def _parse_fasta_text_to_dict(raw_fasta_text: str) -> Dict[PolymerEntity, FastaS
         # Derives associated chains from header
         chains = re.sub("Chains? ", "", header_segments[1]).split(",")
 
-        fasta_dict[entity_id] = FastaSequence(
+        fasta_list.append(FastaSequence(
             entity_id=entity_id,
             chains=chains,
             sequence=fasta_sequence,
             fasta_header=fasta_header
-        )
-    return fasta_dict
+        ))
+    return fasta_list
 
-def get_fasta_from_rcsb_entry(rcsb_id: str) -> Dict[PolymerEntity, FastaSequence]:
+def get_fasta_from_rcsb_entry(rcsb_id: str) -> List[FastaSequence]:
     """Fetches FASTA sequence associated with PDB structure from RCSB.
 
     Args:
@@ -67,4 +67,4 @@ def get_fasta_from_rcsb_entry(rcsb_id: str) -> Dict[PolymerEntity, FastaSequence
         warnings.warn("It appears request failed with:" + response.text)
         response.raise_for_status()
 
-    return _parse_fasta_text_to_dict(response.text)
+    return _parse_fasta_text_to_list(response.text)

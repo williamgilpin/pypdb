@@ -202,7 +202,7 @@ from pypdb.clients.search.search_client import SearchService, ReturnType
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
 
 # Fetches the first sequence in the "6TML" fasta file
-fasta_sequence = get_fasta_from_rcsb_entry("6TML")["6TML_1"].sequence
+fasta_sequence = get_fasta_from_rcsb_entry("6TML")[0].sequence
 
 # Performs sequence search ('BLAST'-like) using the FASTA sequence
 results = perform_search(
