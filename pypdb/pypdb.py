@@ -722,16 +722,15 @@ def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99):
     )
     for valid_sequence in valid_sequences:
         matches_any_sequence_in_chain_query.queries.append(
-            search_client.QueryNode(
-            search_service=search_client.SearchService.SEQUENCE,
-            search_operator=sequence_operators.SequenceOperator(
+            sequence_operators.SequenceOperator(
                 sequence=valid_sequence,
                 identity_cutoff=identity_cutoff,
                 evalue_cutoff=1000
-            )))
+            ))
 
     return search_client.perform_search_with_graph(
-        query_object=matches_any_sequence_in_chain_query
+        query_object=matches_any_sequence_in_chain_query,
+        return_raw_json_dict=True
     )
 
 # def get_pfam(pdb_id):

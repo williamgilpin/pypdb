@@ -26,11 +26,10 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
         search_operator = text_operators.DefaultOperator(value="ribosome")
         return_type = search_client.ReturnType.ENTRY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type)
 
@@ -65,12 +64,11 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
         search_operator = text_operators.ExactMatchOperator(value="Mus musculus",
                                                             attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
         return_type = search_client.ReturnType.POLYMER_ENTITY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type)
 
@@ -107,12 +105,11 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
         search_operator = text_operators.InOperator(values=["Mus musculus", "Homo sapiens"],
                                                     attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
         return_type = search_client.ReturnType.NON_POLYMER_ENTITY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type)
 
@@ -149,12 +146,11 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
         search_operator = text_operators.ContainsWordsOperator(value="actin-binding protein",
                                                     attribute="struct.title")
         return_type = search_client.ReturnType.POLYMER_INSTANCE
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type)
 
@@ -191,12 +187,11 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
         search_operator = text_operators.ContainsPhraseOperator(value="actin-binding protein",
                                                     attribute="struct.title")
         return_type = search_client.ReturnType.ASSEMBLY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type)
 
@@ -232,15 +227,13 @@ class TestHTTPRequests(unittest.TestCase):
         mock_response.json.return_value = canned_json_return_as_dict
         mock_post.return_value = mock_response
 
-
-        search_service = search_client.SearchService.TEXT
         search_operator = text_operators.ComparisonOperator(
                value="2019-01-01T00:00:00Z",
                attribute="rcsb_accession_info.initial_release_date",
                comparison_type=text_operators.ComparisonType.GREATER)
         return_type = search_client.ReturnType.ENTRY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type)
 
@@ -276,7 +269,7 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
+
         search_operator = text_operators.RangeOperator(
             from_value="2019-01-01T00:00:00Z",
             to_value="2019-06-30T00:00:00Z",
@@ -285,7 +278,7 @@ class TestHTTPRequests(unittest.TestCase):
             attribute="rcsb_accession_info.initial_release_date")
         return_type = search_client.ReturnType.ENTRY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type)
 
@@ -328,12 +321,12 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
+
         search_operator = text_operators.ExistsOperator(
             attribute="rcsb_accession_info.initial_release_date")
         return_type = search_client.ReturnType.ENTRY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type,
                                      return_raw_json_dict=True)
@@ -370,27 +363,18 @@ class TestHTTPRequests(unittest.TestCase):
         mock_response.json.return_value = canned_json_return_as_dict
         mock_post.return_value = mock_response
 
-        search_service_one = search_client.SearchService.TEXT
-        search_operator_one = text_operators.ComparisonOperator(
+        after_2019_query_node = text_operators.ComparisonOperator(
                value="2019-01-01T00:00:00Z",
                attribute="rcsb_accession_info.initial_release_date",
                comparison_type=text_operators.ComparisonType.GREATER)
-        after_2019_query_node = search_client.QueryNode(
-                                    search_service_one, search_operator_one)
 
-        search_service_two = search_client.SearchService.TEXT
-        search_operator_two = text_operators.ExactMatchOperator(
+        is_mus_query_node = text_operators.ExactMatchOperator(
                     value="Mus musculus",
                     attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
-        is_mus_query_node = search_client.QueryNode(
-                                    search_service_two, search_operator_two)
 
-        search_service_three = search_client.SearchService.TEXT
-        search_operator_three = text_operators.ExactMatchOperator(
+        is_human_query_node = text_operators.ExactMatchOperator(
                     value="Homo sapiens",
                     attribute="rcsb_entity_source_organism.taxonomy_lineage.name")
-        is_human_query_node = search_client.QueryNode(
-                                    search_service_three, search_operator_three)
 
         is_human_or_mus_group = search_client.QueryGroup(
             queries = [is_mus_query_node, is_human_query_node],
@@ -470,14 +454,14 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
 
-        search_service = search_client.SearchService.TEXT
+
         search_operator = text_operators.ComparisonOperator(
                value=4,
                attribute="rcsb_entry_info.resolution_combined",
                comparison_type=text_operators.ComparisonType.LESS)
         return_type = search_client.ReturnType.ENTRY
 
-        results = search_client.perform_search(search_service,
+        results = search_client.perform_search(
                                      search_operator,
                                      return_type,
                                      return_raw_json_dict=True)
@@ -517,7 +501,6 @@ class TestHTTPRequests(unittest.TestCase):
         mock_post.return_value = mock_response
 
         results = search_client.perform_search(
-            search_service=search_client.SearchService.SEQUENCE,
             search_operator=sequence_operators.SequenceOperator(
                 sequence="ATGAGGTAA",
                 sequence_type=sequence_operators.SequenceType.DNA,
@@ -547,18 +530,6 @@ class TestHTTPRequests(unittest.TestCase):
                                           data=json.dumps(expected_json_dict))
         self.assertEqual(results,
                          ["5JUP", "5JUS", "5JUO"])
-
-    def test_inappropriate_operator_raises_exception(self):
-        with pytest.raises(search_client.InappropriateSearchOperatorException):
-            search_client.perform_search(
-                search_service=search_client.SearchService.TEXT,
-                search_operator=sequence_operators.SequenceOperator(
-                    sequence="ATGAGGTAA",
-                    sequence_type=sequence_operators.SequenceType.DNA,
-                    evalue_cutoff=100,
-                    identity_cutoff=0.90
-                ),
-                return_type=search_client.ReturnType.ENTRY)
 
     def test_request_options_to_dict(self):
         request_options = search_client.RequestOptions(
