@@ -76,7 +76,7 @@ def get_pdb_file(pdb_id: str, filetype=PDBFileType.PDB, compression=False) -> Op
 
     response = http_requests.request_limited(pdb_url)
 
-    if response is None or not response.ok:
+    if response is None or not response.ok: # type: ignore
         warnings.warn("Retrieval failed, returning None")
         return None
 

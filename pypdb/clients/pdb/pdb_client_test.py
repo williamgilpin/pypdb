@@ -1,3 +1,4 @@
+import gzip
 import unittest
 from unittest import mock
 
@@ -20,20 +21,23 @@ class TestPDBFileDownloading(unittest.TestCase):
         )
 
     @mock.patch.object(http_requests, "request_limited", autospec=True)
-    def test_compressed_cif_file(self, mock_http_requests):
+    @mock.patch.object(gzip, "decompress")
+    def test_compressed_cif_file(self, mock_decompress, mock_http_requests):
         mock_return_value_cif = mock.Mock()
         mock_return_value_cif.ok = True
         mock_return_value_cif.content = "fake_compressed_cif"
         mock_http_requests.return_value = mock_return_value_cif
+        mock_decompress.return_value = "fake_decompressed_cif"
 
         self.assertEqual(
-            "fake_compressed_cif",
+            "fake_decompressed_cif",
             pdb_client.get_pdb_file("1A2B", pdb_client.PDBFileType.CIF,
             compression=True)
         )
         mock_http_requests.assert_called_once_with(
             "https://files.rcsb.org/download/1A2B.cif.gz"
         )
+        mock_decompress.assert_called_once_with("fake_compressed_cif")
 
     @mock.patch.object(http_requests, "request_limited", autospec=True)
     def test_umcompressed_pdb(self, mock_http_requests):
@@ -51,19 +55,24 @@ class TestPDBFileDownloading(unittest.TestCase):
         )
 
     @mock.patch.object(http_requests, "request_limited", autospec=True)
-    def test_compressed_structfact(self, mock_http_requests):
+    @mock.patch.object(gzip, "decompress")
+    def test_compressed_structfact(self, mock_decompress, mock_http_requests):
         mock_return_value_pdb = mock.Mock()
         mock_return_value_pdb.content = "fake_compressed_structfact"
         mock_return_value_pdb.ok = True
         mock_http_requests.return_value = mock_return_value_pdb
+        mock_decompress.return_value = "fake_decompressed_structfact"
 
         self.assertEqual(
-            "fake_compressed_structfact",
+            "fake_decompressed_structfact",
             pdb_client.get_pdb_file("HK97", pdb_client.PDBFileType.STRUCTFACT,
                                     compression=True)
         )
         mock_http_requests.assert_called_once_with(
             "https://files.rcsb.org/download/HK97-sf.cif.gz"
+        )
+        mock_decompress.assert_called_once_with(
+            "fake_compressed_structfact"
         )
 
     @mock.patch.object(http_requests, "request_limited", autospec=True)
