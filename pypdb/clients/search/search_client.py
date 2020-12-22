@@ -15,25 +15,15 @@ import requests
 from typing import Any, Dict, List, Optional, Union
 import warnings
 
-from pypdb.clients.search.operators import text_operators
 from pypdb.clients.search.operators import sequence_operators
-from pypdb.clients.search.operators.text_operators import TextSearchOperator
+from pypdb.clients.search.operators import text_operators
+from pypdb.clients.search.operators.chemical_operators import ChemicalOperator
+from pypdb.clients.search.operators.seqmotif_operators import SeqMotifOperator
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
 from pypdb.clients.search.operators.structure_operators import StructureOperator
-from pypdb.clients.search.operators.seqmotif_operators import SeqMotifOperator
+from pypdb.clients.search.operators.text_operators import TextSearchOperator
 
 SEARCH_URL_ENDPOINT: str = "https://search.rcsb.org/rcsbsearch/v1/query"
-
-
-class SearchService(Enum):
-    """Which type of field is being searched."""
-    TEXT = "text"
-    SEQUENCE = "sequence"
-    SEQMOTIF = "seqmotif"
-    STRUCTURE = "structure"
-    CHEMICAL = "chemical"
-
-
 """SearchOperators correspond to individual search operations.
 
 These can be used to search on their own using `perform_search`, or they can be
@@ -289,6 +279,17 @@ def perform_search_with_graph(
     return results
 
 
+class SearchService(Enum):
+    """Which type of field is being searched.
+
+    Auto-inferred from search operator."""
+    TEXT = "text"
+    SEQUENCE = "sequence"
+    SEQMOTIF = "seqmotif"
+    STRUCTURE = "structure"
+    CHEMICAL = "chemical"
+
+
 class CannotInferSearchServiceException(Exception):
     """Raised when the RCSB Search API Service cannot be inferred."""
 
@@ -303,6 +304,8 @@ def _infer_search_service(search_operator: SearchOperator) -> SearchService:
         return SearchService.STRUCTURE
     elif type(search_operator) is SeqMotifOperator:
         return SearchService.SEQMOTIF
+    elif type(search_operator) is ChemicalOperator:
+        return SearchService.CHEMICAL
     else:
         raise CannotInferSearchServiceException(
             "Cannot infer Search Service for {}".format(type(search_operator)))
