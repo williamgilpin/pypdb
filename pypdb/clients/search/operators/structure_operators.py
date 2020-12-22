@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict
 
+
 class StructureSearchMode(Enum):
     """Mode to search structures with. See:
     https://github.com/biocryst/biozernike/
     """
     STRICT_SHAPE_MATCH = "strict_shape_match"
     RELAXED_SHAPE_MATCH = "relaxed_shape_match"
+
 
 @dataclass
 class StructureOperator:

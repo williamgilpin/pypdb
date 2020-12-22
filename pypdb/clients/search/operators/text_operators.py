@@ -9,6 +9,7 @@ from typing import Any, Dict, Union, List
 # For information on available RCSB search attributes, see:
 # https://search.rcsb.org/search-attributes.html
 
+
 @dataclass
 class DefaultOperator:
     """Default search operator; searches across available fields search,
@@ -16,9 +17,8 @@ class DefaultOperator:
     value: str
 
     def _to_dict(self) -> Dict[str, str]:
-        return {
-            "value": self.value
-        }
+        return {"value": self.value}
+
 
 @dataclass
 class ExactMatchOperator:
@@ -31,7 +31,7 @@ class ExactMatchOperator:
         return {
             "attribute": self.attribute,
             "operator": "exact_match",
-            "value":  self.value
+            "value": self.value
         }
 
 
@@ -61,11 +61,11 @@ class ContainsWordsOperator:
     attribute: str
     value: str
 
-    def _to_dict(self) -> Dict[str,str]:
+    def _to_dict(self) -> Dict[str, str]:
         return {
             "attribute": self.attribute,
             "operator": "contains_words",
-            "value":  self.value
+            "value": self.value
         }
 
 
@@ -79,12 +79,13 @@ class ContainsPhraseOperator:
     attribute: str
     value: str
 
-    def _to_dict(self) -> Dict[str,str]:
+    def _to_dict(self) -> Dict[str, str]:
         return {
             "attribute": self.attribute,
             "operator": "contains_phrase",
-            "value":  self.value
+            "value": self.value
         }
+
 
 class ComparisonType(Enum):
     GREATER = "greater"
@@ -94,8 +95,10 @@ class ComparisonType(Enum):
     LESS_OR_EQUAL = "less_or_equal"
     LESS = "less"
 
+
 # TODO(lacoperon): Add support for initializing this, and RangeOperator, from
 #                  datetime.datetime objects for ease of use.
+
 
 @dataclass
 class ComparisonOperator:
@@ -117,21 +120,17 @@ class ComparisonOperator:
     value: Any
     comparison_type: ComparisonType
 
-    def _to_dict(self) -> Dict[str,Any]:
+    def _to_dict(self) -> Dict[str, Any]:
         if self.comparison_type is ComparisonType.NOT_EQUAL:
-            param_dict = {
-                "operator": "equals",
-                "negation": True
-            }
+            param_dict = {"operator": "equals", "negation": True}
         else:
-            param_dict = {
-                "operator": self.comparison_type.value
-            }
+            param_dict = {"operator": self.comparison_type.value}
 
         param_dict["attribute"] = self.attribute
         param_dict["value"] = self.value
 
         return param_dict
+
 
 @dataclass
 class RangeOperator:
@@ -139,53 +138,39 @@ class RangeOperator:
     attribute: str
     from_value: Any
     to_value: Any
-    include_lower: bool = True # Default inclusive
-    include_upper: bool = True # Default inclusive
+    include_lower: bool = True  # Default inclusive
+    include_upper: bool = True  # Default inclusive
 
-    def _to_dict(self) -> Dict[str,Any]:
+    def _to_dict(self) -> Dict[str, Any]:
         return {
-        "operator": "range",
-        "attribute": self.attribute,
-        "value": {
-            "from": self.from_value,
-            "to": self.to_value,
-            "include_lower": self.include_lower,
-            "include_upper": self.include_upper
+            "operator": "range",
+            "attribute": self.attribute,
+            "value": {
+                "from": self.from_value,
+                "to": self.to_value,
+                "include_lower": self.include_lower,
+                "include_upper": self.include_upper
+            }
         }
-    }
+
 
 @dataclass
 class ExistsOperator:
     attribute: str
 
-    def _to_dict(self) -> Dict[str,str]:
-        return {
-            "operator": "exists",
-            "attribute": self.attribute
-        }
+    def _to_dict(self) -> Dict[str, str]:
+        return {"operator": "exists", "attribute": self.attribute}
+
 
 # An object of type `TextSearchOperator` can be any of the following classes:
-TextSearchOperator = Union[
-    DefaultOperator,
-    ExactMatchOperator,
-    InOperator,
-    ContainsWordsOperator,
-    ContainsPhraseOperator,
-    ComparisonOperator,
-    RangeOperator,
-    ExistsOperator
-]
+TextSearchOperator = Union[DefaultOperator, ExactMatchOperator, InOperator,
+                           ContainsWordsOperator, ContainsPhraseOperator,
+                           ComparisonOperator, RangeOperator, ExistsOperator]
 
 # List of all TextSearchOperator-associated classes, for backwards compatability
 # in terms of checking SearchOperator validity
 # (please change this when you change the `Union` definition)
 TEXT_SEARCH_OPERATORS = [
-    DefaultOperator,
-    ExactMatchOperator,
-    InOperator,
-    ContainsWordsOperator,
-    ContainsPhraseOperator,
-    ComparisonOperator,
-    RangeOperator,
-    ExistsOperator
+    DefaultOperator, ExactMatchOperator, InOperator, ContainsWordsOperator,
+    ContainsPhraseOperator, ComparisonOperator, RangeOperator, ExistsOperator
 ]

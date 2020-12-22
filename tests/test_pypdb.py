@@ -5,9 +5,9 @@ import sys
 sys.path.insert(0, '../pypdb')
 from pypdb import *
 
-
 # TODO(ejwilliams): Write generic logic, to execute `test_*.py` files
 # within the pypdb directory (removing need for sys.path hack)
+
 
 class TestSearchFunctions(unittest.TestCase):
 
@@ -36,7 +36,6 @@ class TestSearchFunctions(unittest.TestCase):
 
     #     # an error page would be a longer string
     #     self.assertTrue(len(found_pdbs[0][0]) < 10)
-
 
 
 if __name__ == '__main__':

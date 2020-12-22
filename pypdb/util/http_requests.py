@@ -6,9 +6,12 @@ import time
 import requests
 import warnings
 
-def request_limited(url: str, rtype: str="GET",
-                    num_attempts: int = 3, sleep_time=0.5, **kwargs
-                    ) -> Optional[requests.models.Response]:
+
+def request_limited(url: str,
+                    rtype: str = "GET",
+                    num_attempts: int = 3,
+                    sleep_time=0.5,
+                    **kwargs) -> Optional[requests.models.Response]:
     """
     HTML request with rate-limiting base on response code
 
@@ -51,8 +54,9 @@ def request_limited(url: str, rtype: str="GET",
             return response
 
         if response.status_code == 429:
-            curr_sleep = (1 + total_attempts)*sleep_time
-            warnings.warn("Too many requests, waiting " + str(curr_sleep) + " s")
+            curr_sleep = (1 + total_attempts) * sleep_time
+            warnings.warn("Too many requests, waiting " + str(curr_sleep) +
+                          " s")
             time.sleep(curr_sleep)
         elif 500 <= response.status_code < 600:
             warnings.warn("Server error encountered. Retrying")
