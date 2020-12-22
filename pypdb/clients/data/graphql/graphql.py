@@ -8,7 +8,8 @@ from typing import Any  # DO NOT APPROVE: fix this to actual type
 
 RSCB_GRAPHQL_URL = "https://data.rcsb.org/graphql?query="
 
-def search_graphql(graphql_json_query : str) -> Any:
+
+def search_graphql(graphql_json_query: str) -> Any:
     """Performs RCSB search with JSON query using GraphQL.
 
     For details on what the RCSB GraphQL interface is, see:

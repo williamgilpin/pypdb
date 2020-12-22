@@ -9,14 +9,17 @@ from pypdb.util import http_requests
 
 PDB_DOWNLOAD_BASE_URL = "https://files.rcsb.org/download/"
 
+
 class PDBFileType(Enum):
-    PDB = "pdb" # Older file format.
-    CIF = "cif" # Newer file format (replacing PDB file type)
-    XML = "xml" # Another alternative representation.
-    STRUCTFACT = "structfact" # For structural factors (only populated for some entries)
+    PDB = "pdb"  # Older file format.
+    CIF = "cif"  # Newer file format (replacing PDB file type)
+    XML = "xml"  # Another alternative representation.
+    STRUCTFACT = "structfact"  # For structural factors (only populated for some entries)
 
 
-def get_pdb_file(pdb_id: str, filetype=PDBFileType.PDB, compression=False) -> Optional[str]:
+def get_pdb_file(pdb_id: str,
+                 filetype=PDBFileType.PDB,
+                 compression=False) -> Optional[str]:
     '''Get the full PDB file associated with a PDB_ID
 
     Parameters
@@ -70,13 +73,13 @@ def get_pdb_file(pdb_id: str, filetype=PDBFileType.PDB, compression=False) -> Op
 
     pdb_url = "".join(pdb_url_builder)
 
-    print("Sending GET request to {} to fetch {}'s {} file as a string.".format(
-        pdb_url, pdb_id, filetype.value
-    ))
+    print(
+        "Sending GET request to {} to fetch {}'s {} file as a string.".format(
+            pdb_url, pdb_id, filetype.value))
 
     response = http_requests.request_limited(pdb_url)
 
-    if response is None or not response.ok: # type: ignore
+    if response is None or not response.ok:  # type: ignore
         warnings.warn("Retrieval failed, returning None")
         return None
 

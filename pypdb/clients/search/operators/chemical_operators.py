@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict
 
+
 class DescriptorMatchingCriterion(Enum):
     """Criterion describing what constitutes a chemical 'match' in RCSB search.
 
@@ -14,6 +15,7 @@ class DescriptorMatchingCriterion(Enum):
     GRAPH_RELAXED = "graph-relaxed"
     GRAPH_RELAXED_STEREO = "graph-relaxed-stereo"
     FINGERPRINT_SIMILARITY = "fingerprint-similarity"
+
 
 @dataclass
 class ChemicalOperator:
@@ -34,8 +36,8 @@ class ChemicalOperator:
 
     def _to_dict(self) -> Dict[str, Any]:
         return {
-          "value": self.descriptor,
-          "type": "descriptor",
-          "descriptor_type": self.descriptor_type,
-          "match_type": self.matching_criterion.value
+            "value": self.descriptor,
+            "type": "descriptor",
+            "descriptor_type": self.descriptor_type,
+            "match_type": self.matching_criterion.value
         }

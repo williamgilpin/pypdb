@@ -10,20 +10,22 @@ FASTA_BASE_URL = "https://www.rcsb.org/fasta/entry/"
 
 # Fasta Sequences are uniquely identified by a polymeric entity ID that looks
 # like `${ENTRY_ID}_{SEQUENCE_NUMBER}` (e.g. `5JUP_1` or `6TML_10`)
-PolymerEntity = str # Defines type-alias (Polymer entity IDs are strings)
+PolymerEntity = str  # Defines type-alias (Polymer entity IDs are strings)
+
 
 @dataclass
 class FastaSequence:
     """Class containing data for one FASTA sequence (one of many in a file)."""
     # Polymeric entity ID uniquely identifying this sequence
-    entity_id: PolymerEntity # e.g. `"5RU3_1"`
+    entity_id: PolymerEntity  # e.g. `"5RU3_1"`
     # Chains associated with this sequence
-    chains: List[str] # e.g. `["A", "B"]`
+    chains: List[str]  # e.g. `["A", "B"]`
     # Sequence associated with this entity
     sequence: str
     # Un-processed FASTA header for a sequence
     # (e.g. `5RU3_1|Chains A,B|Non-structural protein 3|Severe acute respiratory syndrome coronavirus 2 (2697049)`)
     fasta_header: str
+
 
 def _parse_fasta_text_to_list(raw_fasta_text: str) -> List[FastaSequence]:
     """Parses raw FASTA response into easy-to-use dict representation."""
@@ -41,13 +43,13 @@ def _parse_fasta_text_to_list(raw_fasta_text: str) -> List[FastaSequence]:
         # Derives associated chains from header
         chains = re.sub("Chains? ", "", header_segments[1]).split(",")
 
-        fasta_list.append(FastaSequence(
-            entity_id=entity_id,
-            chains=chains,
-            sequence=fasta_sequence,
-            fasta_header=fasta_header
-        ))
+        fasta_list.append(
+            FastaSequence(entity_id=entity_id,
+                          chains=chains,
+                          sequence=fasta_sequence,
+                          fasta_header=fasta_header))
     return fasta_list
+
 
 def get_fasta_from_rcsb_entry(rcsb_id: str) -> List[FastaSequence]:
     """Fetches FASTA sequence associated with PDB structure from RCSB.
@@ -61,7 +63,7 @@ def get_fasta_from_rcsb_entry(rcsb_id: str) -> List[FastaSequence]:
     """
 
     print("Querying RCSB for the '{}' FASTA file.".format(rcsb_id))
-    response = requests.get(FASTA_BASE_URL+rcsb_id)
+    response = requests.get(FASTA_BASE_URL + rcsb_id)
 
     if not response.ok:
         warnings.warn("It appears request failed with:" + response.text)

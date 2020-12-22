@@ -46,10 +46,7 @@ class LogicalOperator(Enum):
 # Currently, the only available search operators are associated with the
 # 'text' service. For the list of available RCSB services,
 # see: https://search.rcsb.org/index.html#search-services
-SearchOperator = Union[
-    TextSearchOperator,
-    SequenceOperator,
-    StructureOperator]
+SearchOperator = Union[TextSearchOperator, SequenceOperator, StructureOperator]
 
 
 @dataclass
@@ -73,27 +70,27 @@ class QueryNode:
         Used to raise Errors notifying users of invalid RCSB queries before
         those queries hit RCSB's Search servers."""
 
-        if self.search_service not in [SearchService.TEXT,
-                                       SearchService.SEQUENCE,
-                                       SearchService.STRUCTURE,
-                                       SearchService.SEQMOTIF]:
+        if self.search_service not in [
+                SearchService.TEXT, SearchService.SEQUENCE,
+                SearchService.STRUCTURE, SearchService.SEQMOTIF
+        ]:
             raise NotImplementedError(
                 "This service isn't yet implemented in the RCSB 2.0 API "
                 "(but watch this space)")
 
         # Each SearchService is assocaited with a list of valid search operators
         if self.search_service is SearchService.TEXT:
-            appropriate_operator_list = text_operators.TEXT_SEARCH_OPERATORS # type: ignore
-            operator_file="pypdb/clients/search/operators/text_operators.py"
+            appropriate_operator_list = text_operators.TEXT_SEARCH_OPERATORS  # type: ignore
+            operator_file = "pypdb/clients/search/operators/text_operators.py"
         elif self.search_service is SearchService.SEQUENCE:
-            appropriate_operator_list = [SequenceOperator] # type: ignore
-            operator_file="pypdb/clients/search/operators/sequence_operators.py"
+            appropriate_operator_list = [SequenceOperator]  # type: ignore
+            operator_file = "pypdb/clients/search/operators/sequence_operators.py"
         elif self.search_service is SearchService.STRUCTURE:
-            appropriate_operator_list = [StructureOperator] # type: ignore
-            operator_file="pypdb/clients/search/operators/structure_operators.py"
+            appropriate_operator_list = [StructureOperator]  # type: ignore
+            operator_file = "pypdb/clients/search/operators/structure_operators.py"
         elif self.search_service is SearchService.SEQMOTIF:
-            appropriate_operator_list = [SeqMotifOperator] # type: ignore
-            operator_file="pypdb/clients/search/operators/seqmotif_operators.py"
+            appropriate_operator_list = [SeqMotifOperator]  # type: ignore
+            operator_file = "pypdb/clients/search/operators/seqmotif_operators.py"
         else:
             # Default to search being OK if there's no validation for
             # this operator defined yet
@@ -101,8 +98,10 @@ class QueryNode:
 
         if not type(self.search_operator) in appropriate_operator_list:
             raise InappropriateSearchOperatorException(
-                "Searches against the '{}' service should only use ".format(self.search_service),
+                "Searches against the '{}' service should only use ".format(
+                    self.search_service),
                 " SearchOperators defined in in `{}`.".format(operator_file))
+
 
 @dataclass
 class QueryGroup:
@@ -150,6 +149,7 @@ class ReturnType(Enum):
     NON_POLYMER_ENTITY = "non_polymer_entity"
     POLYMER_INSTANCE = "polymer_instance"
 
+
 @dataclass
 class RequestOptions:
     """Options to configure which results are returned, and in what order."""
@@ -175,19 +175,19 @@ class RequestOptions:
             }
 
         if self.sort_by != None and self.desc != None:
-            result_dict["sort"] = [
-                {
+            result_dict["sort"] = [{
                 "sort_by": self.sort_by,
                 "direction": "desc" if self.desc else "asc"
-                }
-            ]
+            }]
 
         return result_dict
+
 
 @dataclass
 class ScoredResult:
     entity_id: str  # PDB Entity ID (e.g. 5JUP for the entry return type)
     score: float
+
 
 class InappropriateSearchOperatorException(Exception):
     """Raised when the provided SearchService and SearchOperator are
@@ -201,15 +201,14 @@ class InappropriateSearchOperatorException(Exception):
 RawJSONDictResponse = Dict[str, Any]
 
 
-def perform_search(search_service: SearchService,
-                   search_operator: SearchOperator,
-                   return_type: ReturnType = ReturnType.ENTRY,
-                   request_options: Optional[RequestOptions] = None,
-                   return_with_scores: bool = False,
-                   return_raw_json_dict: bool = False
-                   ) -> Union[List[str],
-                              List[ScoredResult],
-                              RawJSONDictResponse]:
+def perform_search(
+    search_service: SearchService,
+    search_operator: SearchOperator,
+    return_type: ReturnType = ReturnType.ENTRY,
+    request_options: Optional[RequestOptions] = None,
+    return_with_scores: bool = False,
+    return_raw_json_dict: bool = False
+) -> Union[List[str], List[ScoredResult], RawJSONDictResponse]:
     """Performs search specified by `search_operator`, against `search_service`.
     Returns entity strings of type `return_type` that match the resulting hits.
 
@@ -268,14 +267,13 @@ def perform_search(search_service: SearchService,
                                      return_raw_json_dict=return_raw_json_dict)
 
 
-def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
-                              return_type: ReturnType = ReturnType.ENTRY,
-                              request_options: Optional[RequestOptions] = None,
-                              return_with_scores: bool = False,
-                              return_raw_json_dict: bool = False
-                              ) -> Union[List[str],
-                                         RawJSONDictResponse,
-                                         List[ScoredResult]]:
+def perform_search_with_graph(
+    query_object: Union[QueryNode, QueryGroup],
+    return_type: ReturnType = ReturnType.ENTRY,
+    request_options: Optional[RequestOptions] = None,
+    return_with_scores: bool = False,
+    return_raw_json_dict: bool = False
+) -> Union[List[str], RawJSONDictResponse, List[ScoredResult]]:
     """Performs specified search using RCSB's search node logic.
 
     Essentially, this allows you to ask multiple questions in one RCSB query.
@@ -329,7 +327,6 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
     response = requests.post(url=SEARCH_URL_ENDPOINT,
                              data=json.dumps(rcsb_query_dict))
 
-
     # If your search queries are failing here, it could be that your attribute
     # doesn't support the SearchOperator you're using.
     # See: https://search.rcsb.org/search-attributes.html
@@ -347,10 +344,9 @@ def perform_search_with_graph(query_object: Union[QueryNode, QueryGroup],
     results = []
     for query_hit in response.json()["result_set"]:
         if return_with_scores:
-            results.append(ScoredResult(
-                entity_id=query_hit["identifier"],
-                score=query_hit["score"]
-            ))
+            results.append(
+                ScoredResult(entity_id=query_hit["identifier"],
+                             score=query_hit["score"]))
         else:
             results.append(query_hit["identifier"])
 
