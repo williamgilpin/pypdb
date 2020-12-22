@@ -240,11 +240,8 @@ def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
     """
 
     if type(query_object) in _SEARCH_OPERATORS:
-        print("HIT HERE")
         cast_query_object = _QueryNode(query_object) # type: ignore
     else:
-        print("HIT THERE")
-        print(type(query_object))
         cast_query_object = query_object # type: ignore
 
     if request_options is not None:
