@@ -25,6 +25,7 @@ import warnings
 
 from pypdb.util import http_requests
 from pypdb.clients.fasta import fasta_client
+from pypdb.clients.pdb import pdb_client
 from pypdb.clients.search import search_client
 from pypdb.clients.search.operators import sequence_operators
 
@@ -446,80 +447,28 @@ get_all_info = get_info # Alias
 describe_pdb = get_info # Alias for now; eve tually make this point to the Graph search https://data.rcsb.org/migration-guide.html#pdb-file-description
 get_entity_info = get_info # Alias
 
-def get_pdb_file(pdb_id, filetype='pdb', compression=False):
-    '''Get the full PDB file associated with a PDB_ID
+def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
+    """Deprecated wrapper for fetching PDB files from RCSB Database.
 
-    Parameters
-    ----------
+    For new uses, please use `pypdb/clients/pdb/pdb_client.py`
+    """
 
-    pdb_id : string
-        A 4 character string giving a pdb entry of interest
+    warnings.warn("The `get_pdb_file` function within pypdb.py is deprecated."
+                  "See `pypdb/clients/pdb/pdb_client.py` for a near-identical "
+                  "function to use", DeprecationWarning)
 
-    filetype: string
-        The file type.
-        'pdb' is the older file format,
-        'cif' is the newer replacement.
-        'xml' an also be obtained and parsed using the various xml tools included in PyPDB
-        'structfact' retrieves structure factors (only available for certain PDB entries)
-
-    compression : bool
-        Retrieve a compressed (gz) version of the file
-
-    Returns
-    -------
-
-    result : string
-        The string representing the full PDB file in the given format
-
-    Examples
-    --------
-    >>> pdb_file = get_pdb_file('4lza', filetype='cif', compression=True)
-    >>> print(pdb_file[:200])
-    data_4LZA
-    #
-    _entry.id   4LZA
-    #
-    _audit_conform.dict_name       mmcif_pdbx.dic
-    _audit_conform.dict_version    4.032
-    _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx
-
-    '''
-
-    full_url = "https://files.rcsb.org/download/"
-
-    full_url += pdb_id
-
-    if (filetype == 'structfact'):
-        full_url += "-sf.cif"
+    if filetype is 'pdb':
+        filetype_enum = pdb_client.PDBFileType.PDB
+    elif filetype is 'cif':
+        filetype_enum = pdb_client.PDBFileType.CIF
+    elif filetype is 'xml':
+        filetype_enum = pdb_client.PDBFileType.XML
+    elif filetype is 'structfact':
+        filetype_enum = pdb_client.PDBFileType.STRUCTFACT
     else:
-        full_url += "." + filetype
+        warnings.warn("Filetype specified to `get_pdb_file` appears to be invalid")
 
-    if compression:
-        full_url += ".gz"
-    else:
-        pass
-
-    #response = requests.get(full_url)
-    response = http_requests.request_limited(full_url)
-
-    if response.status_code == 200:
-        pass
-    else:
-        warnings.warn("Retrieval failed, returning None")
-        return None
-
-    if compression:
-        result  = response.content
-    else:
-        result = response.text
-
-    ## return raw file only
-    # if compression:
-    #     result = result.decode('utf-8')
-    # else:
-    #     pass
-
-    return result
+    return pdb_client.get_pdb_file(pdb_id, filetype_enum, compression)
 
 # https://data.rcsb.org/migration-guide.html#chem-comp-description
 # def describe_chemical(chem_id):
