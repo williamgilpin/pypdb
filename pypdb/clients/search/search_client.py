@@ -33,22 +33,22 @@ class SearchService(Enum):
     STRUCTURE = "structure"
     CHEMICAL = "chemical"
 
+
 """SearchOperators correspond to individual search operations.
 
 These can be used to search on their own using `perform_search`, or they can be
 aggregated together into a `QueryGroup` to search using multiple operators at
 once using `perform_search_with_graph`.
 """
-SearchOperator = Union[
-    TextSearchOperator,
-    SequenceOperator,
-    StructureOperator,
-    SeqMotifOperator]
+SearchOperator = Union[TextSearchOperator, SequenceOperator, StructureOperator,
+                       SeqMotifOperator]
+
 
 class LogicalOperator(Enum):
     """Operation used to combine `QueryGroup` results."""
     AND = "and"
     OR = "or"
+
 
 @dataclass
 class QueryGroup:
@@ -74,12 +74,17 @@ class QueryGroup:
 
     def _to_dict(self):
         return {
-            "type": "group",
-            "logical_operator": self.logical_operator.value,
-            "nodes": [_QueryNode(query)._to_dict() if type(query) is not QueryGroup
-                       else query._to_dict()
-                       for query in self.queries]
+            "type":
+            "group",
+            "logical_operator":
+            self.logical_operator.value,
+            "nodes": [
+                _QueryNode(query)._to_dict()
+                if type(query) is not QueryGroup else query._to_dict()
+                for query in self.queries
+            ]
         }
+
 
 class ReturnType(Enum):
     """For details, see: https://search.rcsb.org/index.html#return-type"""
@@ -88,6 +93,7 @@ class ReturnType(Enum):
     POLYMER_ENTITY = "polymer_entity"
     NON_POLYMER_ENTITY = "non_polymer_entity"
     POLYMER_INSTANCE = "polymer_instance"
+
 
 @dataclass
 class RequestOptions:
@@ -114,14 +120,13 @@ class RequestOptions:
             }
 
         if self.sort_by != None and self.desc != None:
-            result_dict["sort"] = [
-                {
+            result_dict["sort"] = [{
                 "sort_by": self.sort_by,
                 "direction": "desc" if self.desc else "asc"
-                }
-            ]
+            }]
 
         return result_dict
+
 
 @dataclass
 class ScoredResult:
@@ -132,14 +137,13 @@ class ScoredResult:
 RawJSONDictResponse = Dict[str, Any]
 
 
-def perform_search(search_operator: SearchOperator,
-                   return_type: ReturnType = ReturnType.ENTRY,
-                   request_options: Optional[RequestOptions] = None,
-                   return_with_scores: bool = False,
-                   return_raw_json_dict: bool = False
-                   ) -> Union[List[str],
-                              List[ScoredResult],
-                              RawJSONDictResponse]:
+def perform_search(
+    search_operator: SearchOperator,
+    return_type: ReturnType = ReturnType.ENTRY,
+    request_options: Optional[RequestOptions] = None,
+    return_with_scores: bool = False,
+    return_raw_json_dict: bool = False
+) -> Union[List[str], List[ScoredResult], RawJSONDictResponse]:
     """Performs search specified by `search_operator`.
     Returns entity strings of type `return_type` that match the resulting hits.
 
@@ -192,21 +196,19 @@ def perform_search(search_operator: SearchOperator,
                                      return_with_scores=return_with_scores,
                                      return_raw_json_dict=return_raw_json_dict)
 
+
 _SEARCH_OPERATORS = text_operators.TEXT_SEARCH_OPERATORS + [
-    SequenceOperator,
-    StructureOperator,
-    SeqMotifOperator
+    SequenceOperator, StructureOperator, SeqMotifOperator
 ]
 
 
-def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
-                              return_type: ReturnType = ReturnType.ENTRY,
-                              request_options: Optional[RequestOptions] = None,
-                              return_with_scores: bool = False,
-                              return_raw_json_dict: bool = False
-                              ) -> Union[List[str],
-                                         RawJSONDictResponse,
-                                         List[ScoredResult]]:
+def perform_search_with_graph(
+    query_object: Union[SearchOperator, QueryGroup],
+    return_type: ReturnType = ReturnType.ENTRY,
+    request_options: Optional[RequestOptions] = None,
+    return_with_scores: bool = False,
+    return_raw_json_dict: bool = False
+) -> Union[List[str], RawJSONDictResponse, List[ScoredResult]]:
     """Performs specified search using RCSB's search node logic.
 
     Essentially, this allows you to ask multiple questions in one RCSB query.
@@ -240,9 +242,9 @@ def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
     """
 
     if type(query_object) in _SEARCH_OPERATORS:
-        cast_query_object = _QueryNode(query_object) # type: ignore
+        cast_query_object = _QueryNode(query_object)  # type: ignore
     else:
-        cast_query_object = query_object # type: ignore
+        cast_query_object = query_object  # type: ignore
 
     if request_options is not None:
         request_options_dict = request_options._to_dict()
@@ -261,7 +263,6 @@ def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
     response = requests.post(url=SEARCH_URL_ENDPOINT,
                              data=json.dumps(rcsb_query_dict))
 
-
     # If your search queries are failing here, it could be that your attribute
     # doesn't support the SearchOperator you're using.
     # See: https://search.rcsb.org/search-attributes.html
@@ -279,17 +280,18 @@ def perform_search_with_graph(query_object: Union[SearchOperator, QueryGroup],
     results = []
     for query_hit in response.json()["result_set"]:
         if return_with_scores:
-            results.append(ScoredResult(
-                entity_id=query_hit["identifier"],
-                score=query_hit["score"]
-            ))
+            results.append(
+                ScoredResult(entity_id=query_hit["identifier"],
+                             score=query_hit["score"]))
         else:
             results.append(query_hit["identifier"])
 
     return results
 
+
 class CannotInferSearchServiceException(Exception):
     """Raised when the RCSB Search API Service cannot be inferred."""
+
 
 def _infer_search_service(search_operator: SearchOperator) -> SearchService:
 
@@ -304,6 +306,7 @@ def _infer_search_service(search_operator: SearchOperator) -> SearchService:
     else:
         raise CannotInferSearchServiceException(
             "Cannot infer Search Service for {}".format(type(search_operator)))
+
 
 @dataclass
 class _QueryNode:

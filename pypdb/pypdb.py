@@ -30,12 +30,12 @@ from pypdb.clients.search import search_client
 from pypdb.clients.search.operators import sequence_operators
 
 warnings.simplefilter('always', DeprecationWarning)
-
 '''
 =================
 Functions for searching the RCSB PDB for lists of PDB IDs
 =================
 '''
+
 
 class Query(object):
     """
@@ -95,14 +95,12 @@ class Query(object):
     ['3LEZ', '3SGH', '4F47']
 
     """
-
     def __init__(self,
                  search_term,
                  query_type="text",
                  return_type="entry",
                  scan_params=None):
         """See help(Query) for documentation"""
-
 
         if query_type == "PubmedIdQuery":
             query_type = "text"
@@ -114,11 +112,16 @@ class Query(object):
             query_type = "text"
             query_subtype = "experiment_type"
             search_term = search_term.upper()
-            if search_term not in ["X-RAY DIFFRACTION", "ELECTRON MICROSCOPY", "SOLID-STATE NMR", "SOLUTION NMR",
-                             "NEUTRON DIFFRACTION", "ELECTRON CRYSTALLOGRAPHY", "POWDER DIFFRACTION",
-                             "FIBER DIFFRACTION", "SOLUTION SCATTERING", "EPR", "FLUORESCENCE TRANSFER",
-                            "INFRARED SPECTROSCOPY", "THEORETICAL MODEL"]:
-                warnings.warn("Experimental type not recognized, search may fail .")
+            if search_term not in [
+                    "X-RAY DIFFRACTION", "ELECTRON MICROSCOPY",
+                    "SOLID-STATE NMR", "SOLUTION NMR", "NEUTRON DIFFRACTION",
+                    "ELECTRON CRYSTALLOGRAPHY", "POWDER DIFFRACTION",
+                    "FIBER DIFFRACTION", "SOLUTION SCATTERING", "EPR",
+                    "FLUORESCENCE TRANSFER", "INFRARED SPECTROSCOPY",
+                    "THEORETICAL MODEL"
+            ]:
+                warnings.warn(
+                    "Experimental type not recognized, search may fail .")
         elif query_type == "AdvancedAuthorQuery":
             query_type = "text"
             query_subtype = "author"
@@ -131,11 +134,12 @@ class Query(object):
         else:
             query_subtype = None
 
-        assert query_type in {"text", "structure", "sequence", "seqmotif", "chemical"
-                             }, "Query type %s not recognized." % query_type
+        assert query_type in {
+            "text", "structure", "sequence", "seqmotif", "chemical"
+        }, "Query type %s not recognized." % query_type
 
-        assert return_type in {"entry", "polymer_entity"}, "Return type %s not supported." % return_type
-
+        assert return_type in {"entry", "polymer_entity"
+                               }, "Return type %s not supported." % return_type
 
         self.query_type = query_type
         self.search_term = search_term
@@ -148,15 +152,21 @@ class Query(object):
             query_params["service"] = query_type
 
             if query_type == "text":
-                query_params['parameters'] = {"value" : search_term}
+                query_params['parameters'] = {"value": search_term}
 
-            elif query_type=="sequence":
-                query_params['parameters'] = {"target": "pdb_protein_sequence",
-                                              "value" : search_term}
-            elif query_type=="structure":
-                query_params['parameters'] = {"operator": "relaxed_shape_match",
-                                              "value" : {"entry_id" : search_term, "assembly_id": "1"}
-                                             }
+            elif query_type == "sequence":
+                query_params['parameters'] = {
+                    "target": "pdb_protein_sequence",
+                    "value": search_term
+                }
+            elif query_type == "structure":
+                query_params['parameters'] = {
+                    "operator": "relaxed_shape_match",
+                    "value": {
+                        "entry_id": search_term,
+                        "assembly_id": "1"
+                    }
+                }
 
 #             elif query_type=='AdvancedAuthorQuery':
 #                 query_params['description'] = 'Author Name: '+ search_term
@@ -189,50 +199,64 @@ class Query(object):
             if query_subtype:
 
                 if query_subtype == "pmid":
-                    query_params['parameters'] = {"operator" : "in",
-                                                  "negation": False,
-                                                  "value" : [search_term],
-                                                  "attribute": "rcsb_pubmed_container_identifiers.pubmed_id"
-                                                 }
+                    query_params['parameters'] = {
+                        "operator": "in",
+                        "negation": False,
+                        "value": [search_term],
+                        "attribute":
+                        "rcsb_pubmed_container_identifiers.pubmed_id"
+                    }
                 if query_subtype == "taxid":
-                    query_params['parameters'] = {"operator": "exact_match",
-                                                  "negation": False,
-                                                  "value" : str(search_term),
-                                                  "attribute": "rcsb_entity_source_organism.taxonomy_lineage.id"
-                                                 }
+                    query_params['parameters'] = {
+                        "operator":
+                        "exact_match",
+                        "negation":
+                        False,
+                        "value":
+                        str(search_term),
+                        "attribute":
+                        "rcsb_entity_source_organism.taxonomy_lineage.id"
+                    }
                 if query_subtype == "experiment_type":
-                    query_params['parameters'] = {"operator": "exact_match",
-                                                  "negation": False,
-                                                  "value" : str(search_term),
-                                                  "attribute": "exptl.method"
-                                                 }
+                    query_params['parameters'] = {
+                        "operator": "exact_match",
+                        "negation": False,
+                        "value": str(search_term),
+                        "attribute": "exptl.method"
+                    }
                 if query_subtype == "author":
-                    query_params['parameters'] = {"operator": "exact_match",
-                                                  "negation": False,
-                                                  "value" : str(search_term),
-                                                  "attribute": "rcsb_primary_citation.rcsb_authors"
-                                                 }
+                    query_params['parameters'] = {
+                        "operator": "exact_match",
+                        "negation": False,
+                        "value": str(search_term),
+                        "attribute": "rcsb_primary_citation.rcsb_authors"
+                    }
                 if query_subtype == "organism":
-                    query_params['parameters'] = {"operator": "contains_words",
-                                                  "negation": False,
-                                                  "value" : str(search_term),
-                                                  "attribute": "rcsb_entity_source_organism.taxonomy_lineage.name"
-                                                 }
+                    query_params['parameters'] = {
+                        "operator":
+                        "contains_words",
+                        "negation":
+                        False,
+                        "value":
+                        str(search_term),
+                        "attribute":
+                        "rcsb_entity_source_organism.taxonomy_lineage.name"
+                    }
                 if query_subtype == "pfam":
-                    query_params['parameters'] = {"operator": "exact_match",
-                                                  "negation": False,
-                                                  "value" : str(search_term),
-                                                  "attribute": "rcsb_polymer_entity_annotation.annotation_id"
-                                                 }
-
-
+                    query_params['parameters'] = {
+                        "operator": "exact_match",
+                        "negation": False,
+                        "value": str(search_term),
+                        "attribute":
+                        "rcsb_polymer_entity_annotation.annotation_id"
+                    }
 
             self.scan_params = dict()
             self.scan_params["query"] = query_params
             self.scan_params["return_type"] = return_type
 
             if return_type == "entry":
-                self.scan_params["request_options"] = {"return_all_hits" : True}
+                self.scan_params["request_options"] = {"return_all_hits": True}
 
         else:
             self.scan_params = scan_params
@@ -252,8 +276,9 @@ class Query(object):
         """
 
         query_text = json.dumps(self.scan_params, indent=4)
-        response = http_requests.request_limited(self.url, rtype="POST",
-         data=query_text)
+        response = http_requests.request_limited(self.url,
+                                                 rtype="POST",
+                                                 data=query_text)
 
         if response.status_code == 200:
             pass
@@ -264,7 +289,10 @@ class Query(object):
         response_val = json.loads(response.text)
 
         if self.return_type == "entry":
-            idlist = walk_nested_dict(response_val, "identifier", maxdepth=25, outputs=[])
+            idlist = walk_nested_dict(response_val,
+                                      "identifier",
+                                      maxdepth=25,
+                                      outputs=[])
             return idlist
         else:
             return response_val
@@ -284,7 +312,6 @@ class Query(object):
 #         A dictionary of query attributes to use for
 #         the search of the PDB
 
-
 #     Returns
 #     -------
 
@@ -301,7 +328,6 @@ class Query(object):
 #     'keywords': 'actin',
 #     'queryType': 'AdvancedKeywordQuery'}}
 
-
 #     >>> search_dict = make_query('actin network')
 #     >>> found_pdbs = do_search(search_dict)
 #     >>> print(found_pdbs)
@@ -314,7 +340,6 @@ class Query(object):
 #     '''
 #     q = Query('search_term', 'HoldingsQuery', scan_params=scan_params)
 #     return q.search()
-
 
 # def do_protsym_search(point_group, min_rmsd=0.0, max_rmsd=7.0):
 #     '''Performs a protein symmetry search of the PDB
@@ -364,7 +389,6 @@ class Query(object):
 #     idlist =  do_search(scan_params)
 #     return idlist
 
-
 # def get_all():
 #     """Return a list of all PDB entries currently in the RCSB Protein Data Bank
 
@@ -401,12 +425,12 @@ class Query(object):
 #         out.append(item[-5:-1])
 
 #     return out
-
 '''
 =================
 Functions for looking up information given PDB ID
 =================
 '''
+
 
 def get_info(pdb_id, url_root='https://data.rcsb.org/rest/v1/core/entry/'):
     '''Look up all information about a given PDB ID
@@ -427,7 +451,7 @@ def get_info(pdb_id, url_root='https://data.rcsb.org/rest/v1/core/entry/'):
         An ordered dictionary object corresponding to entry information
 
     '''
-    pdb_id = pdb_id.replace(":", "/") # replace old entry identifier
+    pdb_id = pdb_id.replace(":", "/")  # replace old entry identifier
     url = url_root + pdb_id
     response = http_requests.request_limited(url)
 
@@ -437,15 +461,17 @@ def get_info(pdb_id, url_root='https://data.rcsb.org/rest/v1/core/entry/'):
         warnings.warn("Retrieval failed, returning None")
         return None
 
-    result  = str(response.text)
+    result = str(response.text)
 
     out = json.loads(result)
 
     return out
 
-get_all_info = get_info # Alias
-describe_pdb = get_info # Alias for now; eve tually make this point to the Graph search https://data.rcsb.org/migration-guide.html#pdb-file-description
-get_entity_info = get_info # Alias
+
+get_all_info = get_info  # Alias
+describe_pdb = get_info  # Alias for now; eve tually make this point to the Graph search https://data.rcsb.org/migration-guide.html#pdb-file-description
+get_entity_info = get_info  # Alias
+
 
 def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
     """Deprecated wrapper for fetching PDB files from RCSB Database.
@@ -453,9 +479,10 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
     For new uses, please use `pypdb/clients/pdb/pdb_client.py`
     """
 
-    warnings.warn("The `get_pdb_file` function within pypdb.py is deprecated."
-                  "See `pypdb/clients/pdb/pdb_client.py` for a near-identical "
-                  "function to use", DeprecationWarning)
+    warnings.warn(
+        "The `get_pdb_file` function within pypdb.py is deprecated."
+        "See `pypdb/clients/pdb/pdb_client.py` for a near-identical "
+        "function to use", DeprecationWarning)
 
     if filetype is 'pdb':
         filetype_enum = pdb_client.PDBFileType.PDB
@@ -466,9 +493,11 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
     elif filetype is 'structfact':
         filetype_enum = pdb_client.PDBFileType.STRUCTFACT
     else:
-        warnings.warn("Filetype specified to `get_pdb_file` appears to be invalid")
+        warnings.warn(
+            "Filetype specified to `get_pdb_file` appears to be invalid")
 
     return pdb_client.get_pdb_file(pdb_id, filetype_enum, compression)
+
 
 # https://data.rcsb.org/migration-guide.html#chem-comp-description
 # def describe_chemical(chem_id):
@@ -517,7 +546,6 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
 
 #     out : dict
 #         A dictionary containing a list of ligands associated with the entry
-
 
 #     Examples
 #     --------
@@ -619,6 +647,7 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
 #     out = to_dict(out)
 #     return remove_at_sign(out['sequenceCluster'])
 
+
 def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99):
     """
     ---
@@ -657,30 +686,30 @@ def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99):
     NQLIESSIHLLHDSIIEILQKAIKLGGSSIRTY-SALGSTGKMQNELQVYGKTGEKCSRCGAEIQKIKVAGRGTHFCPVCQQ
     """
 
-    warnings.warn("The `get_blast` function is slated for deprecation."
-                "See `pypdb/clients/search/EXAMPLES.md` for examples to use a"
-                "`SequenceOperator` search to similar effect", DeprecationWarning)
+    warnings.warn(
+        "The `get_blast` function is slated for deprecation."
+        "See `pypdb/clients/search/EXAMPLES.md` for examples to use a"
+        "`SequenceOperator` search to similar effect", DeprecationWarning)
 
     fasta_entries = fasta_client.get_fasta_from_rcsb_entry(pdb_id)
-    valid_sequences = [fasta_entry.sequence for fasta_entry in fasta_entries
-                       if chain_id in fasta_entry.chains]
+    valid_sequences = [
+        fasta_entry.sequence for fasta_entry in fasta_entries
+        if chain_id in fasta_entry.chains
+    ]
 
     matches_any_sequence_in_chain_query = search_client.QueryGroup(
-        logical_operator=search_client.LogicalOperator.OR,
-        queries = []
-    )
+        logical_operator=search_client.LogicalOperator.OR, queries=[])
     for valid_sequence in valid_sequences:
         matches_any_sequence_in_chain_query.queries.append(
             sequence_operators.SequenceOperator(
                 sequence=valid_sequence,
                 identity_cutoff=identity_cutoff,
-                evalue_cutoff=1000
-            ))
+                evalue_cutoff=1000))
 
     return search_client.perform_search_with_graph(
         query_object=matches_any_sequence_in_chain_query,
-        return_raw_json_dict=True
-    )
+        return_raw_json_dict=True)
+
 
 # def get_pfam(pdb_id):
 #     """Return PFAM annotations of given PDB_ID
@@ -713,7 +742,6 @@ def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99):
 #         return dict()
 #     return remove_at_sign(out['hmmer3'])
 
-
 # def get_clusters(pdb_id):
 #     """Return cluster related web services of given PDB_ID
 
@@ -740,7 +768,6 @@ def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99):
 #     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/representatives?structureId=')
 #     out = to_dict(out)
 #     return remove_at_sign(out['representatives'])
-
 
 
 def find_results_gen(search_term, field='title'):
@@ -777,7 +804,6 @@ def find_results_gen(search_term, field='title'):
         result = get_info(pdb_id)
         if field in result.keys():
             yield result[field]
-
 
 
 def find_papers(search_term, max_results=10, **kwargs):
@@ -818,6 +844,7 @@ def find_papers(search_term, max_results=10, **kwargs):
         all_papers += [item["title"] for item in pdb_info["citation"]]
     return remove_dupes(all_papers)
 
+
 # def find_authors(search_term, **kwargs):
 #     '''Return an ordered list of the top authors returned by a keyword search of
 #     the RCSB PDB
@@ -843,7 +870,6 @@ def find_papers(search_term, max_results=10, **kwargs):
 #     -------
 
 #     out : list of str
-
 
 #     Examples
 #     --------
@@ -891,17 +917,12 @@ def find_papers(search_term, max_results=10, **kwargs):
 #     '''
 #     all_dates = parse_results_gen(search_term, field='deposition_date', **kwargs)
 #     return all_dates
-
-
-
-
-
-
 '''
 =================
 Helper Functions
 =================
 '''
+
 
 def to_dict(odict):
     '''Convert OrderedDict to dict
@@ -927,6 +948,7 @@ def to_dict(odict):
     out = json.loads(json.dumps(odict))
     return out
 
+
 def remove_at_sign(kk):
     '''Remove the '@' character from the beginning of key names in a dict()
 
@@ -949,6 +971,7 @@ def remove_at_sign(kk):
         kk[tag_key[1:]] = kk.pop(tag_key)
 
     return kk
+
 
 def remove_dupes(list_with_dupes):
     '''Remove duplicate entries from a list while preserving order
@@ -979,8 +1002,12 @@ def remove_dupes(list_with_dupes):
     '''
     visited = set()
     visited_add = visited.add
-    out = [ entry for entry in list_with_dupes if not (entry in visited or visited_add(entry))]
+    out = [
+        entry for entry in list_with_dupes
+        if not (entry in visited or visited_add(entry))
+    ]
     return out
+
 
 def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
     '''
@@ -1017,26 +1044,32 @@ def walk_nested_dict(my_result, term, outputs=[], depth=0, maxdepth=25):
     '''
 
     if depth > maxdepth:
-        warnings.warn('Maximum recursion depth exceeded. Returned None for the search results,'+
-                      ' try increasing the maxdepth keyword argument.')
+        warnings.warn(
+            'Maximum recursion depth exceeded. Returned None for the search results,'
+            + ' try increasing the maxdepth keyword argument.')
         return None
-
 
     depth = depth + 1
 
-    if type(my_result)==dict:
+    if type(my_result) == dict:
         if term in my_result.keys():
             outputs.append(my_result[term])
 
         else:
             new_results = list(my_result.values())
-            walk_nested_dict(new_results, term, outputs=outputs,
-                            depth=depth, maxdepth=maxdepth)
+            walk_nested_dict(new_results,
+                             term,
+                             outputs=outputs,
+                             depth=depth,
+                             maxdepth=maxdepth)
 
-    elif type(my_result)==list:
+    elif type(my_result) == list:
         for item in my_result:
-            walk_nested_dict(item, term, outputs=outputs,
-                            depth=depth, maxdepth=maxdepth)
+            walk_nested_dict(item,
+                             term,
+                             outputs=outputs,
+                             depth=depth,
+                             maxdepth=maxdepth)
 
     else:
         pass
