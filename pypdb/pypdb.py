@@ -30,6 +30,14 @@ from pypdb.clients.search import search_client
 from pypdb.clients.search.operators import sequence_operators
 
 warnings.simplefilter('always', DeprecationWarning)
+
+
+# New imports needed for the updated API
+from pypdb.clients.search.search_client import perform_search
+from pypdb.clients.search.search_client import ReturnType
+from pypdb.clients.search.operators import text_operators
+
+
 '''
 =================
 Functions for searching the RCSB PDB for lists of PDB IDs
@@ -465,7 +473,7 @@ def get_info(pdb_id, url_root='https://data.rcsb.org/rest/v1/core/entry/'):
 
 
 get_all_info = get_info  # Alias
-describe_pdb = get_info  # Alias for now; eve tually make this point to the Graph search https://data.rcsb.org/migration-guide.html#pdb-file-description
+describe_pdb = get_info  # Alias for now; eventually make this point to the Graph search https://data.rcsb.org/migration-guide.html#pdb-file-description
 get_entity_info = get_info  # Alias
 
 
