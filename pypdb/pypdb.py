@@ -280,9 +280,7 @@ class Query(object):
                                                  rtype="POST",
                                                  data=query_text)
 
-        if response.status_code == 200:
-            pass
-        else:
+        if response is None or response.status_code != 200:
             warnings.warn("Retrieval failed, returning None")
             return None
 
@@ -455,9 +453,7 @@ def get_info(pdb_id, url_root='https://data.rcsb.org/rest/v1/core/entry/'):
     url = url_root + pdb_id
     response = http_requests.request_limited(url)
 
-    if response.status_code == 200:
-        pass
-    else:
+    if response is None or response.status_code != 200:
         warnings.warn("Retrieval failed, returning None")
         return None
 
