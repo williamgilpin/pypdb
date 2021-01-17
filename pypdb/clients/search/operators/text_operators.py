@@ -132,25 +132,44 @@ class ComparisonOperator:
         return param_dict
 
 
+# @dataclass
+# class RangeOperator:
+#     """Returns results with attributes within range."""
+#     attribute: str
+#     from_value: Any
+#     to_value: Any
+#     include_lower: bool = True  # Default inclusive
+#     include_upper: bool = True  # Default inclusive
+
+#     def _to_dict(self) -> Dict[str, Any]:
+#         return {
+#             "operator": "range",
+#             "attribute": self.attribute,
+#             "value": {
+#                 "from": self.from_value,
+#                 "to": self.to_value,
+#                 "include_lower": self.include_lower,
+#                 "include_upper": self.include_upper
+#             }
+#         }
+
+
 @dataclass
 class RangeOperator:
-    """Returns results with attributes within range."""
+    """Returns results with attributes within range.."""
     attribute: str
     from_value: Any
     to_value: Any
     include_lower: bool = True  # Default inclusive
     include_upper: bool = True  # Default inclusive
+    negation: bool = False
 
     def _to_dict(self) -> Dict[str, Any]:
         return {
             "operator": "range",
             "attribute": self.attribute,
-            "value": {
-                "from": self.from_value,
-                "to": self.to_value,
-                "include_lower": self.include_lower,
-                "include_upper": self.include_upper
-            }
+            "negation": self.negation,
+            "value": [self.from_value, self.to_value]
         }
 
 
