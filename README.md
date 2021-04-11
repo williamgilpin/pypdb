@@ -1,6 +1,6 @@
 # PyPDB
 
-A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB). This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed from within Python scripts.
+A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB). This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be performed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed from within Python scripts.
 
 Examples of each function and its associated output can be found in [`demos/demos.ipynb`](demos/demos.ipynb).
 
