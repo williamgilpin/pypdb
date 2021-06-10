@@ -90,7 +90,7 @@ class ContainsPhraseOperator:
 class ComparisonType(Enum):
     GREATER = "greater"
     GREATER_OR_EQUAL = "greater_or_equal"
-    EQUAL = "equal"
+    EQUAL = "equals"
     NOT_EQUAL = "not_equal"
     LESS_OR_EQUAL = "less_or_equal"
     LESS = "less"
