@@ -9,8 +9,6 @@ If you use this module for any published work, please consider citing the accomp
       Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
       Bioinformatics, Oxford Journals, 2015.
 
-*As of November 2020, pypdb is undergoing significantly refactoring in order to accomodate changes to the RCSB PDB API and extend functionality. We regret any breaking changes that occur along the way. The previous version of pypdb is available [here](https://github.com/williamgilpin/pypdb_legacy); however, it will no longer function to to the RCSB API being changed.*
-
 **We very much welcome contributors and pull requests**
 
 ## Installation
