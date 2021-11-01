@@ -105,7 +105,7 @@ class Query(object):
     """
     def __init__(self,
                  search_term,
-                 query_type="text",
+                 query_type="full_text",
                  return_type="entry",
                  scan_params=None):
         """See help(Query) for documentation"""
@@ -143,7 +143,7 @@ class Query(object):
             query_subtype = None
 
         assert query_type in {
-            "text", "structure", "sequence", "seqmotif", "chemical"
+            "full_text", "text", "structure", "sequence", "seqmotif", "chemical"
         }, "Query type %s not recognized." % query_type
 
         assert return_type in {"entry", "polymer_entity"
@@ -159,7 +159,7 @@ class Query(object):
             query_params["type"] = "terminal"
             query_params["service"] = query_type
 
-            if query_type == "text":
+            if query_type in ["full_text", "text"]:
                 query_params['parameters'] = {"value": search_term}
 
             elif query_type == "sequence":

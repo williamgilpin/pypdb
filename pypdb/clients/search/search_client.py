@@ -283,6 +283,7 @@ class SearchService(Enum):
     """Which type of field is being searched.
 
     Auto-inferred from search operator."""
+    BASIC_SEARCH = "full_text"
     TEXT = "text"
     SEQUENCE = "sequence"
     SEQMOTIF = "seqmotif"
@@ -296,7 +297,9 @@ class CannotInferSearchServiceException(Exception):
 
 def _infer_search_service(search_operator: SearchOperator) -> SearchService:
 
-    if type(search_operator) in text_operators.TEXT_SEARCH_OPERATORS:
+    if isinstance(search_operator, text_operators.DefaultOperator):
+        return SearchService.BASIC_SEARCH
+    elif type(search_operator) in text_operators.TEXT_SEARCH_OPERATORS:
         return SearchService.TEXT
     elif type(search_operator) is SequenceOperator:
         return SearchService.SEQUENCE
