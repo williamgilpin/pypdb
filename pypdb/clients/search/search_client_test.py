@@ -34,7 +34,7 @@ class TestHTTPRequests(unittest.TestCase):
         expected_json_dict = {
             'query': {
                 'type': 'terminal',
-                'service': 'text',
+                'service': 'full_text',
                 'parameters': {
                     'value': 'ribosome'
                 }
@@ -305,12 +305,8 @@ class TestHTTPRequests(unittest.TestCase):
                 "parameters": {
                     "operator": "range",
                     "attribute": "rcsb_accession_info.initial_release_date",
-                    "value": {
-                        "from": "2019-01-01T00:00:00Z",
-                        "to": "2019-06-30T00:00:00Z",
-                        "include_lower": False,
-                        "include_upper": True
-                    }
+                    "negation": False,
+                    "value": ["2019-01-01T00:00:00Z", "2019-06-30T00:00:00Z"],
                 }
             },
             "request_options": {
