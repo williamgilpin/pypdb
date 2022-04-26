@@ -7,7 +7,7 @@ Examples of each function and its associated output can be found in [`demos/demo
 If you use this module for any published work, please consider citing the accompanying paper
 
       Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
-      Bioinformatics, Oxford Journals, 2015.
+      Bioinformatics, Oxford Journals, 2016.
 
 **We very much welcome contributors and pull requests**
 
