@@ -23,7 +23,7 @@ from pypdb.clients.search.operators.sequence_operators import SequenceOperator
 from pypdb.clients.search.operators.structure_operators import StructureOperator
 from pypdb.clients.search.operators.text_operators import TextSearchOperator
 
-SEARCH_URL_ENDPOINT: str = "https://search.rcsb.org/rcsbsearch/v1/query"
+SEARCH_URL_ENDPOINT: str = "https://search.rcsb.org/rcsbsearch/v2/query"
 """SearchOperators correspond to individual search operations.
 
 These can be used to search on their own using `perform_search`, or they can be
@@ -104,7 +104,7 @@ class RequestOptions:
     def _to_dict(self):
         result_dict = {}
         if self.result_start_index != None and self.num_results != None:
-            result_dict["pager"] = {
+            result_dict["paginate"] = {
                 "start": self.result_start_index,
                 "rows": self.num_results
             }
