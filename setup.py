@@ -15,7 +15,7 @@ setup(
     name='pypdb',
     packages=modules_list,  # same as 'name'
     py_modules=modules_list,
-    version='2.01',
+    version='2.02',
     install_requires=['requests'],
     description='A Python wrapper for the RCSB Protein Data Bank (PDB) API',
     author='William Gilpin',
