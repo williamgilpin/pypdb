@@ -505,14 +505,14 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
 
 
 # https://data.rcsb.org/migration-guide.html#chem-comp-description
-# def describe_chemical(chem_id):
+def describe_chemical(chem_id):
 #     """
 
 #     Parameters
 #     ----------
 
 #     chem_id : string
-#         A 4 character string representing the full chemical sequence of interest (ie, NAG)
+#         A 3 character string representing the full chemical sequence of interest (ie, NAG)
 
 #     Returns
 #     -------
@@ -523,19 +523,13 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
 #     Examples
 #     --------
 #     >>> chem_desc = describe_chemical('NAG')
-#     >>> print(chem_desc)
-#     {'describeHet': {'ligandInfo': {'ligand': {'@molecularWeight': '221.208',
-#     'InChIKey': 'OVRNDRQMDRJTHS-FMDGEEDCSA-N', '@type': 'D-saccharide',
-#     'chemicalName': 'N-ACETYL-D-GLUCOSAMINE', '@chemicalID': 'NAG',
-#     'smiles': 'CC(=O)N[C@@H]1[C@H]([C@@H]([C@H](O[C@H]1O)CO)O)O', '
-#     InChI': 'InChI=1S/C8H15NO6/c1-3(11)9-5-7(13)6(12)4(2-10)15-8(5)14/
-#     h4-8,10,12-14H,2H2,1H3,(H,9,11)/t4-,5-,6-,7-,8-/m1/s1',
-#     'formula': 'C8 H15 N O6'}}}}
-
+#     >>> print(chem_desc["rcsb_chem_comp_descriptor"]["smiles"])
+#     'CC(=O)NC1C(C(C(OC1O)CO)O)O'
 #     """
-#     out = get_info(chem_id, url_root = 'http://www.rcsb.org/pdb/rest/describeHet?chemicalID=')
-#     out = to_dict(out)
-#     return out
+    if (len(chem_id) > 3):
+        raise Exception("Ligand id with more than 3 characters provided")
+
+    return get_info(chem_id, url_root = 'https://data.rcsb.org/rest/v1/core/chemcomp/')
 
 # def get_ligands(pdb_id):
 #     """Return ligands of given PDB ID
