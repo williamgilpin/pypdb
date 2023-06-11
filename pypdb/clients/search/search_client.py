@@ -197,7 +197,8 @@ def perform_search_with_graph(
     return_type: ReturnType = ReturnType.ENTRY,
     request_options: Optional[RequestOptions] = None,
     return_with_scores: bool = False,
-    return_raw_json_dict: bool = False
+    return_raw_json_dict: bool = False,
+    verbose: bool = True,
 ) -> Union[List[str], RawJSONDictResponse, List[ScoredResult]]:
     """Performs specified search using RCSB's search node logic.
 
@@ -222,6 +223,7 @@ def perform_search_with_graph(
             get the top X hits that are similar to a certain protein sequence.
         return_raw_json_dict: Whether to return raw JSON response.
             (for example, to analyze the scores of various matches)
+        verbose: Whether to print search query information (default: True)
 
     Returns:
         List of strings, corresponding to hits in the database. Will be of the
@@ -247,8 +249,9 @@ def perform_search_with_graph(
         "return_type": return_type.value
     }
 
-    print("Querying RCSB Search using the following parameters:\n %s \n" %
-          json.dumps(rcsb_query_dict))
+    if verbose:
+        print("Querying RCSB Search using the following parameters:\n %s \n" %
+              json.dumps(rcsb_query_dict))
 
     response = requests.post(url=SEARCH_URL_ENDPOINT,
                              data=json.dumps(rcsb_query_dict))
