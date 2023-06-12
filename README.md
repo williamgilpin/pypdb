@@ -19,7 +19,7 @@ Install using pip:
 
 To install the development version, which contains the latest features and fixes, install directly from GitHub using
 
-    $ pip install git+git://github.com/williamgilpin/pypdb
+    $ pip install git+https://github.com/williamgilpin/pypdb
 
 If you need to  install directly from setup.py,
 
