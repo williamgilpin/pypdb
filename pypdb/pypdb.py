@@ -647,7 +647,7 @@ def describe_chemical(chem_id):
 #     return remove_at_sign(out['sequenceCluster'])
 
 
-def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99):
+def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99, verbosity=True):
     """
     ---
     WARNING: this function is deprecated and slated to be deleted due to RCSB

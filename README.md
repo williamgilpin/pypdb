@@ -6,7 +6,7 @@ Examples of each function and its associated output can be found in [`demos/demo
 
 If you use this module for any published work, please consider citing the accompanying paper
 
-      Gilpin, W. "PyPDB: A Python API for the Protein Data Bank." 
+      Gilpin, W. "PyPDB: A Python API for the Protein Data Bank."
       Bioinformatics, Oxford Journals, 2016.
 
 **Help wanted: Currently, pypdb is in maintainence-only mode. We would very much appreciate help with adding features and developing a long-term roadmap.**
@@ -15,11 +15,11 @@ If you use this module for any published work, please consider citing the accomp
 
 Install using pip:
 
-	$ pip install pypdb
+    $ pip install pypdb
 
 To install the development version, which contains the latest features and fixes, install directly from GitHub using
 
-   	$ pip install git+git://github.com/williamgilpin/pypdb
+    $ pip install git+git://github.com/williamgilpin/pypdb
 
 If you need to  install directly from setup.py,
 
@@ -27,7 +27,7 @@ If you need to  install directly from setup.py,
 
 Test the installation, and check that the code successfully connects to the PDB, navigate to the root directory and run
 
-	$ pytest 
+    $ pytest
 
 This code has been designed and tested for Python 3.
 

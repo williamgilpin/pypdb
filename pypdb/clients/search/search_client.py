@@ -132,7 +132,8 @@ def perform_search(
     return_type: ReturnType = ReturnType.ENTRY,
     request_options: Optional[RequestOptions] = None,
     return_with_scores: bool = False,
-    return_raw_json_dict: bool = False
+    return_raw_json_dict: bool = False,
+    verbosity: bool = True,
 ) -> Union[List[str], List[ScoredResult], RawJSONDictResponse]:
     """Performs search specified by `search_operator`.
     Returns entity strings of type `return_type` that match the resulting hits.
@@ -156,6 +157,7 @@ def perform_search(
             (if this is true, returns List[ScoredResult] instead of List[str])
         return_raw_json_dict: If True, this function returns the raw JSON
             response from RCSB, instead of a
+        verbosity: Print out the search query to the console (default: True)
 
     Returns:
         List of entity ids, corresponding to entities that match the given
@@ -184,7 +186,8 @@ def perform_search(
                                      return_type=return_type,
                                      request_options=request_options,
                                      return_with_scores=return_with_scores,
-                                     return_raw_json_dict=return_raw_json_dict)
+                                     return_raw_json_dict=return_raw_json_dict,
+                                     verbosity=verbosity)
 
 
 _SEARCH_OPERATORS = text_operators.TEXT_SEARCH_OPERATORS + [
@@ -197,7 +200,8 @@ def perform_search_with_graph(
     return_type: ReturnType = ReturnType.ENTRY,
     request_options: Optional[RequestOptions] = None,
     return_with_scores: bool = False,
-    return_raw_json_dict: bool = False
+    return_raw_json_dict: bool = False,
+    verbosity: bool = True,
 ) -> Union[List[str], RawJSONDictResponse, List[ScoredResult]]:
     """Performs specified search using RCSB's search node logic.
 
@@ -222,6 +226,7 @@ def perform_search_with_graph(
             get the top X hits that are similar to a certain protein sequence.
         return_raw_json_dict: Whether to return raw JSON response.
             (for example, to analyze the scores of various matches)
+        verbosity: Print out the search query to the console (default: True)
 
     Returns:
         List of strings, corresponding to hits in the database. Will be of the
@@ -247,8 +252,9 @@ def perform_search_with_graph(
         "return_type": return_type.value
     }
 
-    print("Querying RCSB Search using the following parameters:\n %s \n" %
-          json.dumps(rcsb_query_dict))
+    if verbosity:
+        print("Querying RCSB Search using the following parameters:\n %s \n" %
+              json.dumps(rcsb_query_dict))
 
     response = requests.post(url=SEARCH_URL_ENDPOINT,
                              data=json.dumps(rcsb_query_dict))

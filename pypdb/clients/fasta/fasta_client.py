@@ -51,18 +51,22 @@ def _parse_fasta_text_to_list(raw_fasta_text: str) -> List[FastaSequence]:
     return fasta_list
 
 
-def get_fasta_from_rcsb_entry(rcsb_id: str) -> List[FastaSequence]:
+def get_fasta_from_rcsb_entry(rcsb_id: str,
+                              verbosity: bool = True,
+                              ) -> List[FastaSequence]:
     """Fetches FASTA sequence associated with PDB structure from RCSB.
 
     Args:
       rcsb_id: RCSB accession code of the structure of interest. E.g. `"5RU3"`
+      verbosity: Print out the search query to the console (default: True)
 
     Returns:
       Dictionary containing FASTA result, from polymer entity id to the
       `FastaSequence` object associated with that entity.
     """
 
-    print("Querying RCSB for the '{}' FASTA file.".format(rcsb_id))
+    if verbosity:
+        print("Querying RCSB for the '{}' FASTA file.".format(rcsb_id))
     response = requests.get(FASTA_BASE_URL + rcsb_id)
 
     if not response.ok:
