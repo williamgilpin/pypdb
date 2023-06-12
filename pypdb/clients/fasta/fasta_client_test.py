@@ -16,7 +16,7 @@ class TestFastaLogic(unittest.TestCase):
         mock_response.text = "fake_fasta_response"
         mock_get.return_value = mock_response
 
-        fasta_client.get_fasta_from_rcsb_entry("6TML")
+        fasta_client.get_fasta_from_rcsb_entry("6TML", verbosity=True)
         mock_get.assert_called_once_with(
             "https://www.rcsb.org/fasta/entry/6TML")
         mock_parse_fasta.assert_called_once_with("fake_fasta_response")

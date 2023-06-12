@@ -169,7 +169,8 @@ class RangeOperator:
             "operator": "range",
             "attribute": self.attribute,
             "negation": self.negation,
-            "value": [self.from_value, self.to_value]
+            "value": {"from": self.from_value,
+                      "to": self.to_value},
         }
 
 

@@ -23,7 +23,8 @@ Two querying functions are currently supported by PyPDB:
 ## `perform_search` Examples
 
 ### Search for all entries that mention the word 'ribosome'
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -36,7 +37,8 @@ results = perform_searchsearch_operator, return_type)
 ```
 
 ### Search for polymers from 'Mus musculus'
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -50,7 +52,8 @@ results = perform_search(search_operator, return_type)
 ```
 
 ### Search for non-polymers from 'Mus musculus' or 'Homo sapiens'
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -63,7 +66,8 @@ results = perform_search(search_operator, return_type)
 ```
 
 ### Search for polymer instances whose titles contain "actin" or "binding" or "protein"
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -77,11 +81,13 @@ results = perform_search(search_operator, return_type)
 ```
 
 ### Search for assemblies that contain the words "actin binding protein"
+
 (must be in that order).
 
 For example, "actin-binding protein" and "actin binding protein" will match,
 but "protein binding actin" will not.
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -95,7 +101,8 @@ results = perform_search(search_operator, return_type)
 ```
 
 ### Search for entries released in 2019 or later
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -111,7 +118,8 @@ results = perform_search(search_operator, return_type)
 ```
 
 ### Search for entries released only in 2019 or later
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -127,8 +135,10 @@ return_type = ReturnType.ENTRY
 
 results = perform_search(search_operator, return_type)
 ```
+
 ### Search for structures under 4 angstroms of resolution
-```
+
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -143,13 +153,12 @@ return_type = ReturnType.ENTRY
 results = perform_search(search_operator, return_type)
 ```
 
-
-### Search for structures with a given attribute.
+### Search for structures with a given attribute
 
 (Admittedly every structure has a release date, but the same logic would
  apply for a more sparse RCSB attribute).
 
-```
+```python
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators import text_operators
@@ -166,7 +175,7 @@ results = perform_search(search_operator, return_type)
 
 (this sequence matches the SARS-CoV-2 NSP3 macrodomain)
 
-```
+```python
 from pypdb.clients.search.search_client import perform_search, RequestOptions
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
@@ -194,14 +203,15 @@ results = perform_search(
 ```
 
 ### Search for structures that match the sequence of an existing RCSB entry
-```
+
+```python
 from pypdb.clients.fasta.fasta_client import get_fasta_from_rcsb_entry
 from pypdb.clients.search.search_client import perform_search
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
 
 # Fetches the first sequence in the "6TML" fasta file
-fasta_sequence = get_fasta_from_rcsb_entry("6TML")[0].sequence
+fasta_sequence = get_fasta_from_rcsb_entry("6TML", verbosity=True)[0].sequence
 
 # Performs sequence search ('BLAST'-like) using the FASTA sequence
 results = perform_search(
@@ -219,7 +229,7 @@ results = perform_search(
 
 ### Search for 'Mus musculus' or 'Homo sapiens' structures after 2019
 
-```
+```python
 from pypdb.clients.search.search_client import perform_search_with_graph
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.search_client import QueryGroup, LogicalOperator
@@ -266,7 +276,7 @@ Also, searching for `rcsb_chem_comp_container_identifiers.comp_id` with
 an exact match to `"CA"` yields only structures in complex with Ca2+
 (filtering out structures in complex with other metals like strontium).
 
-```
+```python
 from pypdb.clients.search.search_client import perform_search_with_graph
 from pypdb.clients.search.search_client import ReturnType
 from pypdb.clients.search.search_client import QueryGroup, LogicalOperator
