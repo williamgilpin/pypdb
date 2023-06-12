@@ -489,13 +489,13 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
         "See `pypdb/clients/pdb/pdb_client.py` for a near-identical "
         "function to use", DeprecationWarning)
 
-    if filetype is 'pdb':
+    if filetype == 'pdb':
         filetype_enum = pdb_client.PDBFileType.PDB
-    elif filetype is 'cif':
+    elif filetype == 'cif':
         filetype_enum = pdb_client.PDBFileType.CIF
-    elif filetype is 'xml':
+    elif filetype == 'xml':
         filetype_enum = pdb_client.PDBFileType.XML
-    elif filetype is 'structfact':
+    elif filetype == 'structfact':
         filetype_enum = pdb_client.PDBFileType.STRUCTFACT
     else:
         warnings.warn(
