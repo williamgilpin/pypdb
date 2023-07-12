@@ -7,6 +7,7 @@ modules_list = [
     "pypdb.clients.search",
     "pypdb.clients.search.operators",
     "pypdb.clients.data",
+    "pypdb.clients.data.graphql",
     "pypdb.clients.fasta",
     "pypdb.clients.pdb",
 ]
