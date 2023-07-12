@@ -1,5 +1,7 @@
 ###Temporary Files created by text editor###
 *~
+.vscode
+.vscode/
 
 ### Remove DS STORE
 *.DS_Store
@@ -71,6 +73,3 @@ target/
 ### IPythonNotebook ###
 # Temporary data
 .ipynb_checkpoints/
-
-# Remove temporary text files
-*~
