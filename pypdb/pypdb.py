@@ -139,6 +139,9 @@ class Query(object):
         elif query_type == "pfam":
             query_type = "text"
             query_subtype = "pfam"
+        elif query_type == "uniprot":
+            query_type = "text"
+            query_subtype = "uniprot"
         else:
             query_subtype = None
 
@@ -258,6 +261,14 @@ class Query(object):
                         "attribute":
                         "rcsb_polymer_entity_annotation.annotation_id"
                     }
+                if query_subtype == "uniprot":
+                    query_params['parameters'] = {
+                        "operator": "exact_match",
+                        "negation": False,
+                        "value": str(search_term),
+                        "attribute": 
+                        "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession"
+                        }
 
             self.scan_params = dict()
             self.scan_params["query"] = query_params
