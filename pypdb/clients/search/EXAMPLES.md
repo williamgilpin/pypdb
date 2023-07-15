@@ -12,7 +12,7 @@ you are querying the RCSB Text Search Service (`all
 operators within `text_operators.py` should be supported.
 
 For a list of RCSB attributes associated with structures you can search, see
-[RCSB's List of Attributes to Search](http://search.rcsb.org/search-attributes.html).
+[RCSB's List of Structure Attributes to Search](https://search.rcsb.org/structure-search-attributes.html) and [RCSB's List of Chemical Attributes to Search](https://search.rcsb.org/chemical-search-attributes.html)
 Note that not every structure will have every attribute.
 
 Two querying functions are currently supported by PyPDB:

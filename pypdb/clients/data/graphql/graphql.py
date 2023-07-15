@@ -4,6 +4,8 @@ For the differences between the GraphQL and RESTful searches, see:
 https://data.rcsb.org/index.html#gql-vs-rest
 """
 
+import requests
+import  warnings
 from typing import Any  # DO NOT APPROVE: fix this to actual type
 
 RSCB_GRAPHQL_URL = "https://data.rcsb.org/graphql?query="
@@ -23,4 +25,12 @@ def search_graphql(graphql_json_query: str) -> Any:
             matter. e.g. "{entry(entry_id:"4HHB"){exptl{method}}}"
     """
 
-    raise UnimplementedError("Currently unimplemented")
+    response = requests.post(url=RSCB_GRAPHQL_URL,
+                             json=graphql_json_query)
+
+    if not response.ok:
+        warnings.warn(f"It appears request failed with: {response.text}")
+        response.raise_for_status()
+
+
+    return response.json()
