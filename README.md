@@ -9,8 +9,6 @@ If you use this module for any published work, please consider citing the accomp
       Gilpin, W. "PyPDB: A Python API for the Protein Data Bank."
       Bioinformatics, Oxford Journals, 2016.
 
-**Help wanted: Currently, pypdb is in maintainence-only mode. We would very much appreciate help with adding features and developing a long-term roadmap.**
-
 ## Installation
 
 Install using pip:
