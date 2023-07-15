@@ -11,15 +11,39 @@ from pypdb import *
 
 class TestSearchFunctions(unittest.TestCase):
 
-    # Returns True if it successfully connects to the
-    # protein data bank
-    def test_querying(self):
-        found_pdbs = Query('actin network').search()
+    def test_searchterm(self):
+        found_pdbs = Query('ribosome').search()
         self.assertTrue(len(found_pdbs) > 0)
         self.assertTrue(type(found_pdbs[0]) == str)
 
         # an error page would be a longer string
         self.assertTrue(len(found_pdbs[0]) < 10)
+
+    def test_pubmed(self):
+        found_pdbs = Query(27499440, "PubmedIdQuery").search()
+        self.assertTrue(len(found_pdbs) > 0)
+
+    def test_treeentity(self):
+        found_pdbs = Query('6239', 'TreeEntityQuery').search()
+        self.assertTrue(len(found_pdbs) > 0)
+
+    def test_exptype(self):
+        found_pdbs = Query('SOLID-STATE NMR', 'ExpTypeQuery').search()
+        self.assertTrue(len(found_pdbs) > 0)
+
+    def test_structure(self):
+        found_pdbs = Query('2E8D', 'structure').search()
+        self.assertTrue(len(found_pdbs) > 0)
+
+    def test_advancedauthor(self):
+        found_pdbs = Query('Perutz, M.F.', 'AdvancedAuthorQuery').search()
+        self.assertTrue(len(found_pdbs) > 0)
+
+    def test_organism(self):
+        found_pdbs = Query('Dictyostelium', 'OrganismQuery').search()
+        self.assertTrue(len(found_pdbs) > 0)
+
+    
 
     # def test_blast(self):
     #     found_pdbs = blast_from_sequence(
