@@ -8,6 +8,7 @@ from pypdb import *
 # TODO(ejwilliams): Write generic logic, to execute `test_*.py` files
 # within the pypdb directory (removing need for sys.path hack)
 
+# aa_index[s] for s in seq_dict[k] if s in aa_index.keys()]
 
 class TestSearchFunctions(unittest.TestCase):
 
