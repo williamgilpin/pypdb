@@ -52,5 +52,18 @@ class TestEntry(unittest.TestCase):
         mock_post.assert_called_once_with(url=RSCB_GRAPHQL_URL, json=entry.json_query)
         self.assertEqual(entry.response, expected_return)
 
+    # TODO: add mock
+    def test_return_data_as_pandas_df(self):
+        entry = Entry(["4HHB", "12CA", "3PQR"])
+        property = {"exptl": ["method"], "cell": ["length_a", "length_b", "length_c"]}
+        entry.add_property(property)
+        entry.fetch_data()
+
+        df = entry.return_data_as_pandas_df()
+        self.assertEqual(df.shape, (3,4))
+        self.assertTrue("exptl.method" in df.columns)
+        for id in entry.id:
+            self.assertTrue(id in df.index)
+
 if __name__ == '__main__':
     unittest.main()

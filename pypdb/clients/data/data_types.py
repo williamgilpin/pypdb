@@ -16,6 +16,9 @@ Namely:
 - UniProt integrated data
 - DrugBank integrated data
 """
+import json
+import pandas as pd
+
 from pypdb.clients.data.graphql.graphql import search_graphql
 
 # TODO: convert to dataclass
@@ -80,7 +83,31 @@ class DataType:
             self.generate_json_query()
 
         response = search_graphql(self.json_query)
+        # TODO: error handling
         self.response = response
+
+    def return_data_as_pandas_df(self):
+        """
+        Return the fetched data as a pandas dataframe.
+        """
+        data = self.response['data']['entries']
+
+        # flatten data dictionary by joining property and subproperty names
+        data_flat = {}
+        for i, entry in enumerate(data):
+            id = self.id[i]
+            curr_dict = {}
+            for key, values in entry.items():
+                if isinstance(values, list):
+                    v = values[0]
+                else:
+                    v = values
+                for subprop, val in v.items():
+                    new_key = f"{key}.{subprop}"
+                    curr_dict[new_key] = val
+            data_flat[id] = curr_dict
+
+        return pd.DataFrame.from_dict(data_flat, orient='index')
 
 class Entry(DataType):
     """
