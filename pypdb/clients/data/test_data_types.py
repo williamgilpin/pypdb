@@ -65,5 +65,13 @@ class TestEntry(unittest.TestCase):
         for id in entry.id:
             self.assertTrue(id in df.index)
 
+    # TODO: add mock
+    def test_fetch_data_error_handling(self):
+        entry = Entry(["4HHB"])
+        property = {"exptl": ["method", "foo", "bar"]}
+        entry.add_property(property)
+        entry.fetch_data()
+        self.assertIsNone = entry.response
+
 if __name__ == '__main__':
     unittest.main()

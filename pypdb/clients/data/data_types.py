@@ -16,8 +16,9 @@ Namely:
 - UniProt integrated data
 - DrugBank integrated data
 """
-import json
 import pandas as pd
+
+#TODO: handle batch requests
 
 from pypdb.clients.data.graphql.graphql import search_graphql
 
@@ -83,13 +84,23 @@ class DataType:
             self.generate_json_query()
 
         response = search_graphql(self.json_query)
-        # TODO: error handling
+
+        if "errors" in response:
+            print("ERROR encountered in fetch_data().")
+            for error in response['errors']:
+                print(error['message'])
+
+            return
+
         self.response = response
 
     def return_data_as_pandas_df(self):
         """
         Return the fetched data as a pandas dataframe.
         """
+        if self.response is None:
+            return None
+
         data = self.response['data']['entries']
 
         # flatten data dictionary by joining property and subproperty names
