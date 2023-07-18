@@ -3,7 +3,6 @@
 For the differences between the GraphQL and RESTful searches, see:
 https://data.rcsb.org/index.html#gql-vs-rest
 """
-
 import requests
 import  warnings
 from typing import Any  # DO NOT APPROVE: fix this to actual type
