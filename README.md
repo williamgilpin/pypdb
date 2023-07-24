@@ -2,8 +2,6 @@
 
 A Python 3 toolkit for performing searches with the RCSB Protein Data Bank (PDB). This can be used to perform advanced searches for PDB IDs matching various criteria, as well as to look up information associated with specific PDB IDs. This tool allows standard operations that can be perfomed from within the PDB website (BLAST, PFAM lookup, etc.) to be performed from within Python scripts.
 
-Examples of each function and its associated output can be found in [`demos/demos.ipynb`](demos/demos.ipynb).
-
 If you use this module for any published work, please consider citing the accompanying paper
 
       Gilpin, W. "PyPDB: A Python API for the Protein Data Bank."
@@ -31,11 +29,11 @@ This code has been designed and tested for Python 3.
 
 ## Usage
 
-This package can be used to get lists of PDB IDs associated with specific search terms, experiment types, structures, and other common criteria.
+### PDB Text Search
+This package can be used to get lists of PDB IDs associated with specific search terms, experiment types, structures, and other common criteria. To use the simple API, see the examples in [`demos/demos.ipynb`](demos/demos.ipynb). For advanced search and query logic, see the examples in [`search/EXAMPLES.md`](pypdb/clients/search/EXAMPLES.md).
 
-Given a list of PDBs, this package can be used to fetch any data associated with those PDBs, including their dates of deposition, lists of authors and associated publications, their sequences or structures, their top BLAST matches, and other query-specific attributes like lists of a ligands or chemical structure.
-
-A set of demos is included in the iPython notebook **demos.ipynb**. A static version of this notebook (for viewing) is available as **demos.html**
+### PDB Data Fetch
+Given a list of PDBs, this package can be used to fetch data associated with those PDBs, including their dates of deposition, lists of authors and associated publications, their sequences or structures, their top BLAST matches, and other query-specific attributes like lists of a ligands or chemical structure.  To use the simple API, see the examples in [`demos/demos.ipynb`](demos/demos.ipynb). For advanced search and query logic, see the examples in [`data/EXAMPLES.md`](pypdb/clients/data/EXAMPLES.md).
 
 ## Issues and Feature Requests
 
