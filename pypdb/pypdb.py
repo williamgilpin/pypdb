@@ -17,7 +17,6 @@ If you find this code useful, please consider citing the paper:
 '''
 from collections import OrderedDict, Counter
 from itertools import repeat, chain
-import requests
 import time
 import re
 import json
