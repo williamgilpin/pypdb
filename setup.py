@@ -17,7 +17,7 @@ setup(
     packages=modules_list,  # same as 'name'
     py_modules=modules_list,
     version='2.03',
-    install_requires=['requests', 'pandas'],
+    install_requires=['requests'],
     description='A Python wrapper for the RCSB Protein Data Bank (PDB) API',
     author='William Gilpin',
     author_email='firstnamelastname@gmail.com',
