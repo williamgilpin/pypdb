@@ -18,7 +18,6 @@ Namely:
 - DrugBank integrated data
 """
 from dataclasses import dataclass, field
-import pandas as pd
 from enum import Enum
 
 #TODO: handle batch requests
@@ -162,9 +161,9 @@ class DataFetcher:
         if len(self.response['data'][self.data_type.value]) != len(self.id):
             print("WARNING: one or more IDs not found in the PDB.")
 
-    def return_data_as_pandas_df(self):
+    def return_data_as_df_dict(self):
         """
-        Return the fetched data as a pandas dataframe.
+        Return the fetched data as a dict usable by pandas or polars.
         """
         if not self.response:
             return None
@@ -190,4 +189,4 @@ class DataFetcher:
                         curr_dict[new_key] = val
             data_flat[id] = curr_dict
 
-        return pd.DataFrame.from_dict(data_flat, orient='index')
+        return data_flat
