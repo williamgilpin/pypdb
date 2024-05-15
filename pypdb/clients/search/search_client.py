@@ -239,6 +239,7 @@ def perform_search_with_graph(
     if type(query_object) in _SEARCH_OPERATORS:
         cast_query_object = _QueryNode(query_object)  # type: ignore
     else:
+        # print(type(query_object))
         cast_query_object = query_object  # type: ignore
 
     if request_options is not None:
