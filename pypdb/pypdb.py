@@ -297,6 +297,7 @@ class Query(object):
         query_text = json.dumps(self.scan_params, indent=4)
         response = http_requests.request_limited(self.url,
                                                  rtype="POST",
+                                                 headers={"Content-Type": "application/json"},
                                                  data=query_text)
 
         if response is None or response.status_code != 200:
