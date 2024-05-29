@@ -258,7 +258,8 @@ def perform_search_with_graph(
               json.dumps(rcsb_query_dict))
 
     response = requests.post(url=SEARCH_URL_ENDPOINT,
-                             data=json.dumps(rcsb_query_dict))
+                             data=json.dumps(rcsb_query_dict),
+                             headers={"Content-Type": "application/json"})
 
     # If your search queries are failing here, it could be that your attribute
     # doesn't support the SearchOperator you're using.
