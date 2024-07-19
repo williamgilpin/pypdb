@@ -37,7 +37,7 @@ Given a list of PDBs, this package can be used to fetch data associated with tho
 
 ## Issues and Feature Requests
 
-If you run into an issue, or if you find a workaround for an existing issue, we would very much appreciate it if you could post your question or code as a GitHub issue.
+If you run into an issue, or if you find a workaround for an existing issue, please post your question or code as a GitHub issue.
 
 If posting a feature request, please check that your request is possible using [the current GUI on current RCSB website](https://www.rcsb.org/search/advanced). If so, please perform your search, and then click the link that says `JSON` in the upper right hand corner of the Advanced Search box. Please post that JSON code with your feature request.
 
