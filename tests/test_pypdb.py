@@ -89,6 +89,15 @@ class TestSearchFunctions(unittest.TestCase):
         # If found_pdbs is an empty list, this will fail.
         self.assertTrue(found_pdbs and len(found_pdbs) > 0)
 
+    def test_ribosome_search_with_custom_user_agent(self):
+        """Test a basic search to ensure User-Agent modification doesn't break things."""
+        result = Query("ribosome").search()
+        self.assertIsNotNone(result, "Search result should not be None")
+        self.assertIsInstance(result, list, "Search result should be a list")
+        self.assertTrue(len(result) > 0, "Search for 'ribosome' should return results")
+        # Optionally, check for a known PDB ID if the results are consistent
+        # self.assertIn('4V5A', result) # Example, can be added if results are stable
+
     def test_chemical_query(self):
         # Search for PDB entries containing NAG (N-Acetyl-D-Glucosamine)
         found_pdbs = Query("NAG", query_type="chemical").search()

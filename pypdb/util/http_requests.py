@@ -6,6 +6,10 @@ import time
 import requests
 import warnings
 
+# Define User-Agent string
+PYPDB_VERSION = "2.04"  # TODO: Consider fetching this dynamically if setup.py changes often
+USER_AGENT = f"PyPDB/{PYPDB_VERSION} (https://github.com/williamgilpin/pypdb)"
+
 
 def request_limited(url: str,
                     rtype: str = "GET",
@@ -39,6 +43,13 @@ def request_limited(url: str,
 
     """
 
+    # Prepare final headers, starting with the library's User-Agent
+    final_headers = {"User-Agent": USER_AGENT}
+    if 'headers' in kwargs:
+        # Update with user-provided headers; user's User-Agent takes precedence if provided
+        user_provided_headers = kwargs.pop('headers')
+        final_headers.update(user_provided_headers)
+
     if rtype not in ["GET", "POST"]:
         warnings.warn("Request type not recognized")
         return None
@@ -46,9 +57,9 @@ def request_limited(url: str,
     total_attempts = 0
     while (total_attempts <= num_attempts):
         if rtype == "GET":
-            response = requests.get(url, **kwargs)
+            response = requests.get(url, headers=final_headers, **kwargs)
         elif rtype == "POST":
-            response = requests.post(url, **kwargs)
+            response = requests.post(url, headers=final_headers, **kwargs)
 
         if response.status_code == 200:
             return response
