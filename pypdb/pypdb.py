@@ -169,6 +169,15 @@ class Query(object):
                     "target": "pdb_protein_sequence",
                     "value": search_term
                 }
+            elif query_type == "seqmotif":
+                query_params['parameters'] = {
+                    "target": "pdb_protein_sequence", # Assuming protein sequence target for motifs
+                    "pattern_type": "simple", # As per RCSB docs, "simple" for basic sequence motifs
+                    "value": search_term
+                }
+            elif query_type == "chemical":
+                # Ensure chemical ID is uppercase, though current test uses "NAG"
+                query_params['parameters'] = {"value": str(search_term).upper()}
             elif query_type == "structure":
                 query_params['parameters'] = {
                     "operator": "relaxed_shape_match",
@@ -517,7 +526,7 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
 
 # https://data.rcsb.org/migration-guide.html#chem-comp-description
 def describe_chemical(chem_id):
-#     """
+    #     """
 
 #     Parameters
 #     ----------
@@ -542,80 +551,25 @@ def describe_chemical(chem_id):
 
     return get_info(chem_id, url_root = 'https://data.rcsb.org/rest/v1/core/chemcomp/')
 
-# def get_ligands(pdb_id):
-#     """Return ligands of given PDB ID
+def get_ligands(pdb_id):
+    """Return ligands of given PDB ID (DEPRECATED)"""
+    warnings.warn(
+        "get_ligands() is deprecated. Use pypdb.clients.data.DataFetcher with DataType.ENTRY "
+        "and query for nonpolymer_entity_instances or related chemical component data.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return None
 
-#     Parameters
-#     ----------
-
-#     pdb_id : string
-#         A 4 character string giving a pdb entry of interest
-
-#     Returns
-#     -------
-
-#     out : dict
-#         A dictionary containing a list of ligands associated with the entry
-
-#     Examples
-#     --------
-#     >>> ligand_dict = get_ligands('100D')
-#     >>> print(ligand_dict)
-#     {'id': '100D',
-#     'ligandInfo': {'ligand': {'@chemicalID': 'SPM',
-#                            '@molecularWeight': '202.34',
-#                            '@structureId': '100D',
-#                            '@type': 'non-polymer',
-#                            'InChI': 'InChI=1S/C10H26N4/c11-5-3-9-13-7-1-2-8-14-10-4-6-12/h13-14H,1-12H2',
-#                            'InChIKey': 'PFNFFQXMRSDOHW-UHFFFAOYSA-N',
-#                            'chemicalName': 'SPERMINE',
-#                            'formula': 'C10 H26 N4',
-#                            'smiles': 'C(CCNCCCN)CNCCCN'}}}
-
-#     """
-#     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/ligandInfo?structureId=')
-#     out = to_dict(out)
-#     return remove_at_sign(out['structureId'])
-
-# def get_gene_onto(pdb_id):
-#     """Return ligands of given PDB_ID
-
-#     Parameters
-#     ----------
-
-#     pdb_id : string
-#         A 4 character string giving a pdb entry of interest
-
-#     Returns
-#     -------
-
-#     out : dict
-#         A dictionary containing the gene ontology information associated with the entry
-
-#     Examples
-#     --------
-
-#     >>> gene_info = get_gene_onto('4Z0L')
-#     >>> print(gene_info['term'][0])
-#     {'@chainId': 'A',
-#      '@id': 'GO:0001516',
-#      '@structureId': '4Z0L',
-#      'detail': {'@definition': 'The chemical reactions and pathways resulting '
-#                                'in the formation of prostaglandins, any of a '
-#                                'group of biologically active metabolites which '
-#                                'contain a cyclopentane ring.',
-#                 '@name': 'prostaglandin biosynthetic process',
-#                 '@ontology': 'B',
-#                 '@synonyms': 'prostaglandin anabolism, prostaglandin '
-#                              'biosynthesis, prostaglandin formation, '
-#                              'prostaglandin synthesis'}}
-#     """
-#     out = get_info(pdb_id, url_root = 'http://www.rcsb.org/pdb/rest/goTerms?structureId=')
-#     out = to_dict(out)
-#     if not out['goTerms']:
-#         return None
-#     out = remove_at_sign(out['goTerms'])
-#     return out
+def get_gene_onto(pdb_id):
+    """Return gene ontology of given PDB_ID (DEPRECATED)"""
+    warnings.warn(
+        "get_gene_onto() is deprecated. Use pypdb.clients.data.DataFetcher with DataType.POLYMER_ENTITY "
+        "and query for rcsb_polymer_entity_annotation (filtering for GO terms).",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return None
 
 # def get_seq_cluster(pdb_id_chain):
 #     """Get the sequence cluster of a PDB ID plus a pdb_id plus a chain,

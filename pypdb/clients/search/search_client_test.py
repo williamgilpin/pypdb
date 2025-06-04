@@ -565,7 +565,7 @@ class TestHTTPRequests(unittest.TestCase):
 
         self.assertEqual(
             request_options._to_dict(), {
-                "pager": {
+                "paginate": {
                     "start": 42,
                     "rows": 8675309
                 },

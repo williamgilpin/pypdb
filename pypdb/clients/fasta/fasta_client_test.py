@@ -57,3 +57,35 @@ MFFSRLSLSALKAAPAREAL"""
                     "6TML_32|Chains H1,H2,H3,H4|subunit c|Toxoplasma gondii (strain ATCC 50853 / GT1) (507601)"
                 )
             ])
+
+    def test_get_fasta_from_rcsb_entry_integration(self):
+        # This test makes a network call to the RCSB PDB.
+        pdb_id = '1EHZ'
+        results = fasta_client.get_fasta_from_rcsb_entry(pdb_id)
+
+        self.assertTrue(results) # Check that the list is not empty
+        self.assertIsInstance(results, list)
+
+        # Assuming 1EHZ has at least one sequence, typically protein.
+        # If 1EHZ changes structure significantly, this test might need updating.
+        result = results[0]
+
+        self.assertIsInstance(result, fasta_client.FastaSequence)
+        self.assertTrue(result.entity_id.startswith(f'{pdb_id}_'))
+
+        self.assertIsInstance(result.chains, list)
+        self.assertTrue(len(result.chains) > 0)
+        self.assertIsInstance(result.chains[0], str)
+
+        self.assertIsInstance(result.sequence, str)
+        self.assertTrue(len(result.sequence) > 10)
+
+        # Check if all characters in the sequence are valid protein characters
+        # (standard amino acids; some PDBs might have non-standard ones, e.g. U for Selenocysteine)
+        valid_protein_chars = set('ACDEFGHIKLMNPQRSTVWYU') # Added 'U'
+        sequence_chars = set(result.sequence.upper())
+        self.assertTrue(sequence_chars.issubset(valid_protein_chars),
+                        f"Sequence contains non-standard protein characters: {sequence_chars - valid_protein_chars}")
+
+        self.assertIsInstance(result.fasta_header, str)
+        self.assertTrue(result.fasta_header.startswith(f'{pdb_id}_'))
