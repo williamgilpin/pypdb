@@ -268,53 +268,13 @@ class TestDeprecatedFunctions(unittest.TestCase):
 
         # Test with an invalid filetype (should still warn about deprecation, and then the wrapped function might error or warn further)
         mock_pdb_client_get_file.reset_mock()
-        with self.assertWarns(DeprecationWarning): # Checks for the initial deprecation warning
-            # The internal pdb_client.get_pdb_file would then handle the invalid filetype,
-            # which might raise its own error or warning, not tested here.
-            # For the purpose of this test, we only care that our wrapper issues the deprecation warning.
-            # The `get_pdb_file` wrapper in pypdb.py issues a UserWarning for invalid filetype before calling client.
-             with self.assertWarnsRegex(UserWarning, "Filetype specified to `get_pdb_file` appears to be invalid"):
-                get_pdb_file('1EHZ', filetype='invalid', compression=False)
-        # The mock_pdb_client_get_file should NOT be called if the filetype is invalid in the wrapper itself.
-        # However, the current pypdb.py get_pdb_file wrapper *does* call the client after its own warning.
-        # So we expect a call with an PDBFileType.PDB due to fallback / error in mapping.
-        # Let's check the actual behavior.
-        # The wrapper code sets filetype_enum = pdb_client.PDBFileType.PDB if filetype is 'pdb'
-        # and then warns for invalid filetypes but does not prevent calling the client.
-        # It does not have a default fallback for `filetype_enum` if the type is truly unknown to its mapping.
-        # It will actually fail at `pdb_client.get_pdb_file(pdb_id, filetype_enum, compression)`
-        # if `filetype_enum` is not defined.
-        # The wrapper has:
-        # else:
-        #     warnings.warn(
-        #         "Filetype specified to `get_pdb_file` appears to be invalid")
-        # return pdb_client.get_pdb_file(pdb_id, filetype_enum, compression)
-        # This will cause a NameError for filetype_enum if not pdb, cif, xml, structfact.
-        # So, instead of asserting a call, let's assert it raises NameError after DeprecationWarning + UserWarning
-        mock_pdb_client_get_file.reset_mock()
-        # Test the specific sequence of warnings and error for invalid filetype
-        mock_pdb_client_get_file.reset_mock()
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+            self.assertIsNone(get_pdb_file('1EHZ', filetype='invalid', compression=False))
 
-        with warnings.catch_warnings(record=True) as w_recorder:
-            warnings.simplefilter("always") # Capture all warnings
-
-            # Expect UnboundLocalError when filetype_enum is not set
-            try:
-                get_pdb_file('1EHZ', filetype='invalid', compression=False)
-                # If UnboundLocalError is not raised, this line will be reached, failing the test.
-                self.fail("UnboundLocalError was expected but not raised.")
-            except UnboundLocalError:
-                pass # Expected error occurred
-
-        # Check for DeprecationWarning
-        self.assertTrue(any(isinstance(warn.message, DeprecationWarning) and \
-                            "The `get_pdb_file` function within pypdb.py is deprecated" in str(warn.message)
-                            for warn in w_recorder), "DeprecationWarning not found.")
-        # Check for UserWarning about invalid filetype
-        self.assertTrue(any(isinstance(warn.message, UserWarning) and \
-                            "Filetype specified to `get_pdb_file` appears to be invalid" in str(warn.message)
-                            for warn in w_recorder), "UserWarning for invalid filetype not found.")
-
+        self.assertTrue(any(isinstance(w.message, DeprecationWarning) for w in caught_warnings))
+        self.assertTrue(any("Filetype specified to `get_pdb_file` appears to be invalid" in str(w.message)
+                            for w in caught_warnings))
         mock_pdb_client_get_file.assert_not_called()
 
 
@@ -354,10 +314,8 @@ class TestDeprecatedFunctions(unittest.TestCase):
         self.assertEqual(query_object.queries[0].sequence, 'MTE') # Corrected expected sequence
 
     def test_characterize_get_ligands_for_deprecation(self):
-        # Intended for deprecation. Functionality covered by DataFetcher.
-        # Currently, this function is commented out in pypdb.py
-        with self.assertRaises(NameError):
-            get_ligands('1EHZ')
+        with self.assertWarns(DeprecationWarning):
+            self.assertIsNone(get_ligands('1EHZ'))
 
     def test_characterize_get_gene_onto_for_deprecation(self):
         # Intended for deprecation. Functionality covered by DataFetcher.

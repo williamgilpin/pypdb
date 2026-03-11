@@ -127,6 +127,19 @@ class ScoredResult:
 RawJSONDictResponse = Dict[str, Any]
 
 
+def _extract_result_set(response_json: RawJSONDictResponse) -> List[Dict[str, Any]]:
+    """
+    Normalize RCSB search responses across minor schema variants.
+    """
+    if "result_set" in response_json and isinstance(response_json["result_set"], list):
+        return response_json["result_set"]
+
+    if "results" in response_json and isinstance(response_json["results"], list):
+        return response_json["results"]
+
+    return []
+
+
 def perform_search(
     search_operator: SearchOperator,
     return_type: ReturnType = ReturnType.ENTRY,
@@ -275,14 +288,22 @@ def perform_search_with_graph(
 
     # Converts RCSB result to list of identifiers corresponding to
     # the `return_type`. Annotated with score if `return_with_scores`.
+    response_json = response.json()
     results = []
-    for query_hit in response.json()["result_set"]:
+    for query_hit in _extract_result_set(response_json):
+        identifier = query_hit.get("identifier")
+        if identifier is None and "result" in query_hit:
+            identifier = query_hit["result"].get("identifier")
+
+        if identifier is None:
+            continue
+
         if return_with_scores:
             results.append(
-                ScoredResult(entity_id=query_hit["identifier"],
-                             score=query_hit["score"]))
+                ScoredResult(entity_id=identifier,
+                             score=query_hit.get("score")))
         else:
-            results.append(query_hit["identifier"])
+            results.append(identifier)
 
     return results
 

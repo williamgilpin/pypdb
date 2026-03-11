@@ -8,6 +8,8 @@ from unittest import mock
 from pypdb.clients.search import search_client
 from pypdb.clients.search.operators import sequence_operators, text_operators
 
+REQUEST_HEADERS = {"Content-Type": "application/json"}
+
 
 class TestHTTPRequests(unittest.TestCase):
     @mock.patch.object(requests, "post")
@@ -47,7 +49,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -92,7 +95,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -137,7 +141,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -181,7 +186,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -224,7 +230,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -269,7 +276,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -306,7 +314,10 @@ class TestHTTPRequests(unittest.TestCase):
                     "operator": "range",
                     "attribute": "rcsb_accession_info.initial_release_date",
                     "negation": False,
-                    "value": ["2019-01-01T00:00:00Z", "2019-06-30T00:00:00Z"],
+                    "value": {
+                        "from": "2019-01-01T00:00:00Z",
+                        "to": "2019-06-30T00:00:00Z"
+                    },
                 }
             },
             "request_options": {
@@ -317,7 +328,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -361,7 +373,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, canned_json_return_as_dict)
 
     @mock.patch.object(requests, "post")
@@ -460,7 +473,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
@@ -507,7 +521,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, canned_json_return_as_dict)
 
     @mock.patch.object(requests, "post")
@@ -553,7 +568,8 @@ class TestHTTPRequests(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             url=search_client.SEARCH_URL_ENDPOINT,
-            data=json.dumps(expected_json_dict))
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     def test_request_options_to_dict(self):

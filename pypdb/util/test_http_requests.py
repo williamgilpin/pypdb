@@ -6,6 +6,8 @@ import warnings
 
 from pypdb.util import http_requests
 
+EXPECTED_HEADERS = {"User-Agent": http_requests.USER_AGENT}
+
 
 class TestHTTPRequests(unittest.TestCase):
     @mock.patch.object(warnings, "warn", autospec=True)
@@ -27,7 +29,8 @@ class TestHTTPRequests(unittest.TestCase):
         self.assertEqual(
             http_requests.request_limited(url="http://get_your_proteins.com",
                                           rtype="GET"), mock_response)
-        mock_get.assert_called_once_with("http://get_your_proteins.com")
+        mock_get.assert_called_once_with("http://get_your_proteins.com",
+                                         headers=EXPECTED_HEADERS)
         self.assertEqual(len(mock_sleep.mock_calls), 0)
 
     @mock.patch.object(requests, "post", autospec=True)
@@ -40,7 +43,8 @@ class TestHTTPRequests(unittest.TestCase):
         self.assertEqual(
             http_requests.request_limited(url="http://get_your_proteins.com",
                                           rtype="POST"), mock_response)
-        mock_post.assert_called_once_with("http://get_your_proteins.com")
+        mock_post.assert_called_once_with("http://get_your_proteins.com",
+                                          headers=EXPECTED_HEADERS)
         self.assertEqual(len(mock_sleep.mock_calls), 0)
 
     @mock.patch.object(requests, "get", autospec=True)
@@ -65,7 +69,8 @@ class TestHTTPRequests(unittest.TestCase):
             http_requests.request_limited(url="http://get_your_proteins.com",
                                           rtype="GET"), mock_ok_response)
         self.assertEqual(len(mock_get.mock_calls), 3)
-        mock_get.assert_called_with("http://get_your_proteins.com")
+        mock_get.assert_called_with("http://get_your_proteins.com",
+                                    headers=EXPECTED_HEADERS)
         # Should only sleep on being throttled (not server error)
         self.assertEqual(len(mock_sleep.mock_calls), 1)
 
@@ -86,7 +91,8 @@ class TestHTTPRequests(unittest.TestCase):
             "Too many failures on requests. Exiting...")
 
         self.assertEqual(len(mock_post.mock_calls), 4)
-        mock_post.assert_called_with("http://protein_data_bank.com")
+        mock_post.assert_called_with("http://protein_data_bank.com",
+                                     headers=EXPECTED_HEADERS)
         self.assertEqual(len(mock_sleep.mock_calls), 4)
 
 

@@ -84,5 +84,8 @@ def get_pdb_file(pdb_id: str,
         return None
 
     if compression:
-        return gzip.decompress(response.content)
+        decompressed = gzip.decompress(response.content)
+        if isinstance(decompressed, bytes):
+            return decompressed.decode("utf-8")
+        return decompressed
     return response.text

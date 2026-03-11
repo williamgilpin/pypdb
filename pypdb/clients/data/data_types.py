@@ -190,3 +190,18 @@ class DataFetcher:
             data_flat[id] = curr_dict
 
         return data_flat
+
+    def return_data_as_pandas_df(self):
+        """
+        Backwards-compatible helper returning fetched data as a pandas DataFrame.
+        """
+        data = self.return_data_as_df_dict()
+        if data is None:
+            return None
+
+        try:
+            import pandas as pd
+        except ImportError as exc:
+            return data
+
+        return pd.DataFrame.from_dict(data, orient="index")

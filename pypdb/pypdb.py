@@ -520,6 +520,7 @@ def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
     else:
         warnings.warn(
             "Filetype specified to `get_pdb_file` appears to be invalid")
+        return None
 
     return pdb_client.get_pdb_file(pdb_id, filetype_enum, compression)
 
@@ -556,16 +557,6 @@ def get_ligands(pdb_id):
     warnings.warn(
         "get_ligands() is deprecated. Use pypdb.clients.data.DataFetcher with DataType.ENTRY "
         "and query for nonpolymer_entity_instances or related chemical component data.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return None
-
-def get_gene_onto(pdb_id):
-    """Return gene ontology of given PDB_ID (DEPRECATED)"""
-    warnings.warn(
-        "get_gene_onto() is deprecated. Use pypdb.clients.data.DataFetcher with DataType.POLYMER_ENTITY "
-        "and query for rcsb_polymer_entity_annotation (filtering for GO terms).",
         DeprecationWarning,
         stacklevel=2
     )
