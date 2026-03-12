@@ -204,7 +204,7 @@ def perform_search(
 
 
 _SEARCH_OPERATORS = text_operators.TEXT_SEARCH_OPERATORS + [
-    SequenceOperator, StructureOperator, SeqMotifOperator
+    SequenceOperator, StructureOperator, SeqMotifOperator, ChemicalOperator
 ]
 
 

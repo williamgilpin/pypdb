@@ -27,6 +27,7 @@ from pypdb.clients.fasta import fasta_client
 from pypdb.clients.pdb import pdb_client
 from pypdb.clients.search import search_client
 from pypdb.clients.search.operators import sequence_operators
+from pypdb.clients.search.operators import chemical_operators
 
 warnings.simplefilter('always', DeprecationWarning)
 
@@ -176,8 +177,14 @@ class Query(object):
                     "value": search_term
                 }
             elif query_type == "chemical":
-                # Ensure chemical ID is uppercase, though current test uses "NAG"
-                query_params['parameters'] = {"value": str(search_term).upper()}
+                search_term = str(search_term)
+                if search_term.startswith("InChI=") or len(search_term) > 3:
+                    chemical_operator = chemical_operators.ChemicalOperator(
+                        descriptor=search_term)
+                    query_params['parameters'] = chemical_operator._to_dict()
+                else:
+                    # Preserve legacy behavior for short CCD identifiers.
+                    query_params['parameters'] = {"value": search_term.upper()}
             elif query_type == "structure":
                 query_params['parameters'] = {
                     "operator": "relaxed_shape_match",

@@ -6,7 +6,7 @@ import unittest
 from unittest import mock
 
 from pypdb.clients.search import search_client
-from pypdb.clients.search.operators import sequence_operators, text_operators
+from pypdb.clients.search.operators import chemical_operators, sequence_operators, text_operators
 
 REQUEST_HEADERS = {"Content-Type": "application/json"}
 
@@ -571,6 +571,47 @@ class TestHTTPRequests(unittest.TestCase):
             data=json.dumps(expected_json_dict),
             headers=REQUEST_HEADERS)
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
+
+    @mock.patch.object(requests, "post")
+    def test_chemical_operator_search(self, mock_post):
+        canned_json_return_as_dict = {
+            "result_set": [{
+                "identifier": "8XYZ"
+            }, {
+                "identifier": "7ABC"
+            }]
+        }
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = canned_json_return_as_dict
+        mock_post.return_value = mock_response
+
+        results = search_client.perform_search(
+            search_operator=chemical_operators.ChemicalOperator(
+                descriptor="Clc1nc(Br)nc2nc[nH]c12"),
+            return_type=search_client.ReturnType.ENTRY)
+
+        expected_json_dict = {
+            'query': {
+                'type': 'terminal',
+                'service': 'chemical',
+                'parameters': {
+                    'value': 'Clc1nc(Br)nc2nc[nH]c12',
+                    'type': 'descriptor',
+                    'descriptor_type': 'SMILES',
+                    'match_type': 'graph-strict'
+                }
+            },
+            'request_options': {
+                'return_all_hits': True
+            },
+            'return_type': 'entry'
+        }
+
+        mock_post.assert_called_once_with(
+            url=search_client.SEARCH_URL_ENDPOINT,
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
+        self.assertEqual(results, ["8XYZ", "7ABC"])
 
     def test_request_options_to_dict(self):
         request_options = search_client.RequestOptions(

@@ -1,6 +1,7 @@
 import unittest
 import warnings
 from unittest.mock import patch
+import json
 
 ## Import from local directory
 import sys
@@ -108,6 +109,23 @@ class TestSearchFunctions(unittest.TestCase):
             self.assertIn("1AGA", found_pdbs) # Example PDB ID containing NAG
         else:
             self.assertIsNone(found_pdbs, "Chemical query returned None, acknowledging current behavior.")
+
+    @patch('pypdb.pypdb.http_requests.request_limited')
+    def test_chemical_smiles_query_payload(self, mock_request_limited):
+        mock_response = unittest.mock.Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps({"result_set": [{"identifier": "8XYZ"}]})
+        mock_request_limited.return_value = mock_response
+
+        found_pdbs = Query("Clc1nc(Br)nc2nc[nH]c12", query_type="chemical").search()
+
+        self.assertEqual(found_pdbs, ["8XYZ"])
+        _, kwargs = mock_request_limited.call_args
+        sent_payload = json.loads(kwargs["data"])
+        self.assertEqual(sent_payload["query"]["service"], "chemical")
+        self.assertEqual(sent_payload["query"]["parameters"]["type"], "descriptor")
+        self.assertEqual(sent_payload["query"]["parameters"]["descriptor_type"], "SMILES")
+        self.assertEqual(sent_payload["query"]["parameters"]["value"], "Clc1nc(Br)nc2nc[nH]c12")
 
     # def test_blast(self):
     #     found_pdbs = blast_from_sequence(
