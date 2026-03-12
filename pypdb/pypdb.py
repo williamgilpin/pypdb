@@ -21,6 +21,7 @@ import time
 import re
 import json
 import warnings
+import requests
 
 from pypdb.util import http_requests
 from pypdb.clients.fasta import fasta_client
@@ -109,6 +110,7 @@ class Query(object):
                  return_type="entry",
                  scan_params=None):
         """See help(Query) for documentation"""
+        self._uses_custom_scan_params = scan_params is not None
 
         if query_type == "PubmedIdQuery":
             query_type = "text"
@@ -155,6 +157,7 @@ class Query(object):
         self.query_type = query_type
         self.search_term = search_term
         self.return_type = return_type
+        self.query_subtype = query_subtype
         self.url = "https://search.rcsb.org/rcsbsearch/v2/query?json="
         composite_query = False
         if not scan_params:
@@ -296,20 +299,75 @@ class Query(object):
         else:
             self.scan_params = scan_params
 
-    def search(self, num_attempts=1, sleep_time=0.5):
-        """
-        Perform a search of the Protein Data Bank using the REST API
+    def _get_return_type_enum(self) -> search_client.ReturnType:
+        if self.return_type == "entry":
+            return search_client.ReturnType.ENTRY
+        if self.return_type == "polymer_entity":
+            return search_client.ReturnType.POLYMER_ENTITY
+        raise AssertionError("Return type %s not supported." % self.return_type)
 
-        Parameters
-        ----------
+    def _build_search_operator(self):
+        if self.query_type == "full_text":
+            return text_operators.DefaultOperator(value=str(self.search_term))
 
-        num_attempts : int
-            In case of a failed retrieval, the number of attempts to try again
-        sleep_time : int
-            The amount of time to wait between requests, in case of
-            API rate limits
-        """
+        if self.query_type == "sequence":
+            return sequence_operators.SequenceOperator(
+                sequence=str(self.search_term),
+                sequence_type=sequence_operators.SequenceType.PROTEIN)
 
+        if self.query_type == "seqmotif":
+            from pypdb.clients.search.operators import seqmotif_operators
+
+            return seqmotif_operators.SeqMotifOperator(
+                pattern=str(self.search_term),
+                sequence_type=seqmotif_operators.SequenceType.PROTEIN,
+                pattern_type=seqmotif_operators.PatternType.SIMPLE)
+
+        if self.query_type == "structure":
+            from pypdb.clients.search.operators import structure_operators
+
+            return structure_operators.StructureOperator(
+                pdb_entry_id=str(self.search_term),
+                assembly_id=1,
+                search_mode=structure_operators.StructureSearchMode.RELAXED_SHAPE_MATCH)
+
+        if self.query_type == "chemical":
+            search_term = str(self.search_term)
+            if search_term.startswith("InChI=") or len(search_term) > 3:
+                return chemical_operators.ChemicalOperator(descriptor=search_term)
+            return None
+
+        if self.query_type != "text":
+            return None
+
+        attribute_map = {
+            "pmid": ("in", "rcsb_pubmed_container_identifiers.pubmed_id"),
+            "taxid": ("exact_match", "rcsb_entity_source_organism.taxonomy_lineage.id"),
+            "experiment_type": ("exact_match", "exptl.method"),
+            "author": ("exact_match", "rcsb_primary_citation.rcsb_authors"),
+            "organism": ("contains_words", "rcsb_entity_source_organism.taxonomy_lineage.name"),
+            "pfam": ("exact_match", "rcsb_polymer_entity_annotation.annotation_id"),
+            "uniprot": (
+                "exact_match",
+                "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession",
+            ),
+        }
+        operator_info = attribute_map.get(self.query_subtype)
+        if operator_info is None:
+            return None
+
+        operator_name, attribute = operator_info
+        if operator_name == "in":
+            return text_operators.InOperator(attribute=attribute,
+                                             values=[self.search_term])
+        if operator_name == "contains_words":
+            return text_operators.ContainsWordsOperator(
+                attribute=attribute,
+                value=str(self.search_term))
+        return text_operators.ExactMatchOperator(attribute=attribute,
+                                                 value=str(self.search_term))
+
+    def _legacy_search(self):
         query_text = json.dumps(self.scan_params, indent=4)
         response = http_requests.request_limited(self.url,
                                                  rtype="POST",
@@ -328,8 +386,41 @@ class Query(object):
                                       maxdepth=25,
                                       outputs=[])
             return idlist
-        else:
-            return response_val
+        return response_val
+
+    def search(self, num_attempts=1, sleep_time=0.5):
+        """
+        Perform a search of the Protein Data Bank using the REST API
+
+        Parameters
+        ----------
+
+        num_attempts : int
+            In case of a failed retrieval, the number of attempts to try again
+        sleep_time : int
+            The amount of time to wait between requests, in case of
+            API rate limits
+        """
+        if self._uses_custom_scan_params:
+            return self._legacy_search()
+
+        search_operator = self._build_search_operator()
+        if search_operator is None:
+            return self._legacy_search()
+
+        try:
+            result = search_client.perform_search(
+                search_operator=search_operator,
+                return_type=self._get_return_type_enum(),
+                return_raw_json_dict=(self.return_type != "entry"),
+                verbosity=False)
+        except requests.RequestException:
+            warnings.warn("Retrieval failed, returning None")
+            return None
+
+        if self.return_type == "entry":
+            return result
+        return result
 
 
 # def do_search(scan_params):

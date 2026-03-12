@@ -1,7 +1,6 @@
 import unittest
 import warnings
 from unittest.mock import patch
-import json
 
 ## Import from local directory
 import sys
@@ -110,22 +109,31 @@ class TestSearchFunctions(unittest.TestCase):
         else:
             self.assertIsNone(found_pdbs, "Chemical query returned None, acknowledging current behavior.")
 
-    @patch('pypdb.pypdb.http_requests.request_limited')
-    def test_chemical_smiles_query_payload(self, mock_request_limited):
-        mock_response = unittest.mock.Mock()
-        mock_response.status_code = 200
-        mock_response.text = json.dumps({"result_set": [{"identifier": "8XYZ"}]})
-        mock_request_limited.return_value = mock_response
+    @patch('pypdb.pypdb.search_client.perform_search')
+    def test_chemical_smiles_query_uses_new_search_client(self, mock_perform_search):
+        mock_perform_search.return_value = ["8XYZ"]
 
         found_pdbs = Query("Clc1nc(Br)nc2nc[nH]c12", query_type="chemical").search()
 
         self.assertEqual(found_pdbs, ["8XYZ"])
-        _, kwargs = mock_request_limited.call_args
-        sent_payload = json.loads(kwargs["data"])
-        self.assertEqual(sent_payload["query"]["service"], "chemical")
-        self.assertEqual(sent_payload["query"]["parameters"]["type"], "descriptor")
-        self.assertEqual(sent_payload["query"]["parameters"]["descriptor_type"], "SMILES")
-        self.assertEqual(sent_payload["query"]["parameters"]["value"], "Clc1nc(Br)nc2nc[nH]c12")
+        _, kwargs = mock_perform_search.call_args
+        chemical_operator = kwargs["search_operator"]
+        self.assertEqual(chemical_operator.descriptor, "Clc1nc(Br)nc2nc[nH]c12")
+        self.assertEqual(chemical_operator.descriptor_type, "SMILES")
+        self.assertEqual(kwargs["return_type"], ReturnType.ENTRY)
+        self.assertFalse(kwargs["return_raw_json_dict"])
+        self.assertFalse(kwargs["verbosity"])
+
+    @patch('pypdb.pypdb.search_client.perform_search')
+    def test_full_text_query_uses_new_search_client(self, mock_perform_search):
+        mock_perform_search.return_value = ["4V5A"]
+
+        found_pdbs = Query("ribosome").search()
+
+        self.assertEqual(found_pdbs, ["4V5A"])
+        _, kwargs = mock_perform_search.call_args
+        self.assertEqual(kwargs["search_operator"].value, "ribosome")
+        self.assertEqual(kwargs["return_type"], ReturnType.ENTRY)
 
     # def test_blast(self):
     #     found_pdbs = blast_from_sequence(
