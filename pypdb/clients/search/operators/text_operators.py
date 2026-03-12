@@ -10,14 +10,21 @@ from typing import Any, Dict, Union, List
 # https://search.rcsb.org/search-attributes.html
 
 
+def _maybe_add_negation(param_dict: Dict[str, Any], negation: bool) -> Dict[str, Any]:
+    if negation:
+        param_dict["negation"] = True
+    return param_dict
+
+
 @dataclass
 class DefaultOperator:
     """Default search operator; searches across available fields search,
     and returns a hit if a match happens in any field."""
     value: str
+    negation: bool = False
 
     def _to_dict(self) -> Dict[str, str]:
-        return {"value": self.value}
+        return _maybe_add_negation({"value": self.value}, self.negation)
 
 
 @dataclass
@@ -26,13 +33,14 @@ class ExactMatchOperator:
     value exactly (including whitespaces, special characters and case)."""
     attribute: str
     value: Any
+    negation: bool = False
 
     def _to_dict(self) -> Dict[str, Any]:
-        return {
+        return _maybe_add_negation({
             "attribute": self.attribute,
             "operator": "exact_match",
             "value": self.value
-        }
+        }, self.negation)
 
 
 @dataclass
@@ -42,13 +50,14 @@ class InOperator:
     matches. It can be used instead of multiple OR conditions."""
     attribute: str
     values: List[Any]  # List of strings, numbers or date strings
+    negation: bool = False
 
     def _to_dict(self) -> Dict[str, Any]:
-        return {
+        return _maybe_add_negation({
             "attribute": self.attribute,
             "operator": "in",
             "value": self.values
-        }
+        }, self.negation)
 
 
 @dataclass
@@ -60,13 +69,14 @@ class ContainsWordsOperator:
     """
     attribute: str
     value: str
+    negation: bool = False
 
     def _to_dict(self) -> Dict[str, str]:
-        return {
+        return _maybe_add_negation({
             "attribute": self.attribute,
             "operator": "contains_words",
             "value": self.value
-        }
+        }, self.negation)
 
 
 @dataclass
@@ -78,13 +88,14 @@ class ContainsPhraseOperator:
     "actin" AND "binding" AND "protein" occurring in a given order."""
     attribute: str
     value: str
+    negation: bool = False
 
     def _to_dict(self) -> Dict[str, str]:
-        return {
+        return _maybe_add_negation({
             "attribute": self.attribute,
             "operator": "contains_phrase",
             "value": self.value
-        }
+        }, self.negation)
 
 
 class ComparisonType(Enum):
@@ -177,9 +188,13 @@ class RangeOperator:
 @dataclass
 class ExistsOperator:
     attribute: str
+    negation: bool = False
 
     def _to_dict(self) -> Dict[str, str]:
-        return {"operator": "exists", "attribute": self.attribute}
+        return _maybe_add_negation({
+            "operator": "exists",
+            "attribute": self.attribute
+        }, self.negation)
 
 
 # An object of type `TextSearchOperator` can be any of the following classes:

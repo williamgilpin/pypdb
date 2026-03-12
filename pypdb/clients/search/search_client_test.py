@@ -281,6 +281,49 @@ class TestHTTPRequests(unittest.TestCase):
         self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
 
     @mock.patch.object(requests, "post")
+    def test_negated_contains_words_operator_with_entry_return(self, mock_post):
+        canned_json_return_as_dict = {
+            "result_set": [{
+                "identifier": "1ABC"
+            }, {
+                "identifier": "2DEF"
+            }]
+        }
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = canned_json_return_as_dict
+        mock_post.return_value = mock_response
+
+        search_operator = text_operators.ContainsWordsOperator(
+            value="kinase inhibitor",
+            attribute="struct.title",
+            negation=True)
+
+        results = search_client.perform_search(search_operator, search_client.ReturnType.ENTRY)
+
+        expected_json_dict = {
+            'query': {
+                'type': 'terminal',
+                'service': 'text',
+                'parameters': {
+                    'attribute': 'struct.title',
+                    'operator': 'contains_words',
+                    'value': 'kinase inhibitor',
+                    'negation': True
+                }
+            },
+            'request_options': {
+                'return_all_hits': True
+            },
+            'return_type': 'entry'
+        }
+
+        mock_post.assert_called_once_with(
+            url=search_client.SEARCH_URL_ENDPOINT,
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
+        self.assertEqual(results, ["1ABC", "2DEF"])
+
+    @mock.patch.object(requests, "post")
     def test_range_operator_with_entry_return(self, mock_post):
         # Creates a mock HTTP response, as wrapped by `requests`
         canned_json_return_as_dict = {
