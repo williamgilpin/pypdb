@@ -17,13 +17,17 @@ To install the development version, which contains the latest features and fixes
 
     $ pip install git+https://github.com/williamgilpin/pypdb
 
-If you need to  install directly from setup.py,
+To install from a local checkout,
 
-    $ python setup.py install
+    $ pip install .
+
+For development and test dependencies,
+
+    $ pip install -e ".[dev]"
 
 Test the installation, and check that the code successfully connects to the PDB, navigate to the root directory and run
 
-    $ pytest
+    $ python -m pytest
 
 This code has been designed and tested for Python 3.
 
@@ -40,7 +44,6 @@ Given a list of PDBs, this package can be used to fetch data associated with tho
 If you run into an issue, or if you find a workaround for an existing issue, please post your question or code as a GitHub issue.
 
 If posting a feature request, please check that your request is possible using [the current GUI on current RCSB website](https://www.rcsb.org/search/advanced). If so, please perform your search, and then click the link that says `JSON` in the upper right hand corner of the Advanced Search box. Please post that JSON code with your feature request.
-
 
 
 

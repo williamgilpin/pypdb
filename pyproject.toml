@@ -1,17 +1,41 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "pypdb"
-version = "0.1.0"
-description = "Add your description here"
+version = "2.04"
+description = "A Python wrapper for the RCSB Protein Data Bank (PDB) API"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-    "ipykernel>=7.2.0",
-    "ipython>=9.11.0",
-    "jupyter>=1.1.1",
-    "matplotlib>=3.10.8",
-    "numpy>=2.4.3",
-    "pytest>=9.0.2",
-    "requests>=2.32.5",
-    "scikit-learn>=1.8.0",
-    "scipy>=1.17.1",
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "William Gilpin", email = "firstnamelastname@gmail.com" },
 ]
+keywords = ["protein", "pdb", "rcsb", "api", "bioinformatics"]
+dependencies = [
+  "requests>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2.2",
+  "pytest>=8.0",
+]
+notebooks = [
+  "ipykernel>=6.0",
+  "ipython>=8.0",
+  "jupyter>=1.0",
+  "matplotlib>=3.5",
+  "numpy>=1.23",
+  "scikit-learn>=1.2",
+  "scipy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/williamgilpin/pypdb"
+Repository = "https://github.com/williamgilpin/pypdb"
+Issues = "https://github.com/williamgilpin/pypdb/issues"
+
+[tool.setuptools.packages.find]
+include = ["pypdb*"]

@@ -6,8 +6,10 @@ import time
 import requests
 import warnings
 
+from pypdb._version import __version__
+
 # Define User-Agent string
-PYPDB_VERSION = "2.04"  # TODO: Consider fetching this dynamically if setup.py changes often
+PYPDB_VERSION = __version__
 USER_AGENT = f"PyPDB/{PYPDB_VERSION} (https://github.com/williamgilpin/pypdb)"
 
 
