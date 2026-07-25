@@ -6,10 +6,10 @@ import time
 import requests
 import warnings
 
-from pypdb._version import __version__
+from pypdb._version_helper import get_version
 
 # Define User-Agent string
-PYPDB_VERSION = __version__
+PYPDB_VERSION = get_version()
 USER_AGENT = f"PyPDB/{PYPDB_VERSION} (https://github.com/williamgilpin/pypdb)"
 
 

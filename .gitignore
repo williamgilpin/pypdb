@@ -73,3 +73,5 @@ target/
 ### IPythonNotebook ###
 # Temporary data
 .ipynb_checkpoints/
+# Generated at build time by setuptools-scm
+pypdb/_version.py

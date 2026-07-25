@@ -1,9 +1,11 @@
 # Publishes a new version to PyPI whenever a `v*` tag is pushed.
 #
-# To cut a release:
-#   1. Bump `__version__` in pypdb/_version.py (the single source of truth).
-#   2. Commit, then tag and push:
-#        git tag v2.6 && git push origin v2.6
+# To cut a release, just tag and push:
+#     git tag v2.9 && git push origin v2.9
+#
+# The tag is the only place a version is written. setuptools-scm derives the
+# package version from it at build time, so there is nothing to keep in sync
+# and no file to edit.
 #
 # Publishing uses PyPI Trusted Publishing (OIDC), so no API token is stored
 # here. This requires a one-time setup on PyPI: on
@@ -29,6 +31,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # setuptools-scm derives the version from the git tag, so it needs
+          # the full history rather than a shallow clone.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -40,20 +46,11 @@ jobs:
       - name: Run tests
         run: pytest
 
-      - name: Check that the tag matches the package version
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          PKG_VERSION="$(python -c 'import pypdb; print(pypdb.__version__)')"
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "Tag $GITHUB_REF_NAME implies version $TAG_VERSION, but the" \
-                 "package reports $PKG_VERSION."
-            echo "Update __version__ in pypdb/_version.py to match the tag."
-            exit 1
-          fi
-
       - name: Build release distributions
         run: python -m build
+
+      - name: Show the version that will be published
+        run: ls dist/
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4

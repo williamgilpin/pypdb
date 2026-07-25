@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=69", "setuptools-scm>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pypdb"
-# Single source of truth is `__version__` in pypdb/_version.py
+# The version is derived from the git tag by setuptools-scm; see
+# [tool.setuptools_scm] below. Never edit a version by hand.
 dynamic = ["version"]
 description = "A Python wrapper for the RCSB Protein Data Bank (PDB) API"
 readme = "README.md"
@@ -39,8 +40,10 @@ Homepage = "https://github.com/williamgilpin/pypdb"
 Repository = "https://github.com/williamgilpin/pypdb"
 Issues = "https://github.com/williamgilpin/pypdb/issues"
 
-[tool.setuptools.dynamic]
-version = { attr = "pypdb._version.__version__" }
+[tool.setuptools_scm]
+# Writes the resolved version into the package at build time, so
+# `pypdb.__version__` always matches the tag that produced the release.
+version_file = "pypdb/_version.py"
 
 [tool.setuptools.packages.find]
 include = ["pypdb*"]

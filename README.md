@@ -53,17 +53,17 @@ Searches can also be restricted to a page of results, scored with a particular s
 
 ## Releasing a new version
 
-The version is defined in one place, `__version__` in [`pypdb/_version.py`](pypdb/_version.py); `pyproject.toml` reads it from there. To publish a release to PyPI:
-
-1. Bump `__version__` in `pypdb/_version.py`.
-2. Commit the change.
-3. Tag the commit and push the tag:
+The git tag is the only place the version is written. To publish a release to PyPI, tag and push:
 
 ```bash
-git tag v2.6 && git push origin v2.6
+git tag v2.9 && git push origin v2.9
 ```
 
-Pushing a `v*` tag runs the tests, checks that the tag matches the package version, builds the distributions, and uploads them to PyPI. This uses [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/), so no API token is stored in the repository — it requires a one-time publisher registration on PyPI pointing at the `python-publish.yml` workflow and the `pypi` environment.
+That's the whole process — there is no version file to edit. [setuptools-scm](https://setuptools-scm.readthedocs.io/) derives the package version from the tag at build time and writes it into `pypdb/_version.py`, which is generated rather than checked in (it is listed in `.gitignore`).
+
+Pushing a `v*` tag runs the tests, builds the distributions, and uploads them to PyPI. This uses [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/), so no API token is stored in the repository — it requires a one-time publisher registration on PyPI pointing at the `python-publish.yml` workflow and the `pypi` environment.
+
+Between releases, `pypdb.__version__` reports a development version derived from the most recent tag (e.g. `2.9.dev1+g1a2b3c4`).
 
 ## Issues and Feature Requests
 
