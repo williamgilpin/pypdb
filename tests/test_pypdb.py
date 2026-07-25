@@ -65,6 +65,47 @@ class TestSearchFunctions(unittest.TestCase):
         self.assertTrue(len(found_pdbs) > 0)
         self.assertIn("4HHB", found_pdbs)
 
+    def test_ec_number_query(self):
+        # Ubiquitin--protein ligase
+        found_pdbs = Query("2.3.2.5", query_type="ec_number").search()
+        self.assertTrue(len(found_pdbs) > 0)
+        self.assertIn("2AFM", found_pdbs)
+
+    def test_partial_ec_number_query_matches_lineage(self):
+        # EC numbers are a lineage, so a partial number matches everything
+        # below it in the hierarchy.
+        exact_pdbs = Query("2.3.2.5", query_type="ec_number").search()
+        parent_pdbs = Query("2.3.2", query_type="ec_number").search()
+
+        self.assertTrue(len(parent_pdbs) > len(exact_pdbs))
+        self.assertTrue(set(exact_pdbs).issubset(set(parent_pdbs)))
+
+    def test_ec_number_query_with_multiple_values(self):
+        found_pdbs = Query(["2.3.2.5", "1.1.1.1"],
+                           query_type="ec_number").search()
+
+        alcohol_dehydrogenase_pdbs = Query("1.1.1.1",
+                                           query_type="ec_number").search()
+
+        self.assertTrue(len(found_pdbs) > 0)
+        # Searching for several EC numbers returns the union of their hits
+        self.assertTrue(
+            set(alcohol_dehydrogenase_pdbs).issubset(set(found_pdbs)))
+
+    @patch('pypdb.pypdb.search_client.perform_search')
+    def test_ec_number_query_uses_in_operator(self, mock_perform_search):
+        mock_perform_search.return_value = ["2AFM"]
+
+        found_pdbs = Query("2.3.2.5", query_type="ec_number").search()
+
+        self.assertEqual(found_pdbs, ["2AFM"])
+        _, kwargs = mock_perform_search.call_args
+        search_operator = kwargs["search_operator"]
+        self.assertEqual(search_operator.attribute,
+                         "rcsb_polymer_entity.rcsb_ec_lineage.id")
+        self.assertEqual(search_operator.values, ["2.3.2.5"])
+        self.assertEqual(kwargs["return_type"], ReturnType.ENTRY)
+
     def test_sequence_query(self):
         # Sequence from demos/demos.ipynb, corresponds to 1A00 (Hemoglobin alpha chain)
         sequence = "VLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQVKGHGKKVADALTAVAHVDDMPNAL"

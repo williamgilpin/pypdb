@@ -51,6 +51,20 @@ print(get_top_results("crispr", max_results=5))
 
 Searches can also be restricted to a page of results, scored with a particular strategy, or extended to include computed structure models (such as AlphaFold predictions) via `RequestOptions`. See [`search/EXAMPLES.md`](pypdb/clients/search/EXAMPLES.md).
 
+## Releasing a new version
+
+The version is defined in one place, `__version__` in [`pypdb/_version.py`](pypdb/_version.py); `pyproject.toml` reads it from there. To publish a release to PyPI:
+
+1. Bump `__version__` in `pypdb/_version.py`.
+2. Commit the change.
+3. Tag the commit and push the tag:
+
+```bash
+git tag v2.6 && git push origin v2.6
+```
+
+Pushing a `v*` tag runs the tests, checks that the tag matches the package version, builds the distributions, and uploads them to PyPI. This uses [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/), so no API token is stored in the repository — it requires a one-time publisher registration on PyPI pointing at the `python-publish.yml` workflow and the `pypi` environment.
+
 ## Issues and Feature Requests
 
 If you run into an issue, or if you find a workaround for an existing issue, please post your question or code as a GitHub issue.

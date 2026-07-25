@@ -4,7 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pypdb"
-version = "2.5"
+# Single source of truth is `__version__` in pypdb/_version.py
+dynamic = ["version"]
 description = "A Python wrapper for the RCSB Protein Data Bank (PDB) API"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,6 +38,9 @@ notebooks = [
 Homepage = "https://github.com/williamgilpin/pypdb"
 Repository = "https://github.com/williamgilpin/pypdb"
 Issues = "https://github.com/williamgilpin/pypdb/issues"
+
+[tool.setuptools.dynamic]
+version = { attr = "pypdb._version.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["pypdb*"]

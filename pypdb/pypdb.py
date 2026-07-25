@@ -92,6 +92,10 @@ class Query(object):
 
         'uniprot' : Search by UniProt accession, e.g. 'A0A023GPI8'
 
+        'ec_number' : Search by Enzyme Classification number, e.g. '2.3.2.5'.
+            Partial EC numbers match everything below them in the hierarchy,
+            so '2.3.2' returns all of its sub-classes
+
     return_type : str
         The type of search result to return. Default "entry" returns a list of
         PDB IDs; "polymer_entity" returns the raw JSON response.
@@ -123,6 +127,7 @@ class Query(object):
         "OrganismQuery": "organism",
         "pfam": "pfam",
         "uniprot": "uniprot",
+        "ec_number": "ec_number",
     }
 
     # Attribute (and matching text operator) backing each query subtype.
@@ -145,6 +150,10 @@ class Query(object):
         "chem_comp_id":
         ("exact_match",
          "rcsb_nonpolymer_entity_container_identifiers.nonpolymer_comp_id"),
+        # Enzyme Classification numbers, e.g. "2.3.2.5". This is a lineage
+        # attribute, so a partial EC number such as "2.3.2" matches every
+        # entry beneath it in the EC hierarchy.
+        "ec_number": ("in", "rcsb_polymer_entity.rcsb_ec_lineage.id"),
     }
 
     EXPERIMENTAL_METHODS = [
@@ -246,8 +255,12 @@ class Query(object):
 
         operator_name, attribute = operator_info
         if operator_name == "in":
+            # The `in` operator matches against any of a list of values, so a
+            # search term that is already a list is passed through as-is.
+            values = (list(self.search_term) if isinstance(
+                self.search_term, (list, tuple)) else [self.search_term])
             return text_operators.InOperator(attribute=attribute,
-                                             values=[self.search_term])
+                                             values=values)
         if operator_name == "contains_words":
             return text_operators.ContainsWordsOperator(
                 attribute=attribute, value=str(self.search_term))

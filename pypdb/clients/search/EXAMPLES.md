@@ -386,3 +386,29 @@ results = perform_search(
 )
 print(results)  # ['NAG']
 ```
+
+## Search by Enzyme Classification (EC) number
+
+EC numbers are stored as a lineage, so a partial EC number matches every class
+beneath it in the hierarchy (`"2.3.2"` returns all of its sub-classes).
+
+```python
+from pypdb import Query
+
+found_pdbs = Query("2.3.2.5", query_type="ec_number").search()
+```
+
+The equivalent search using the operator API, which also accepts several EC
+numbers at once:
+
+```python
+from pypdb.clients.search.search_client import perform_search, ReturnType
+from pypdb.clients.search.operators import text_operators
+
+results = perform_search(
+    search_operator=text_operators.InOperator(
+        attribute="rcsb_polymer_entity.rcsb_ec_lineage.id",
+        values=["2.3.2.5"]),
+    return_type=ReturnType.ENTRY
+)
+```
