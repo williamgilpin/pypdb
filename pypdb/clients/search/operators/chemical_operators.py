@@ -41,3 +41,24 @@ class ChemicalOperator:
             "descriptor_type": self.descriptor_type,
             "match_type": self.matching_criterion.value
         }
+
+
+@dataclass
+class ChemicalFormulaOperator:
+    """Search operator matching molecular definitions by chemical formula.
+
+    For example, `ChemicalFormulaOperator(formula="C12H17N4OS")` matches the
+    thiamine chemical component. Set `match_subset=True` to also return
+    definitions containing the given formula alongside other elements.
+    """
+    # Chemical formula to match (e.g. "C12H17N4OS")
+    formula: str
+    # Whether formulas that merely contain `formula` should also match
+    match_subset: bool = False
+
+    def _to_dict(self) -> Dict[str, Any]:
+        return {
+            "value": self.formula,
+            "type": "formula",
+            "match_subset": self.match_subset
+        }

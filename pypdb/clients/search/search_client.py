@@ -6,8 +6,6 @@ Python objects. This aims to completely implement the Search API in Python.
 For RCSB API docs, see: https://search.rcsb.org/index.html
 """
 
-# TODO(lacoperon): Implement request options
-
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -15,9 +13,12 @@ import requests
 from typing import Any, Dict, List, Optional, Union
 import warnings
 
+from pypdb.clients.search.operators import selection_operators
 from pypdb.clients.search.operators import sequence_operators
 from pypdb.clients.search.operators import text_operators
+from pypdb.clients.search.operators.chemical_operators import ChemicalFormulaOperator
 from pypdb.clients.search.operators.chemical_operators import ChemicalOperator
+from pypdb.clients.search.operators.selection_operators import ChemicalTextSearchOperator
 from pypdb.clients.search.operators.seqmotif_operators import SeqMotifOperator
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
 from pypdb.clients.search.operators.structure_operators import StructureOperator
@@ -31,7 +32,8 @@ aggregated together into a `QueryGroup` to search using multiple operators at
 once using `perform_search_with_graph`.
 """
 SearchOperator = Union[TextSearchOperator, SequenceOperator, StructureOperator,
-                       SeqMotifOperator]
+                       SeqMotifOperator, ChemicalOperator,
+                       ChemicalFormulaOperator, ChemicalTextSearchOperator]
 
 
 class LogicalOperator(Enum):
@@ -83,6 +85,46 @@ class ReturnType(Enum):
     POLYMER_ENTITY = "polymer_entity"
     NON_POLYMER_ENTITY = "non_polymer_entity"
     POLYMER_INSTANCE = "polymer_instance"
+    # Chemical component or BIRD definitions
+    MOL_DEFINITION = "mol_definition"
+
+
+class ScoringStrategy(Enum):
+    """How to score and rank search results.
+
+    A strategy may only be used when the query contains at least one terminal
+    node of the corresponding service.
+    For details, see: https://search.rcsb.org/index.html#scoring-strategy
+    """
+    COMBINED = "combined"
+    SEQUENCE = "sequence"
+    SEQMOTIF = "seqmotif"
+    STRUCMOTIF = "strucmotif"
+    STRUCTURE = "structure"
+    CHEMICAL = "chemical"
+    TEXT = "text"
+    TEXT_CHEM = "text_chem"
+
+
+class ResultsContentType(Enum):
+    """Whether to return experimental structures, computational ones, or both.
+
+    Computational structures include predicted models (e.g. AlphaFold).
+    For details, see: https://search.rcsb.org/index.html#results-content-type
+    """
+    EXPERIMENTAL = "experimental"
+    COMPUTATIONAL = "computational"
+
+
+class ResultsVerbosity(Enum):
+    """How much information to return for each hit.
+
+    `COMPACT` returns bare identifier strings, while `MINIMAL` and `VERBOSE`
+    return objects annotated with scores.
+    """
+    COMPACT = "compact"
+    MINIMAL = "minimal"
+    VERBOSE = "verbose"
 
 
 @dataclass
@@ -100,9 +142,17 @@ class RequestOptions:
     sort_by: Optional[str] = "score"
     # Whether to sort by score ascending, or score descending
     desc: Optional[bool] = True
+    # How to score results. Defaults to RCSB's `combined` strategy.
+    scoring_strategy: Optional[ScoringStrategy] = None
+    # If True, the search returns only the number of matches, and no results.
+    return_counts: bool = False
+    # Which classes of structure to search over. Defaults to experimental only.
+    results_content_type: Optional[List[ResultsContentType]] = None
+    # How much information to return about each hit.
+    results_verbosity: Optional[ResultsVerbosity] = None
 
     def _to_dict(self):
-        result_dict = {}
+        result_dict: Dict[str, Any] = {}
         if self.result_start_index != None and self.num_results != None:
             result_dict["paginate"] = {
                 "start": self.result_start_index,
@@ -115,13 +165,29 @@ class RequestOptions:
                 "direction": "desc" if self.desc else "asc"
             }]
 
+        if self.scoring_strategy is not None:
+            result_dict["scoring_strategy"] = self.scoring_strategy.value
+
+        if self.return_counts:
+            result_dict["return_counts"] = True
+
+        if self.results_content_type is not None:
+            result_dict["results_content_type"] = [
+                content_type.value for content_type in self.results_content_type
+            ]
+
+        if self.results_verbosity is not None:
+            result_dict["results_verbosity"] = self.results_verbosity.value
+
         return result_dict
 
 
 @dataclass
 class ScoredResult:
     entity_id: str  # PDB Entity ID (e.g. 5JUP for the entry return type)
-    score: float
+    # Score of the hit. None when the search requested `compact` verbosity,
+    # which omits per-hit scores.
+    score: Optional[float]
 
 
 RawJSONDictResponse = Dict[str, Any]
@@ -147,7 +213,7 @@ def perform_search(
     return_with_scores: bool = False,
     return_raw_json_dict: bool = False,
     verbosity: bool = True,
-) -> Union[List[str], List[ScoredResult], RawJSONDictResponse]:
+) -> Union[List[str], List[ScoredResult], RawJSONDictResponse, int]:
     """Performs search specified by `search_operator`.
     Returns entity strings of type `return_type` that match the resulting hits.
 
@@ -203,9 +269,11 @@ def perform_search(
                                      verbosity=verbosity)
 
 
-_SEARCH_OPERATORS = text_operators.TEXT_SEARCH_OPERATORS + [
-    SequenceOperator, StructureOperator, SeqMotifOperator, ChemicalOperator
-]
+_SEARCH_OPERATORS = (text_operators.TEXT_SEARCH_OPERATORS +
+                     selection_operators.CHEMICAL_TEXT_SEARCH_OPERATORS + [
+                         SequenceOperator, StructureOperator, SeqMotifOperator,
+                         ChemicalOperator, ChemicalFormulaOperator
+                     ])
 
 
 def perform_search_with_graph(
@@ -215,7 +283,7 @@ def perform_search_with_graph(
     return_with_scores: bool = False,
     return_raw_json_dict: bool = False,
     verbosity: bool = True,
-) -> Union[List[str], RawJSONDictResponse, List[ScoredResult]]:
+) -> Union[List[str], RawJSONDictResponse, List[ScoredResult], int]:
     """Performs specified search using RCSB's search node logic.
 
     Essentially, this allows you to ask multiple questions in one RCSB query.
@@ -286,11 +354,25 @@ def perform_search_with_graph(
     if return_raw_json_dict:
         return response.json()
 
+    response_json = response.json()
+
+    # A `return_counts` request returns only the number of matching hits.
+    if request_options is not None and request_options.return_counts:
+        return response_json.get("total_count", 0)
+
     # Converts RCSB result to list of identifiers corresponding to
     # the `return_type`. Annotated with score if `return_with_scores`.
-    response_json = response.json()
     results = []
     for query_hit in _extract_result_set(response_json):
+        # `compact` results verbosity returns bare identifier strings rather
+        # than objects annotated with scores.
+        if isinstance(query_hit, str):
+            if return_with_scores:
+                results.append(ScoredResult(entity_id=query_hit, score=None))
+            else:
+                results.append(query_hit)
+            continue
+
         identifier = query_hit.get("identifier")
         if identifier is None and "result" in query_hit:
             identifier = query_hit["result"].get("identifier")
@@ -314,6 +396,8 @@ class SearchService(Enum):
     Auto-inferred from search operator."""
     BASIC_SEARCH = "full_text"
     TEXT = "text"
+    # Attribute search over molecular definitions, rather than structures
+    TEXT_CHEM = "text_chem"
     SEQUENCE = "sequence"
     SEQMOTIF = "seqmotif"
     STRUCTURE = "structure"
@@ -330,13 +414,17 @@ def _infer_search_service(search_operator: SearchOperator) -> SearchService:
         return SearchService.BASIC_SEARCH
     elif type(search_operator) in text_operators.TEXT_SEARCH_OPERATORS:
         return SearchService.TEXT
+    elif type(
+            search_operator
+    ) in selection_operators.CHEMICAL_TEXT_SEARCH_OPERATORS:
+        return SearchService.TEXT_CHEM
     elif type(search_operator) is SequenceOperator:
         return SearchService.SEQUENCE
     elif type(search_operator) is StructureOperator:
         return SearchService.STRUCTURE
     elif type(search_operator) is SeqMotifOperator:
         return SearchService.SEQMOTIF
-    elif type(search_operator) is ChemicalOperator:
+    elif type(search_operator) in (ChemicalOperator, ChemicalFormulaOperator):
         return SearchService.CHEMICAL
     else:
         raise CannotInferSearchServiceException(

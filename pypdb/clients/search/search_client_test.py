@@ -6,7 +6,7 @@ import unittest
 from unittest import mock
 
 from pypdb.clients.search import search_client
-from pypdb.clients.search.operators import chemical_operators, sequence_operators, text_operators
+from pypdb.clients.search.operators import chemical_operators, selection_operators, sequence_operators, text_operators
 
 REQUEST_HEADERS = {"Content-Type": "application/json"}
 
@@ -674,6 +674,181 @@ class TestHTTPRequests(unittest.TestCase):
                     "direction": "asc"
                 }]
             })
+
+    def test_request_options_to_dict_with_all_options(self):
+        request_options = search_client.RequestOptions(
+            sort_by=None,
+            desc=None,
+            scoring_strategy=search_client.ScoringStrategy.TEXT,
+            return_counts=True,
+            results_content_type=[
+                search_client.ResultsContentType.EXPERIMENTAL,
+                search_client.ResultsContentType.COMPUTATIONAL
+            ],
+            results_verbosity=search_client.ResultsVerbosity.COMPACT)
+
+        self.assertEqual(
+            request_options._to_dict(), {
+                "scoring_strategy": "text",
+                "return_counts": True,
+                "results_content_type": ["experimental", "computational"],
+                "results_verbosity": "compact"
+            })
+
+    @mock.patch.object(requests, "post")
+    def test_return_counts_returns_total_count(self, mock_post):
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = {"total_count": 9560}
+        mock_post.return_value = mock_response
+
+        results = search_client.perform_search(
+            search_operator=text_operators.DefaultOperator(value="ribosome"),
+            return_type=search_client.ReturnType.ENTRY,
+            request_options=search_client.RequestOptions(sort_by=None,
+                                                         desc=None,
+                                                         return_counts=True),
+            verbosity=False)
+
+        expected_json_dict = {
+            'query': {
+                'type': 'terminal',
+                'service': 'full_text',
+                'parameters': {
+                    'value': 'ribosome'
+                }
+            },
+            'request_options': {
+                'return_counts': True
+            },
+            'return_type': 'entry'
+        }
+
+        mock_post.assert_called_once_with(
+            url=search_client.SEARCH_URL_ENDPOINT,
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
+        self.assertEqual(results, 9560)
+
+    @mock.patch.object(requests, "post")
+    def test_compact_verbosity_returns_bare_identifiers(self, mock_post):
+        # `compact` verbosity returns identifier strings rather than objects
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = {
+            "result_set": ["5JUP", "5JUS", "5JUO"]
+        }
+        mock_post.return_value = mock_response
+
+        results = search_client.perform_search(
+            search_operator=text_operators.DefaultOperator(value="ribosome"),
+            return_type=search_client.ReturnType.ENTRY,
+            request_options=search_client.RequestOptions(
+                sort_by=None,
+                desc=None,
+                results_verbosity=search_client.ResultsVerbosity.COMPACT),
+            verbosity=False)
+
+        self.assertEqual(results, ["5JUP", "5JUS", "5JUO"])
+
+    @mock.patch.object(requests, "post")
+    def test_compact_verbosity_with_scores_returns_null_scores(
+            self, mock_post):
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = {"result_set": ["5JUP", "5JUS"]}
+        mock_post.return_value = mock_response
+
+        results = search_client.perform_search(
+            search_operator=text_operators.DefaultOperator(value="ribosome"),
+            return_type=search_client.ReturnType.ENTRY,
+            request_options=search_client.RequestOptions(
+                sort_by=None,
+                desc=None,
+                results_verbosity=search_client.ResultsVerbosity.COMPACT),
+            return_with_scores=True,
+            verbosity=False)
+
+        self.assertEqual(results, [
+            search_client.ScoredResult(entity_id="5JUP", score=None),
+            search_client.ScoredResult(entity_id="5JUS", score=None)
+        ])
+
+    @mock.patch.object(requests, "post")
+    def test_chemical_text_operator_with_mol_definition_return(
+            self, mock_post):
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = {
+            "result_set": [{
+                "identifier": "NAG"
+            }]
+        }
+        mock_post.return_value = mock_response
+
+        results = search_client.perform_search(
+            search_operator=selection_operators.ChemicalExactMatchOperator(
+                attribute="rcsb_chem_comp_container_identifiers.comp_id",
+                value="NAG"),
+            return_type=search_client.ReturnType.MOL_DEFINITION,
+            verbosity=False)
+
+        expected_json_dict = {
+            'query': {
+                'type': 'terminal',
+                'service': 'text_chem',
+                'parameters': {
+                    'attribute':
+                    'rcsb_chem_comp_container_identifiers.comp_id',
+                    'operator': 'exact_match',
+                    'value': 'NAG'
+                }
+            },
+            'request_options': {
+                'return_all_hits': True
+            },
+            'return_type': 'mol_definition'
+        }
+
+        mock_post.assert_called_once_with(
+            url=search_client.SEARCH_URL_ENDPOINT,
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
+        self.assertEqual(results, ["NAG"])
+
+    @mock.patch.object(requests, "post")
+    def test_chemical_formula_operator(self, mock_post):
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.json.return_value = {
+            "result_set": [{
+                "identifier": "VIB"
+            }]
+        }
+        mock_post.return_value = mock_response
+
+        results = search_client.perform_search(
+            search_operator=chemical_operators.ChemicalFormulaOperator(
+                formula="C12H17N4OS"),
+            return_type=search_client.ReturnType.MOL_DEFINITION,
+            verbosity=False)
+
+        expected_json_dict = {
+            'query': {
+                'type': 'terminal',
+                'service': 'chemical',
+                'parameters': {
+                    'value': 'C12H17N4OS',
+                    'type': 'formula',
+                    'match_subset': False
+                }
+            },
+            'request_options': {
+                'return_all_hits': True
+            },
+            'return_type': 'mol_definition'
+        }
+
+        mock_post.assert_called_once_with(
+            url=search_client.SEARCH_URL_ENDPOINT,
+            data=json.dumps(expected_json_dict),
+            headers=REQUEST_HEADERS)
+        self.assertEqual(results, ["VIB"])
 
 
 if __name__ == '__main__':

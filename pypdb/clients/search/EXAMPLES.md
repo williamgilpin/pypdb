@@ -300,3 +300,89 @@ results = perform_search_with_graph(
   ),
   return_type=ReturnType.ENTRY
 )
+
+## Count results without fetching them
+
+Setting `return_counts` returns only the number of matching entries, which is
+much faster than retrieving every hit.
+
+```python
+from pypdb.clients.search.search_client import perform_search, ReturnType, RequestOptions
+from pypdb.clients.search.operators import text_operators
+
+count = perform_search(
+    search_operator=text_operators.DefaultOperator(value="ribosome"),
+    return_type=ReturnType.ENTRY,
+    request_options=RequestOptions(sort_by=None, desc=None, return_counts=True)
+)
+print(count)  # e.g. 9560
+```
+
+## Fetch only the top results
+
+```python
+from pypdb.clients.search.search_client import perform_search, ReturnType, RequestOptions
+from pypdb.clients.search.operators import text_operators
+
+results = perform_search(
+    search_operator=text_operators.DefaultOperator(value="crispr"),
+    return_type=ReturnType.ENTRY,
+    request_options=RequestOptions(result_start_index=0, num_results=10)
+)
+```
+
+## Include computed structure models
+
+By default only experimentally-determined structures are searched. Computed
+models (such as AlphaFold predictions) can be included as well.
+
+```python
+from pypdb.clients.search.search_client import (
+    perform_search, ReturnType, RequestOptions, ResultsContentType)
+from pypdb.clients.search.operators import text_operators
+
+results = perform_search(
+    search_operator=text_operators.DefaultOperator(value="ribosome"),
+    return_type=ReturnType.ENTRY,
+    request_options=RequestOptions(
+        result_start_index=0,
+        num_results=10,
+        results_content_type=[ResultsContentType.EXPERIMENTAL,
+                              ResultsContentType.COMPUTATIONAL])
+)
+print(results)  # includes IDs like 'AF_AFA0A0K0DUR6F1'
+```
+
+## Search molecular definitions by chemical formula
+
+The `mol_definition` return type returns chemical component (and BIRD) IDs,
+rather than structures.
+
+```python
+from pypdb.clients.search.search_client import perform_search, ReturnType
+from pypdb.clients.search.operators.chemical_operators import ChemicalFormulaOperator
+
+results = perform_search(
+    search_operator=ChemicalFormulaOperator(formula="C12H17N4OS"),
+    return_type=ReturnType.MOL_DEFINITION
+)
+print(results)  # ['VIB'] (thiamine)
+```
+
+## Search molecular definitions by attribute
+
+Attribute searches against chemical definitions use the operators in
+`selection_operators`, which are dispatched to RCSB's `text_chem` service.
+
+```python
+from pypdb.clients.search.search_client import perform_search, ReturnType
+from pypdb.clients.search.operators import selection_operators
+
+results = perform_search(
+    search_operator=selection_operators.ChemicalExactMatchOperator(
+        attribute="rcsb_chem_comp_container_identifiers.comp_id",
+        value="NAG"),
+    return_type=ReturnType.MOL_DEFINITION
+)
+print(results)  # ['NAG']
+```

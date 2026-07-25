@@ -118,5 +118,54 @@ class TestEntry(unittest.TestCase):
         df = fetcher.return_data_as_pandas_df()
         self.assertFalse(df is None)
 
+    def test_interface_fetch(self):
+        fetcher = DataFetcher(["4HHB-1.1"], DataType.INTERFACE)
+        property = {"rcsb_interface_info": ["interface_area", "interface_character"]}
+        fetcher.add_property(property)
+        fetcher.fetch_data()
+
+        self.assertFalse(not fetcher.response)
+
+        df = fetcher.return_data_as_pandas_df()
+        self.assertFalse(df is None)
+
+    def test_uniprot_fetch(self):
+        # Hemoglobin subunit beta
+        fetcher = DataFetcher("P68871", DataType.UNIPROT)
+        property = {"rcsb_uniprot_protein": ["sequence"]}
+        fetcher.add_property(property)
+
+        fetcher.generate_json_query()
+        # Singular data types take one ID, rather than a list of them
+        self.assertIn('uniprot(uniprot_id: "P68871")',
+                      fetcher.json_query["query"])
+
+        fetcher.fetch_data()
+        self.assertFalse(not fetcher.response)
+
+        data = fetcher.return_data_as_df_dict()
+        self.assertIn("P68871", data)
+
+    def test_pubmed_fetch(self):
+        # PubMed IDs are numeric, and are not quoted in the GraphQL query
+        fetcher = DataFetcher(6726807, DataType.PUBMED)
+        property = {"rcsb_pubmed_container_identifiers": ["pubmed_id"]}
+        fetcher.add_property(property)
+
+        fetcher.generate_json_query()
+        self.assertIn("pubmed(pubmed_id: 6726807)", fetcher.json_query["query"])
+
+        fetcher.fetch_data()
+        self.assertFalse(not fetcher.response)
+
+        data = fetcher.return_data_as_df_dict()
+        self.assertEqual(
+            data[6726807]["rcsb_pubmed_container_identifiers.pubmed_id"],
+            6726807)
+
+    def test_singular_data_type_truncates_extra_ids(self):
+        fetcher = DataFetcher(["P68871", "P69905"], DataType.UNIPROT)
+        self.assertEqual(fetcher.id, ["P68871"])
+
 if __name__ == '__main__':
     unittest.main()

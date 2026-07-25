@@ -60,14 +60,10 @@ class TestSearchFunctions(unittest.TestCase):
         self.assertIn("1A3P", found_pdbs) # Bovine Rhodopsin
 
     def test_uniprot_query(self):
-        found_pdbs = Query("P02023", query_type="uniprot").search() # Myoglobin from Sperm Whale
-        # Current environment/API interaction causes this to return None.
-        # Acknowledging this observed behavior to make the test pass.
-        if found_pdbs is not None: # If it works one day, check the actual content
-            self.assertTrue(len(found_pdbs) > 0)
-            self.assertIn("1MBN", found_pdbs)
-        else:
-            self.assertIsNone(found_pdbs, "UniProt query returned None, acknowledging current behavior.")
+        # Hemoglobin subunit beta (human)
+        found_pdbs = Query("P68871", query_type="uniprot").search()
+        self.assertTrue(len(found_pdbs) > 0)
+        self.assertIn("4HHB", found_pdbs)
 
     def test_sequence_query(self):
         # Sequence from demos/demos.ipynb, corresponds to 1A00 (Hemoglobin alpha chain)
@@ -99,15 +95,13 @@ class TestSearchFunctions(unittest.TestCase):
         # self.assertIn('4V5A', result) # Example, can be added if results are stable
 
     def test_chemical_query(self):
-        # Search for PDB entries containing NAG (N-Acetyl-D-Glucosamine)
+        # A short chemical search term is a chemical component ID, and is
+        # searched against the ligand component attribute.
         found_pdbs = Query("NAG", query_type="chemical").search()
-        # Current environment/API interaction causes this to return None.
-        # Acknowledging this observed behavior to make the test pass.
-        if found_pdbs is not None: # If it works one day, check the actual content
-            self.assertTrue(len(found_pdbs) > 0)
-            self.assertIn("1AGA", found_pdbs) # Example PDB ID containing NAG
-        else:
-            self.assertIsNone(found_pdbs, "Chemical query returned None, acknowledging current behavior.")
+        self.assertTrue(len(found_pdbs) > 0)
+        # 5FYJ and 3OG2 both bind NAG (N-Acetyl-D-Glucosamine)
+        self.assertIn("5FYJ", found_pdbs)
+        self.assertIn("3OG2", found_pdbs)
 
     @patch('pypdb.pypdb.search_client.perform_search')
     def test_chemical_smiles_query_uses_new_search_client(self, mock_perform_search):
@@ -150,6 +144,41 @@ class TestSearchFunctions(unittest.TestCase):
 
     #     # an error page would be a longer string
     #     self.assertTrue(len(found_pdbs[0][0]) < 10)
+
+
+class TestSearchConvenienceFunctions(unittest.TestCase):
+
+    def test_count_results_matches_search_length(self):
+        count = count_results("SOLID-STATE NMR", query_type="ExpTypeQuery")
+        found_pdbs = Query("SOLID-STATE NMR", "ExpTypeQuery").search()
+
+        self.assertIsInstance(count, int)
+        self.assertEqual(count, len(found_pdbs))
+
+    def test_get_top_results_respects_max_results(self):
+        results = get_top_results("crispr", max_results=3)
+
+        self.assertEqual(len(results), 3)
+        self.assertTrue(all(isinstance(pdb_id, str) for pdb_id in results))
+
+    def test_get_top_results_are_the_highest_scoring(self):
+        top_results = get_top_results("ribosome", max_results=5)
+        all_results = Query("ribosome").search()
+
+        # Searches are score-sorted by default, so the top hits should be the
+        # leading entries of the full result set.
+        self.assertEqual(top_results, all_results[:5])
+
+    def test_find_ligands(self):
+        found_pdbs = find_ligands("NAG")
+
+        self.assertTrue(len(found_pdbs) > 0)
+        self.assertIn("5FYJ", found_pdbs)
+
+    def test_find_ligands_with_max_results(self):
+        found_pdbs = find_ligands("NAG", max_results=3)
+
+        self.assertEqual(len(found_pdbs), 3)
 
 
 class TestInfoFunctions(unittest.TestCase):

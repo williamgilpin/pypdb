@@ -37,7 +37,19 @@ This code has been designed and tested for Python 3.
 This package can be used to get lists of PDB IDs associated with specific search terms, experiment types, structures, and other common criteria. To use the simple API, see the examples in [`demos/demos.ipynb`](demos/demos.ipynb). For advanced search and query logic, see the examples in [`search/EXAMPLES.md`](pypdb/clients/search/EXAMPLES.md).
 
 ### PDB Data Fetch
-Given a list of PDBs, this package can be used to fetch data associated with those PDBs, including their dates of deposition, lists of authors and associated publications, their sequences or structures, their top BLAST matches, and other query-specific attributes like lists of a ligands or chemical structure.  To use the simple API, see the examples in [`demos/demos.ipynb`](demos/demos.ipynb). For advanced search and query logic, see the examples in [`data/EXAMPLES.md`](pypdb/clients/data/EXAMPLES.md).
+Given a list of PDBs, this package can be used to fetch data associated with those PDBs, including their dates of deposition, lists of authors and associated publications, their sequences or structures, their top BLAST matches, and other query-specific attributes like lists of a ligands or chemical structure. Integrated PubMed, UniProt, and structural interface data can be fetched as well. To use the simple API, see the examples in [`demos/demos.ipynb`](demos/demos.ipynb). For advanced search and query logic, see the examples in [`data/EXAMPLES.md`](pypdb/clients/data/EXAMPLES.md).
+
+### Counting and paginating results
+Searches return every matching entry by default, which can be slow for broad queries. To retrieve just a tally or the highest-scoring hits:
+
+```python
+from pypdb import count_results, get_top_results
+
+print(count_results("ribosome"))            # 9560
+print(get_top_results("crispr", max_results=5))
+```
+
+Searches can also be restricted to a page of results, scored with a particular strategy, or extended to include computed structure models (such as AlphaFold predictions) via `RequestOptions`. See [`search/EXAMPLES.md`](pypdb/clients/search/EXAMPLES.md).
 
 ## Issues and Feature Requests
 

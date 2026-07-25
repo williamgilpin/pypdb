@@ -37,3 +37,24 @@ class TestChemicalOperators(unittest.TestCase):
                 "descriptor_type": "SMILES",
                 "match_type": "graph-strict"
             })
+
+    def test_chemical_formula_operator_to_dict(self):
+        # Thiamine
+        formula_operator = chemical_operators.ChemicalFormulaOperator(
+            formula="C12H17N4OS")
+
+        self.assertEqual(formula_operator._to_dict(), {
+            "value": "C12H17N4OS",
+            "type": "formula",
+            "match_subset": False
+        })
+
+    def test_chemical_formula_operator_with_match_subset(self):
+        formula_operator = chemical_operators.ChemicalFormulaOperator(
+            formula="C12H17N4OS", match_subset=True)
+
+        self.assertEqual(formula_operator._to_dict(), {
+            "value": "C12H17N4OS",
+            "type": "formula",
+            "match_subset": True
+        })

@@ -34,6 +34,24 @@ class DataType(Enum):
     NONPOLYMER_ENTITY_INSTANCE = "nonpolymer_entity_instances"
     ASSEMBLY = "assemblies"
     CHEMICAL_COMPONENT = "chem_comps"
+    INTERFACE = "interfaces"
+    # PubMed and UniProt integrated data are only queryable one ID at a time
+    PUBMED = "pubmed"
+    UNIPROT = "uniprot"
+
+
+# Data types that the PDB only exposes as single-ID (rather than batch) queries
+SINGULAR_DATA_TYPES = {DataType.PUBMED, DataType.UNIPROT}
+
+# GraphQL argument name used to pass IDs, per data type
+_ID_ARGUMENT_NAMES = {
+    DataType.ENTRY: "entry_ids",
+    DataType.ASSEMBLY: "assembly_ids",
+    DataType.CHEMICAL_COMPONENT: "comp_ids",
+    DataType.INTERFACE: "interface_ids",
+    DataType.PUBMED: "pubmed_id",
+    DataType.UNIPROT: "uniprot_id",
+}
 
 @dataclass
 class DataFetcher:
@@ -41,7 +59,7 @@ class DataFetcher:
     General class that will host various data types, as detailed above.
     """
 
-    id: str | list
+    id: str | int | list
     data_type: DataType
 
     properties: dict = field(default_factory=dict)
@@ -53,10 +71,16 @@ class DataFetcher:
         Check types of IDs given, format accordingly.
         """
 
-        if isinstance(self.id, str):
+        # PubMed IDs are numeric, so accept ints alongside string identifiers
+        if isinstance(self.id, (str, int)):
             self.id = [self.id]
 
-        if "entit" in self.data_type.value and "instance" not in self.data_type.value:
+        if self.data_type in SINGULAR_DATA_TYPES:
+            if len(self.id) > 1:
+                print(f"WARNING: {self.data_type.value} accepts only one ID "
+                      "at a time; using the first one.")
+                self.id = self.id[:1]
+        elif "entit" in self.data_type.value and "instance" not in self.data_type.value:
             for id in self.id:
                 if '_' not in id:
                     print(f"WARNING: {id} not valid for {self.data_type.value}.")
@@ -116,19 +140,22 @@ class DataFetcher:
             print("ERROR: no properties given to generate JSON query.")
             raise ValueError
 
-        if self.data_type == DataType.ENTRY:
-            q_str = "entry_ids"
-        elif "entit" in self.data_type.value:
+        q_str = _ID_ARGUMENT_NAMES.get(self.data_type)
+        if q_str is None:
             if "instance" in self.data_type.value:
                 q_str = "instance_ids"
             else:
                 q_str = "entity_ids"
-        elif self.data_type == DataType.ASSEMBLY:
-            q_str = "assembly_ids"
-        elif self.data_type == DataType.CHEMICAL_COMPONENT:
-            q_str = "comp_ids"
 
-        data_str = f"{self.data_type.value}({q_str}: [" + ",".join(f"\"{w}\"" for w in self.id) + "])"
+        if self.data_type in SINGULAR_DATA_TYPES:
+            # Singular data types take a single (unquoted, for PubMed) ID
+            # rather than a list.
+            value = self.id[0]
+            id_str = value if self.data_type == DataType.PUBMED else f"\"{value}\""
+            data_str = f"{self.data_type.value}({q_str}: {id_str})"
+        else:
+            data_str = f"{self.data_type.value}({q_str}: [" + ",".join(
+                f"\"{w}\"" for w in self.id) + "])"
 
         props_string = ""
         for key, val in self.properties.items():
@@ -158,7 +185,11 @@ class DataFetcher:
 
         self.response = response
 
-        if len(self.response['data'][self.data_type.value]) != len(self.id):
+        returned_data = self.response['data'][self.data_type.value]
+        if self.data_type in SINGULAR_DATA_TYPES:
+            if returned_data is None:
+                print("WARNING: one or more IDs not found in the PDB.")
+        elif len(returned_data) != len(self.id):
             print("WARNING: one or more IDs not found in the PDB.")
 
     def return_data_as_df_dict(self):
@@ -169,6 +200,10 @@ class DataFetcher:
             return None
 
         data = self.response['data'][self.data_type.value]
+
+        if self.data_type in SINGULAR_DATA_TYPES:
+            # Singular data types return one object rather than a list
+            data = [data] if data is not None else []
 
         # flatten data dictionary by joining property and subproperty names
         data_flat = {}

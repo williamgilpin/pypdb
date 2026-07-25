@@ -32,6 +32,3 @@ class SeqMotifOperator:
             "pattern_type": self.pattern_type.value,
             "target": self.sequence_type.value
         }
-
-
-# DO NOT APPROVE: DO NOT APPROVE THIS CL UNTIL ADDED TO VALIDATION

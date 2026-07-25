@@ -17,11 +17,14 @@ PDB's data API [organizes the data in the following way](https://data.rcsb.org/#
 * `assembly`
 * `chemical_component`
 
-In addition to these, the following are also options in the PDB, but are currently not implemented in PyPDB:
+In addition to these, PyPDB also supports the following:
 
-* `PubMed`
-* `UniProt`
-* `DrugBank`
+* `interface` (`DataType.INTERFACE`)
+* `PubMed` (`DataType.PUBMED`)
+* `UniProt` (`DataType.UNIPROT`)
+
+`DrugBank` data is not available as a top-level query in the PDB's GraphQL API,
+and so is not implemented here.
 
 The data schemas for all of these data types can be viewed [here](https://data.rcsb.org/#data-schema).
 These schemas allow the user to determine what keywords to ask for.
@@ -121,5 +124,33 @@ fetcher = DataFetcher(["NAG","EBW"], DataType.CHEMICAL_COMPONENT)
 property = {"rcsb_id":[], "chem_comp": ["type", "formula_weight","name","formula"],
             "rcsb_chem_comp_info":["initial_release_date"]}
 fetcher.add_property(property)
+fetcher.fetch_data()
+```
+### Fetch integrated PubMed and UniProt data
+
+The PDB exposes PubMed and UniProt data one record at a time, so these data
+types take a single ID rather than a list:
+
+```python
+fetcher = DataFetcher("P68871", DataType.UNIPROT)
+fetcher.add_property({"rcsb_uniprot_protein": ["sequence"]})
+fetcher.fetch_data()
+```
+
+PubMed IDs are numeric:
+
+```python
+fetcher = DataFetcher(6726807, DataType.PUBMED)
+fetcher.add_property({"rcsb_pubmed_abstract_text": []})
+fetcher.fetch_data()
+```
+
+### Fetch interface data
+
+Interface IDs combine an entry, an assembly, and an interface number:
+
+```python
+fetcher = DataFetcher(["4HHB-1.1"], DataType.INTERFACE)
+fetcher.add_property({"rcsb_interface_info": ["interface_area", "interface_character"]})
 fetcher.fetch_data()
 ```
