@@ -1,0 +1,14 @@
+version: 2
+
+updates:
+  # pypdb is a library: runtime dependencies are declared as open ranges in
+  # pyproject.toml rather than pinned, so there is no Python lock file to
+  # update. Only the CI actions are version-pinned and worth tracking.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

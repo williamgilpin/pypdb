@@ -75,3 +75,7 @@ target/
 .ipynb_checkpoints/
 # Generated at build time by setuptools-scm
 pypdb/_version.py
+
+# Lock file for local development only; pypdb is a library, so runtime
+# dependency ranges live in pyproject.toml rather than being pinned here.
+uv.lock
