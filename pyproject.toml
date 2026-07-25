@@ -40,6 +40,11 @@ Homepage = "https://github.com/williamgilpin/pypdb"
 Repository = "https://github.com/williamgilpin/pypdb"
 Issues = "https://github.com/williamgilpin/pypdb/issues"
 
+[tool.pytest.ini_options]
+# Jupyter leaves stale copies of source and test files in these directories;
+# collecting them would run outdated code.
+norecursedirs = [".*", "build", "dist", "*.egg-info", ".ipynb_checkpoints"]
+
 [tool.setuptools_scm]
 # Writes the resolved version into the package at build time, so
 # `pypdb.__version__` always matches the tag that produced the release.

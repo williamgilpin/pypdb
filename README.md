@@ -13,6 +13,10 @@ Install using pip:
 
     $ pip install pypdb
 
+Or using conda, from [conda-forge](https://anaconda.org/conda-forge/pypdb):
+
+    $ conda install -c conda-forge pypdb
+
 To install the development version, which contains the latest features and fixes, install directly from GitHub using
 
     $ pip install git+https://github.com/williamgilpin/pypdb
@@ -34,12 +38,75 @@ This code has been designed and tested for Python 3.
 ## Usage
 
 ### PDB Text Search
-This package can be used to get lists of PDB IDs associated with specific search terms, experiment types, structures, and other common criteria. To use the simple API, see the examples in [`demos/demos.ipynb`](demos/demos.ipynb). For advanced search and query logic, see the examples in [`search/EXAMPLES.md`](pypdb/clients/search/EXAMPLES.md).
+
+Search the PDB for entries matching a term, and get back a list of PDB IDs:
+
+```python
+from pypdb import Query
+
+found_pdbs = Query("ribosome").search()
+print(found_pdbs[:5])
+```
+
+The `query_type` argument searches a specific field instead of the full text. A few of the most common:
+
+```python
+# By source organism
+Query("Dictyostelium", query_type="OrganismQuery").search()
+
+# By Enzyme Classification number (partial numbers match the whole subtree)
+Query("2.3.2.5", query_type="ec_number").search()
+
+# By UniProt accession
+Query("P68871", query_type="uniprot").search()
+
+# By experimental method
+Query("SOLID-STATE NMR", query_type="ExpTypeQuery").search()
+
+# By ligand, either as a chemical component ID or a SMILES string
+Query("NAG", query_type="chemical").search()
+Query("Clc1nc(Br)nc2nc[nH]c12", query_type="chemical").search()
+```
+
+Other query types include `PubmedIdQuery`, `TreeEntityQuery` (NCBI TaxID), `AdvancedAuthorQuery`, `pfam`, `sequence`, `seqmotif`, and `structure`. See `help(Query)` for the full list.
+
+For queries combining several conditions with AND/OR logic, negation, ranges, or comparisons, see [`search/EXAMPLES.md`](pypdb/clients/search/EXAMPLES.md).
 
 ### PDB Data Fetch
-Given a list of PDBs, this package can be used to fetch data associated with those PDBs, including their dates of deposition, lists of authors and associated publications, their sequences or structures, their top BLAST matches, and other query-specific attributes like lists of a ligands or chemical structure. Integrated PubMed, UniProt, and structural interface data can be fetched as well. To use the simple API, see the examples in [`demos/demos.ipynb`](demos/demos.ipynb). For advanced search and query logic, see the examples in [`data/EXAMPLES.md`](pypdb/clients/data/EXAMPLES.md).
+
+Look up the information associated with a single PDB ID:
+
+```python
+from pypdb import get_info
+
+info = get_info("4HHB")
+print(info["struct"]["title"])     # THE CRYSTAL STRUCTURE OF HUMAN DEOXYHAEMOGLOBIN...
+print(info["exptl"][0]["method"])  # X-RAY DIFFRACTION
+```
+
+Fetch the ligands bound to an entry, or the description of a chemical component:
+
+```python
+from pypdb import get_ligands, describe_chemical
+
+ligands = get_ligands("4HHB")["ligandInfo"]["ligand"]
+print([ligand["@chemicalID"] for ligand in ligands])  # ['HEM', 'PO4']
+
+print(describe_chemical("NAG")["chem_comp"]["name"])
+```
+
+Download a structure file:
+
+```python
+from pypdb import get_pdb_file
+
+cif = get_pdb_file("4lza", filetype="cif", compression=True)
+```
+
+Integrated PubMed, UniProt, and structural interface data can be fetched as well. For fetching many properties across many entries at once, see [`data/EXAMPLES.md`](pypdb/clients/data/EXAMPLES.md).
 
 ### Counting and paginating results
+
 Searches return every matching entry by default, which can be slow for broad queries. To retrieve just a tally or the highest-scoring hits:
 
 ```python
@@ -50,6 +117,8 @@ print(get_top_results("crispr", max_results=5))
 ```
 
 Searches can also be restricted to a page of results, scored with a particular strategy, or extended to include computed structure models (such as AlphaFold predictions) via `RequestOptions`. See [`search/EXAMPLES.md`](pypdb/clients/search/EXAMPLES.md).
+
+More worked examples of every function live in [`demos/demos.ipynb`](demos/demos.ipynb).
 
 ## Releasing a new version
 
