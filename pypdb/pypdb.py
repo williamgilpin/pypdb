@@ -21,6 +21,7 @@ import warnings
 import requests
 
 from pypdb.util import http_requests
+from pypdb.clients.data.graphql import graphql
 from pypdb.clients.fasta import fasta_client
 from pypdb.clients.pdb import pdb_client
 from pypdb.clients.search import search_client
@@ -426,14 +427,81 @@ def describe_chemical(chem_id):
     return get_info(chem_id, url_root = 'https://data.rcsb.org/rest/v1/core/chemcomp/')
 
 def get_ligands(pdb_id):
-    """Return ligands of given PDB ID (DEPRECATED)"""
-    warnings.warn(
-        "get_ligands() is deprecated. Use pypdb.clients.data.DataFetcher with DataType.ENTRY "
-        "and query for nonpolymer_entity_instances or related chemical component data.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return None
+    '''Return the ligands bound to a given PDB entry
+
+    Parameters
+    ----------
+
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+
+    Returns
+    -------
+
+    out : dict
+        A dictionary containing a list of ligands associated with the entry.
+        Returns None if the entry cannot be retrieved.
+
+    Examples
+    --------
+    >>> ligand_dict = get_ligands('100D')
+    >>> print(ligand_dict)
+    {'id': '100D',
+    'ligandInfo': {'ligand': [{'@structureId': '100D',
+                            '@chemicalID': 'SPM',
+                            '@type': 'non-polymer',
+                            '@molecularWeight': 202.34,
+                            'chemicalName': 'SPERMINE',
+                            'formula': 'C10 H26 N4',
+                            'InChI': 'InChI=1S/C10H26N4/c11-5-3-9-13-7-1-2-8-14-10-4-6-12/h13-14H,1-12H2',
+                            'InChIKey': 'PFNFFQXMRSDOHW-UHFFFAOYSA-N',
+                            'smiles': 'C(CCNCCCN)CNCCCN'}]}}
+
+    '''
+    graphql_query = {
+        "query":
+        '{entries(entry_ids:["%s"]){rcsb_id nonpolymer_entities{'
+        'nonpolymer_comp{chem_comp{id name formula formula_weight type}'
+        'rcsb_chem_comp_descriptor{InChI InChIKey SMILES}}}}}' % pdb_id
+    }
+
+    response = graphql.search_graphql(graphql_query)
+
+    if not response or "errors" in response:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    entries = response.get("data", {}).get("entries")
+    if not entries:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    entry = entries[0]
+    ligands = []
+    # Entries without any bound ligands report `None` rather than an empty list
+    for nonpolymer_entity in entry.get("nonpolymer_entities") or []:
+        component = nonpolymer_entity.get("nonpolymer_comp") or {}
+        chem_comp = component.get("chem_comp") or {}
+        descriptor = component.get("rcsb_chem_comp_descriptor") or {}
+
+        ligands.append({
+            "@structureId": entry.get("rcsb_id"),
+            "@chemicalID": chem_comp.get("id"),
+            "@type": chem_comp.get("type"),
+            "@molecularWeight": chem_comp.get("formula_weight"),
+            "chemicalName": chem_comp.get("name"),
+            "formula": chem_comp.get("formula"),
+            "InChI": descriptor.get("InChI"),
+            "InChIKey": descriptor.get("InChIKey"),
+            "smiles": descriptor.get("SMILES"),
+        })
+
+    return {
+        "id": entry.get("rcsb_id"),
+        "ligandInfo": {
+            "ligand": ligands
+        }
+    }
 
 def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99, verbosity=True):
     """

@@ -308,6 +308,51 @@ class TestInfoFunctions(unittest.TestCase):
         self.assertTrue(found_expected_warning,
                         f"Expected 'Retrieval failed, returning None' UserWarning was not issued. Captured warnings: {[str(cw.message) for cw in w]}")
 
+    def test_get_ligands_successful_retrieval(self):
+        result = get_ligands('100D')
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result['id'], '100D')
+
+        ligands = result['ligandInfo']['ligand']
+        self.assertEqual(len(ligands), 1)
+
+        spermine = ligands[0]
+        self.assertEqual(spermine['@structureId'], '100D')
+        self.assertEqual(spermine['@chemicalID'], 'SPM')
+        self.assertEqual(spermine['@type'], 'non-polymer')
+        self.assertEqual(spermine['chemicalName'], 'SPERMINE')
+        self.assertEqual(spermine['formula'], 'C10 H26 N4')
+        self.assertEqual(spermine['smiles'], 'C(CCNCCCN)CNCCCN')
+        self.assertEqual(
+            spermine['InChI'],
+            'InChI=1S/C10H26N4/c11-5-3-9-13-7-1-2-8-14-10-4-6-12/h13-14H,1-12H2')
+        self.assertEqual(spermine['InChIKey'],
+                         'PFNFFQXMRSDOHW-UHFFFAOYSA-N')
+        self.assertAlmostEqual(float(spermine['@molecularWeight']), 202.34)
+
+    def test_get_ligands_with_multiple_ligands(self):
+        result = get_ligands('4HHB')
+
+        chemical_ids = [
+            ligand['@chemicalID'] for ligand in result['ligandInfo']['ligand']
+        ]
+        self.assertIn('HEM', chemical_ids)
+        self.assertIn('PO4', chemical_ids)
+
+    def test_get_ligands_for_entry_without_ligands(self):
+        # An entry with no bound ligands returns an empty list, not None
+        result = get_ligands('1UBQ')
+
+        self.assertEqual(result['id'], '1UBQ')
+        self.assertEqual(result['ligandInfo']['ligand'], [])
+
+    def test_get_ligands_nonexistent_pdb_id(self):
+        with self.assertWarns(UserWarning):
+            result = get_ligands('9ZZZ')
+
+        self.assertIsNone(result)
+
     def test_describe_chemical_invalid_chem_id_format(self):
         chem_id = "NAGX" # Invalid format (too long)
         with self.assertRaisesRegex(Exception, "Ligand id with more than 3 characters provided"):
@@ -408,10 +453,6 @@ class TestDeprecatedFunctions(unittest.TestCase):
         self.assertEqual(len(query_object.queries), 1)
         self.assertIsInstance(query_object.queries[0], PDBSequenceOperator) # Using direct import alias
         self.assertEqual(query_object.queries[0].sequence, 'MTE') # Corrected expected sequence
-
-    def test_characterize_get_ligands_for_deprecation(self):
-        with self.assertWarns(DeprecationWarning):
-            self.assertIsNone(get_ligands('1EHZ'))
 
     def test_characterize_get_gene_onto_for_deprecation(self):
         # Intended for deprecation. Functionality covered by DataFetcher.
