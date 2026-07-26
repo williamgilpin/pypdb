@@ -103,6 +103,26 @@ from pypdb import get_pdb_file
 cif = get_pdb_file("4lza", filetype="cif", compression=True)
 ```
 
+### Ligand coordinates
+
+Ligand coordinates can be downloaded in either of the two forms the RCSB website offers, both in Kekule form. *Ideal* coordinates come from the Chemical Component Dictionary and are independent of any structure; *instance* coordinates are the ligand as modelled inside one particular entry:
+
+```python
+from pypdb import get_ideal_ligand_file, get_ligand_instances, get_ligand_instance_file
+
+# Idealized coordinates for a chemical component (SDF only)
+sdf = get_ideal_ligand_file("ATP")
+
+# Coordinates of each copy as modelled in an entry (SDF or MOL2)
+for instance in get_ligand_instances("4HHB"):
+    coords = get_ligand_instance_file("4HHB",
+                                      instance["auth_asym_id"],
+                                      instance["auth_seq_id"],
+                                      filetype="mol2")
+```
+
+`get_ligand_instances` reports the chain and residue number of every ligand copy in an entry, which is what identifies a specific instance to download.
+
 Integrated PubMed, UniProt, and structural interface data can be fetched as well. For fetching many properties across many entries at once, see [`data/EXAMPLES.md`](pypdb/clients/data/EXAMPLES.md).
 
 ### Counting and paginating results

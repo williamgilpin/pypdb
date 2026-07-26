@@ -23,6 +23,7 @@ import requests
 from pypdb.util import http_requests
 from pypdb.clients.data.graphql import graphql
 from pypdb.clients.fasta import fasta_client
+from pypdb.clients.ligand import ligand_client
 from pypdb.clients.pdb import pdb_client
 from pypdb.clients.search import search_client
 from pypdb.clients.search.operators import chemical_operators
@@ -502,6 +503,160 @@ def get_ligands(pdb_id):
             "ligand": ligands
         }
     }
+
+
+def get_ligand_instances(pdb_id):
+    '''List each copy of each ligand modelled within a PDB entry
+
+    The same chemical component often appears several times in one structure.
+    This returns the chain and residue number identifying each copy, which
+    `get_ligand_instance_file` needs in order to download its coordinates.
+
+    Parameters
+    ----------
+
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+
+    Returns
+    -------
+
+    out : list of dict
+        One entry per ligand copy, with `chem_id`, `auth_asym_id` (chain) and
+        `auth_seq_id` (residue number) keys. Returns None if the entry cannot
+        be retrieved.
+
+    Examples
+    --------
+    >>> print(get_ligand_instances('4HHB')[0])
+    {'chem_id': 'HEM', 'auth_asym_id': 'A', 'auth_seq_id': 142}
+
+    '''
+    graphql_query = {
+        "query":
+        '{entry(entry_id:"%s"){nonpolymer_entities{'
+        'nonpolymer_entity_instances{'
+        'rcsb_nonpolymer_entity_instance_container_identifiers{'
+        'auth_asym_id auth_seq_id comp_id}}}}}' % pdb_id
+    }
+
+    response = graphql.search_graphql(graphql_query)
+
+    if not response or "errors" in response:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    entry = response.get("data", {}).get("entry")
+    if not entry:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    instances = []
+    # Entries without any bound ligands report `None` rather than an empty list
+    for nonpolymer_entity in entry.get("nonpolymer_entities") or []:
+        for instance in nonpolymer_entity.get(
+                "nonpolymer_entity_instances") or []:
+            identifiers = instance.get(
+                "rcsb_nonpolymer_entity_instance_container_identifiers") or {}
+            auth_seq_id = identifiers.get("auth_seq_id")
+            instances.append({
+                "chem_id": identifiers.get("comp_id"),
+                "auth_asym_id": identifiers.get("auth_asym_id"),
+                # Returned as a string by RCSB, but used as a number downstream
+                "auth_seq_id":
+                int(auth_seq_id) if auth_seq_id is not None else None,
+            })
+
+    return instances
+
+
+def get_ideal_ligand_file(chem_id, filetype='sdf', verbosity=True):
+    '''Download idealized coordinates for a chemical component from the CCD
+
+    These coordinates are independent of any particular structure, and are
+    written in Kekule form.
+
+    Parameters
+    ----------
+
+    chem_id : string
+        The chemical component ID of the ligand (e.g. 'ATP')
+
+    filetype : string
+        The format to download. RCSB only publishes idealized coordinates
+        as 'sdf'.
+
+    verbosity : bool
+        Print out the download URL to the console
+
+    Returns
+    -------
+
+    out : string
+        The coordinate file as a string, or None if the request failed.
+
+    Examples
+    --------
+    >>> sdf = get_ideal_ligand_file('ATP')
+    >>> print(sdf.splitlines()[0])
+    ATP
+
+    '''
+    return ligand_client.get_ideal_ligand_file(
+        chem_id,
+        filetype=ligand_client.LigandFileType(filetype.lower()),
+        verbosity=verbosity)
+
+
+def get_ligand_instance_file(pdb_id,
+                             auth_asym_id,
+                             auth_seq_id,
+                             filetype='sdf',
+                             verbosity=True):
+    '''Download the coordinates of one ligand as modelled within a PDB entry
+
+    Unlike the idealized CCD coordinates, these are the experimentally
+    determined coordinates in the entry's own frame of reference. Use
+    `get_ligand_instances` to list the copies available within an entry.
+
+    Parameters
+    ----------
+
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+
+    auth_asym_id : string
+        The author-assigned chain ID of the ligand copy (e.g. 'A')
+
+    auth_seq_id : int
+        The author-assigned residue number of the ligand copy
+
+    filetype : string
+        The format to download, one of 'sdf' or 'mol2'
+
+    verbosity : bool
+        Print out the download URL to the console
+
+    Returns
+    -------
+
+    out : string
+        The coordinate file as a string, or None if the request failed.
+
+    Examples
+    --------
+    >>> sdf = get_ligand_instance_file('4HHB', 'A', 142)
+    >>> print(sdf.splitlines()[0])
+    HEM
+
+    '''
+    return ligand_client.get_ligand_instance_file(
+        pdb_id,
+        auth_asym_id,
+        auth_seq_id,
+        filetype=ligand_client.LigandFileType(filetype.lower()),
+        verbosity=verbosity)
+
 
 def get_blast(pdb_id, chain_id='A', identity_cutoff=0.99, verbosity=True):
     """

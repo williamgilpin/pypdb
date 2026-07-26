@@ -347,6 +347,47 @@ class TestInfoFunctions(unittest.TestCase):
         self.assertEqual(result['id'], '1UBQ')
         self.assertEqual(result['ligandInfo']['ligand'], [])
 
+    def test_get_ligand_instances(self):
+        instances = get_ligand_instances('4HHB')
+
+        self.assertTrue(len(instances) > 0)
+        # 4HHB contains four hemes and two phosphates
+        hemes = [i for i in instances if i['chem_id'] == 'HEM']
+        self.assertEqual(len(hemes), 4)
+
+        self.assertIn({
+            'chem_id': 'HEM',
+            'auth_asym_id': 'A',
+            'auth_seq_id': 142
+        }, instances)
+
+    def test_get_ligand_instances_for_entry_without_ligands(self):
+        self.assertEqual(get_ligand_instances('1UBQ'), [])
+
+    def test_get_ideal_ligand_file(self):
+        sdf = get_ideal_ligand_file('ATP', verbosity=False)
+
+        self.assertIsNotNone(sdf)
+        self.assertEqual(sdf.splitlines()[0].strip(), 'ATP')
+
+    def test_get_ligand_instance_file(self):
+        sdf = get_ligand_instance_file('4HHB', 'A', 142, verbosity=False)
+
+        self.assertIsNotNone(sdf)
+        self.assertEqual(sdf.splitlines()[0].strip(), 'HEM')
+        # Instance coordinates carry the ligand's real position in the entry
+        self.assertIn('18.6750', sdf)
+
+    def test_get_ligand_instance_file_as_mol2(self):
+        mol2 = get_ligand_instance_file('4HHB',
+                                        'A',
+                                        142,
+                                        filetype='mol2',
+                                        verbosity=False)
+
+        self.assertIsNotNone(mol2)
+        self.assertIn('HEM', mol2.splitlines()[0])
+
     def test_get_ligands_nonexistent_pdb_id(self):
         with self.assertWarns(UserWarning):
             result = get_ligands('9ZZZ')
