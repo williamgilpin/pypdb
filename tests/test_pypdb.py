@@ -347,6 +347,54 @@ class TestInfoFunctions(unittest.TestCase):
         self.assertEqual(result['id'], '1UBQ')
         self.assertEqual(result['ligandInfo']['ligand'], [])
 
+    def test_get_chains(self):
+        chains = get_chains('4HHB')
+
+        self.assertEqual(len(chains), 2)
+
+        alpha, beta = chains
+        self.assertEqual(alpha['entity_id'], '4HHB_1')
+        self.assertEqual(alpha['chains'], ['A', 'C'])
+        self.assertEqual(alpha['description'], 'Hemoglobin subunit alpha')
+        self.assertEqual(alpha['polymer_type'], 'Protein')
+        self.assertIn('Homo sapiens', alpha['organism'])
+        self.assertEqual(len(alpha['sequence']), 141)
+
+        self.assertEqual(beta['chains'], ['B', 'D'])
+        self.assertEqual(beta['description'], 'Hemoglobin subunit beta')
+
+    def test_get_chain_ids(self):
+        self.assertEqual(get_chain_ids('4HHB'), ['A', 'B', 'C', 'D'])
+
+    def test_get_chains_reports_non_protein_polymers(self):
+        # 1EHZ is a transfer RNA
+        chains = get_chains('1EHZ')
+
+        self.assertEqual(len(chains), 1)
+        self.assertEqual(chains[0]['chains'], ['A'])
+        self.assertEqual(chains[0]['polymer_type'], 'RNA')
+
+    def test_get_chains_distinguishes_auth_and_label_ids(self):
+        # In large structures the author-assigned chain IDs shown on the RCSB
+        # website differ from the mmCIF label_asym_ids
+        chains = get_chains('4V5A')
+
+        self.assertTrue(len(chains) > 1)
+        self.assertTrue(
+            any(entity['chains'] != entity['label_chains']
+                for entity in chains),
+            "Expected auth and label chain IDs to differ for 4V5A")
+
+    def test_get_chains_nonexistent_pdb_id(self):
+        with self.assertWarns(UserWarning):
+            result = get_chains('9ZZZ')
+
+        self.assertIsNone(result)
+
+    def test_get_chain_ids_nonexistent_pdb_id(self):
+        with self.assertWarns(UserWarning):
+            self.assertIsNone(get_chain_ids('9ZZZ'))
+
     def test_get_ligand_instances(self):
         instances = get_ligand_instances('4HHB')
 

@@ -370,6 +370,128 @@ describe_pdb = get_info  # Alias for now; eventually make this point to the Grap
 get_entity_info = get_info  # Alias
 
 
+def get_chains(pdb_id):
+    '''Return the polymer chains of a given PDB entry
+
+    In the current RCSB API, chain IDs live on an entry's polymer entities
+    rather than on the entry itself, so they are not part of `get_info`.
+    This reproduces the per-chain table shown on an entry's RCSB web page.
+
+    Parameters
+    ----------
+
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+
+    Returns
+    -------
+
+    out : list of dict
+        One entry per polymer entity, in the order RCSB reports them, with
+        keys:
+
+        `entity_id`     : the polymer entity ID, e.g. '4HHB_1'
+        `chains`        : author-assigned chain IDs, e.g. ['A', 'C']. These
+                          are the IDs shown on the RCSB website and used in
+                          PDB files
+        `label_chains`  : the corresponding mmCIF label_asym_ids, which differ
+                          from `chains` in some large structures
+        `description`   : the name of the molecule, e.g. 'Hemoglobin subunit alpha'
+        `polymer_type`  : e.g. 'Protein', 'DNA', 'RNA'
+        `organism`      : source organism names, if annotated
+        `sequence`      : the one-letter canonical sequence
+
+        Returns None if the entry cannot be retrieved.
+
+    Examples
+    --------
+    >>> for chain in get_chains('4HHB'):
+    ...     print(chain['chains'], chain['description'])
+    ['A', 'C'] Hemoglobin subunit alpha
+    ['B', 'D'] Hemoglobin subunit beta
+
+    '''
+    graphql_query = {
+        "query":
+        '{entry(entry_id:"%s"){polymer_entities{rcsb_id '
+        'rcsb_polymer_entity{pdbx_description} '
+        'rcsb_polymer_entity_container_identifiers{auth_asym_ids asym_ids} '
+        'entity_poly{rcsb_entity_polymer_type pdbx_seq_one_letter_code_can} '
+        'rcsb_entity_source_organism{ncbi_scientific_name}}}}' % pdb_id
+    }
+
+    response = graphql.search_graphql(graphql_query)
+
+    if not response or "errors" in response:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    entry = response.get("data", {}).get("entry")
+    if not entry:
+        warnings.warn("Retrieval failed, returning None")
+        return None
+
+    chains = []
+    # Entries with no polymers (e.g. pure chemical components) report `None`
+    for polymer_entity in entry.get("polymer_entities") or []:
+        identifiers = polymer_entity.get(
+            "rcsb_polymer_entity_container_identifiers") or {}
+        entity = polymer_entity.get("rcsb_polymer_entity") or {}
+        entity_poly = polymer_entity.get("entity_poly") or {}
+        organisms = polymer_entity.get("rcsb_entity_source_organism") or []
+
+        chains.append({
+            "entity_id":
+            polymer_entity.get("rcsb_id"),
+            "chains":
+            identifiers.get("auth_asym_ids") or [],
+            "label_chains":
+            identifiers.get("asym_ids") or [],
+            "description":
+            entity.get("pdbx_description"),
+            "polymer_type":
+            entity_poly.get("rcsb_entity_polymer_type"),
+            "organism": [
+                organism.get("ncbi_scientific_name")
+                for organism in organisms
+            ],
+            "sequence":
+            entity_poly.get("pdbx_seq_one_letter_code_can"),
+        })
+
+    return chains
+
+
+def get_chain_ids(pdb_id):
+    '''Return a flat list of the author-assigned chain IDs of a PDB entry
+
+    Parameters
+    ----------
+
+    pdb_id : string
+        A 4 character string giving a pdb entry of interest
+
+    Returns
+    -------
+
+    out : list of str
+        Every polymer chain ID in the entry, sorted. Returns None if the
+        entry cannot be retrieved.
+
+    Examples
+    --------
+    >>> print(get_chain_ids('4HHB'))
+    ['A', 'B', 'C', 'D']
+
+    '''
+    chains = get_chains(pdb_id)
+    if chains is None:
+        return None
+
+    return sorted({chain_id for entity in chains
+                   for chain_id in entity["chains"]})
+
+
 def get_pdb_file(pdb_id: str, filetype='pdb', compression=False):
     """Deprecated wrapper for fetching PDB files from RCSB Database.
 

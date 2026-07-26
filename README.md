@@ -84,6 +84,19 @@ print(info["struct"]["title"])     # THE CRYSTAL STRUCTURE OF HUMAN DEOXYHAEMOGL
 print(info["exptl"][0]["method"])  # X-RAY DIFFRACTION
 ```
 
+List the polymer chains in an entry. Chain IDs live on an entry's polymer entities in the current RCSB API, so they are not part of `get_info`:
+
+```python
+from pypdb import get_chains, get_chain_ids
+
+for entity in get_chains("4HHB"):
+    print(entity["chains"], entity["description"])
+# ['A', 'C'] Hemoglobin subunit alpha
+# ['B', 'D'] Hemoglobin subunit beta
+
+print(get_chain_ids("4HHB"))  # ['A', 'B', 'C', 'D']
+```
+
 Fetch the ligands bound to an entry, or the description of a chemical component:
 
 ```python
