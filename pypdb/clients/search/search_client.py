@@ -18,9 +18,11 @@ from pypdb.clients.search.operators import sequence_operators
 from pypdb.clients.search.operators import text_operators
 from pypdb.clients.search.operators.chemical_operators import ChemicalFormulaOperator
 from pypdb.clients.search.operators.chemical_operators import ChemicalOperator
+from pypdb.clients.search.operators.chemical_operators import ChemicalSimilarityOperator
 from pypdb.clients.search.operators.selection_operators import ChemicalTextSearchOperator
 from pypdb.clients.search.operators.seqmotif_operators import SeqMotifOperator
 from pypdb.clients.search.operators.sequence_operators import SequenceOperator
+from pypdb.clients.search.operators.strucmotif_operators import StrucMotifOperator
 from pypdb.clients.search.operators.structure_operators import StructureOperator
 from pypdb.clients.search.operators.text_operators import TextSearchOperator
 
@@ -32,8 +34,9 @@ aggregated together into a `QueryGroup` to search using multiple operators at
 once using `perform_search_with_graph`.
 """
 SearchOperator = Union[TextSearchOperator, SequenceOperator, StructureOperator,
-                       SeqMotifOperator, ChemicalOperator,
-                       ChemicalFormulaOperator, ChemicalTextSearchOperator]
+                       SeqMotifOperator, StrucMotifOperator, ChemicalOperator,
+                       ChemicalSimilarityOperator, ChemicalFormulaOperator,
+                       ChemicalTextSearchOperator]
 
 
 class LogicalOperator(Enum):
@@ -127,6 +130,80 @@ class ResultsVerbosity(Enum):
     VERBOSE = "verbose"
 
 
+class GroupByReturnType(Enum):
+    """Whether a grouped search returns whole groups or one member of each."""
+    GROUPS = "groups"
+    REPRESENTATIVES = "representatives"
+
+
+@dataclass
+class Facet:
+    """Requests a tally of results, bucketed by an attribute's value.
+
+    Facets answer questions like "how many hits used each experimental
+    method?" in the same request as the search itself, rather than requiring
+    a separate query per bucket.
+
+    For details, see: https://search.rcsb.org/index.html#using-facets
+    """
+    # Name this facet's results are reported under
+    name: str
+    # Attribute to bucket results by
+    attribute: str
+    # How to aggregate. "terms" buckets by distinct value, and is the default.
+    aggregation_type: str = "terms"
+    # Only report buckets holding at least this many results
+    min_interval_population: Optional[int] = None
+    # Maximum number of buckets to report
+    max_num_intervals: Optional[int] = None
+
+    def _to_dict(self) -> Dict[str, Any]:
+        facet_dict: Dict[str, Any] = {
+            "name": self.name,
+            "aggregation_type": self.aggregation_type,
+            "attribute": self.attribute
+        }
+
+        if self.min_interval_population is not None:
+            facet_dict["min_interval_population"] = self.min_interval_population
+
+        if self.max_num_intervals is not None:
+            facet_dict["max_num_intervals"] = self.max_num_intervals
+
+        return facet_dict
+
+
+@dataclass
+class GroupBy:
+    """Collapses results into groups of related entities.
+
+    For example, grouping polymer entities by sequence identity returns one
+    cluster per unique sequence rather than every redundant copy.
+
+    For details, see: https://search.rcsb.org/index.html#groupby-results
+    """
+    # How to group results, e.g. "sequence_identity" or
+    # "matching_deposit_group_id"
+    aggregation_method: str
+    # Identity threshold, for the "sequence_identity" method (e.g. 100)
+    similarity_cutoff: Optional[float] = None
+    # Only report groups holding at least this many results
+    min_population: Optional[int] = None
+
+    def _to_dict(self) -> Dict[str, Any]:
+        group_dict: Dict[str, Any] = {
+            "aggregation_method": self.aggregation_method
+        }
+
+        if self.similarity_cutoff is not None:
+            group_dict["similarity_cutoff"] = self.similarity_cutoff
+
+        if self.min_population is not None:
+            group_dict["min_population"] = self.min_population
+
+        return group_dict
+
+
 @dataclass
 class RequestOptions:
     """Options to configure which results are returned, and in what order."""
@@ -150,6 +227,12 @@ class RequestOptions:
     results_content_type: Optional[List[ResultsContentType]] = None
     # How much information to return about each hit.
     results_verbosity: Optional[ResultsVerbosity] = None
+    # Tallies of results bucketed by an attribute, returned alongside the hits
+    facets: Optional[List[Facet]] = None
+    # Collapses results into groups of related entities
+    group_by: Optional[GroupBy] = None
+    # Whether a grouped search returns whole groups or one member of each
+    group_by_return_type: Optional[GroupByReturnType] = None
 
     def _to_dict(self):
         result_dict: Dict[str, Any] = {}
@@ -178,6 +261,16 @@ class RequestOptions:
 
         if self.results_verbosity is not None:
             result_dict["results_verbosity"] = self.results_verbosity.value
+
+        if self.facets is not None:
+            result_dict["facets"] = [facet._to_dict() for facet in self.facets]
+
+        if self.group_by is not None:
+            result_dict["group_by"] = self.group_by._to_dict()
+
+        if self.group_by_return_type is not None:
+            result_dict["group_by_return_type"] = (
+                self.group_by_return_type.value)
 
         return result_dict
 
@@ -272,7 +365,8 @@ def perform_search(
 _SEARCH_OPERATORS = (text_operators.TEXT_SEARCH_OPERATORS +
                      selection_operators.CHEMICAL_TEXT_SEARCH_OPERATORS + [
                          SequenceOperator, StructureOperator, SeqMotifOperator,
-                         ChemicalOperator, ChemicalFormulaOperator
+                         StrucMotifOperator, ChemicalOperator,
+                         ChemicalSimilarityOperator, ChemicalFormulaOperator
                      ])
 
 
@@ -401,6 +495,8 @@ class SearchService(Enum):
     SEQUENCE = "sequence"
     SEQMOTIF = "seqmotif"
     STRUCTURE = "structure"
+    # Search for 3D arrangements of residues
+    STRUCMOTIF = "strucmotif"
     CHEMICAL = "chemical"
 
 
@@ -424,7 +520,11 @@ def _infer_search_service(search_operator: SearchOperator) -> SearchService:
         return SearchService.STRUCTURE
     elif type(search_operator) is SeqMotifOperator:
         return SearchService.SEQMOTIF
-    elif type(search_operator) in (ChemicalOperator, ChemicalFormulaOperator):
+    elif type(search_operator) is StrucMotifOperator:
+        return SearchService.STRUCMOTIF
+    elif type(search_operator) in (ChemicalOperator,
+                                   ChemicalSimilarityOperator,
+                                   ChemicalFormulaOperator):
         return SearchService.CHEMICAL
     else:
         raise CannotInferSearchServiceException(

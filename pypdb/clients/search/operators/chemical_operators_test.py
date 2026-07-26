@@ -58,3 +58,21 @@ class TestChemicalOperators(unittest.TestCase):
             "type": "formula",
             "match_subset": True
         })
+
+    def test_chemical_similarity_operator_with_smiles(self):
+        similarity_operator = chemical_operators.ChemicalSimilarityOperator(
+            descriptor="CC(=O)NC1C(O)OC(CO)C(O)C1O")
+
+        self.assertEqual(
+            similarity_operator._to_dict(), {
+                "value": "CC(=O)NC1C(O)OC(CO)C(O)C1O",
+                "type": "descriptor",
+                "descriptor_type": "SMILES",
+                "match_type": "fingerprint-similarity"
+            })
+
+    def test_chemical_similarity_operator_with_inchi(self):
+        similarity_operator = chemical_operators.ChemicalSimilarityOperator(
+            descriptor="InChI=1S/C10H26N4/c11-5-3-9-13-7-1-2-8-14-10-4-6-12")
+
+        self.assertEqual(similarity_operator.descriptor_type, "InChI")

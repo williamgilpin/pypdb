@@ -412,3 +412,112 @@ results = perform_search(
     return_type=ReturnType.ENTRY
 )
 ```
+
+## Search for a 3D structure motif
+
+A structure motif search finds spatial arrangements of residues, such as a
+catalytic triad, regardless of the sequence or fold they appear in. The motif
+is defined by pointing at between 2 and 10 residues of an existing entry,
+addressed by their mmCIF `label_asym_id` and `label_seq_id`.
+
+```python
+from pypdb.clients.search.search_client import perform_search, ReturnType
+from pypdb.clients.search.operators.strucmotif_operators import (
+    AtomPairingScheme, StructureMotifResidue, StrucMotifOperator)
+
+# The enolase superfamily's catalytic residues, as they sit in 2MNR
+results = perform_search(
+    search_operator=StrucMotifOperator(
+        pdb_entry_id="2MNR",
+        residues=[
+            StructureMotifResidue(label_asym_id="A", label_seq_id=162),
+            StructureMotifResidue(label_asym_id="A", label_seq_id=193),
+            StructureMotifResidue(label_asym_id="A", label_seq_id=219),
+        ],
+        rmsd_cutoff=2,
+        atom_pairing_scheme=AtomPairingScheme.ALL),
+    return_type=ReturnType.ENTRY
+)
+```
+
+Individual positions can permit other residue types via `exchanges`, which
+broadens the search:
+
+```python
+StructureMotifResidue(label_asym_id="A", label_seq_id=162,
+                      exchanges=["LYS", "HIS"])
+```
+
+## Search for chemically similar molecules
+
+`ChemicalOperator` matches molecular graphs exactly or as substructures.
+To rank molecular definitions by chemical similarity instead, use
+`ChemicalSimilarityOperator`:
+
+```python
+from pypdb.clients.search.search_client import perform_search, ReturnType
+from pypdb.clients.search.operators.chemical_operators import ChemicalSimilarityOperator
+
+results = perform_search(
+    search_operator=ChemicalSimilarityOperator(
+        descriptor="CC(=O)NC1C(O)OC(CO)C(O)C1O"),
+    return_type=ReturnType.MOL_DEFINITION
+)
+```
+
+## Tally results with facets
+
+A facet buckets the matching results by an attribute's value, and is returned
+alongside the hits, so counting how many structures used each experimental
+method takes one request rather than one per method.
+
+```python
+from pypdb.clients.search.search_client import (
+    Facet, RequestOptions, ReturnType, perform_search)
+from pypdb.clients.search.operators import text_operators
+
+response = perform_search(
+    search_operator=text_operators.DefaultOperator(value="hemoglobin"),
+    return_type=ReturnType.ENTRY,
+    request_options=RequestOptions(
+        result_start_index=0,
+        num_results=1,
+        facets=[Facet(name="Methods", attribute="exptl.method")]),
+    # Facets are only present in the raw response, not in the ID list
+    return_raw_json_dict=True
+)
+
+for bucket in response["facets"][0]["buckets"]:
+    print(bucket["label"], bucket["population"])
+# X-RAY DIFFRACTION 8253
+# ELECTRON MICROSCOPY 643
+# SOLUTION NMR 151
+```
+
+## Group redundant results
+
+Grouping collapses related hits together — for example, one group per unique
+sequence instead of every redundant copy of it.
+
+```python
+from pypdb.clients.search.search_client import (
+    GroupBy, GroupByReturnType, RequestOptions, ReturnType, perform_search)
+from pypdb.clients.search.operators import text_operators
+
+response = perform_search(
+    search_operator=text_operators.DefaultOperator(value="hemoglobin"),
+    return_type=ReturnType.POLYMER_ENTITY,
+    request_options=RequestOptions(
+        result_start_index=0,
+        num_results=1,
+        group_by=GroupBy(aggregation_method="sequence_identity",
+                         similarity_cutoff=100),
+        group_by_return_type=GroupByReturnType.GROUPS),
+    return_raw_json_dict=True
+)
+
+print(response["group_by_count"])  # number of distinct groups
+```
+
+Use `GroupByReturnType.REPRESENTATIVES` to get a single member of each group
+instead of the whole group.

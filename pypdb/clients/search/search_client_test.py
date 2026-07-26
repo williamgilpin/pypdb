@@ -6,7 +6,7 @@ import unittest
 from unittest import mock
 
 from pypdb.clients.search import search_client
-from pypdb.clients.search.operators import chemical_operators, selection_operators, sequence_operators, text_operators
+from pypdb.clients.search.operators import chemical_operators, selection_operators, sequence_operators, strucmotif_operators, text_operators
 
 REQUEST_HEADERS = {"Content-Type": "application/json"}
 
@@ -849,6 +849,136 @@ class TestHTTPRequests(unittest.TestCase):
             data=json.dumps(expected_json_dict),
             headers=REQUEST_HEADERS)
         self.assertEqual(results, ["VIB"])
+
+
+class TestNewSearchServices(unittest.TestCase):
+    """Coverage for the search services and request options added most
+    recently, so that every RCSB search service can be expressed."""
+
+    def test_all_rcsb_search_services_are_supported(self):
+        self.assertEqual(
+            {service.value for service in search_client.SearchService}, {
+                "full_text", "text", "text_chem", "sequence", "seqmotif",
+                "structure", "strucmotif", "chemical"
+            })
+
+    def test_infers_strucmotif_service(self):
+        operator = strucmotif_operators.StrucMotifOperator(
+            pdb_entry_id="2MNR",
+            residues=[
+                strucmotif_operators.StructureMotifResidue("A", 162),
+                strucmotif_operators.StructureMotifResidue("A", 193),
+            ])
+
+        self.assertEqual(search_client._infer_search_service(operator),
+                         search_client.SearchService.STRUCMOTIF)
+
+    def test_infers_chemical_service_for_similarity_operator(self):
+        operator = chemical_operators.ChemicalSimilarityOperator(
+            descriptor="CCO")
+
+        self.assertEqual(search_client._infer_search_service(operator),
+                         search_client.SearchService.CHEMICAL)
+
+    def test_request_options_with_facets(self):
+        request_options = search_client.RequestOptions(
+            sort_by=None,
+            facets=[
+                search_client.Facet(name="Methods", attribute="exptl.method")
+            ])
+
+        self.assertEqual(
+            request_options._to_dict()["facets"], [{
+                "name": "Methods",
+                "aggregation_type": "terms",
+                "attribute": "exptl.method"
+            }])
+
+    def test_request_options_with_group_by(self):
+        request_options = search_client.RequestOptions(
+            sort_by=None,
+            group_by=search_client.GroupBy(
+                aggregation_method="sequence_identity", similarity_cutoff=100),
+            group_by_return_type=search_client.GroupByReturnType.GROUPS)
+
+        result = request_options._to_dict()
+
+        self.assertEqual(result["group_by"], {
+            "aggregation_method": "sequence_identity",
+            "similarity_cutoff": 100
+        })
+        self.assertEqual(result["group_by_return_type"], "groups")
+
+
+class TestNewSearchServicesIntegration(unittest.TestCase):
+    """Tests that hit the live RCSB search service."""
+
+    def test_strucmotif_search(self):
+        # The enolase superfamily's catalytic residues
+        operator = strucmotif_operators.StrucMotifOperator(
+            pdb_entry_id="2MNR",
+            residues=[
+                strucmotif_operators.StructureMotifResidue("A", 162),
+                strucmotif_operators.StructureMotifResidue("A", 193),
+                strucmotif_operators.StructureMotifResidue("A", 219),
+            ],
+            rmsd_cutoff=2,
+            atom_pairing_scheme=strucmotif_operators.AtomPairingScheme.ALL)
+
+        results = search_client.perform_search(operator, verbosity=False)
+
+        self.assertTrue(len(results) > 0)
+        # The entry the motif was taken from must match itself
+        self.assertIn("2MNR", results)
+
+    def test_chemical_similarity_search(self):
+        operator = chemical_operators.ChemicalSimilarityOperator(
+            descriptor="CC(=O)NC1C(O)OC(CO)C(O)C1O")
+
+        results = search_client.perform_search(
+            operator,
+            search_client.ReturnType.MOL_DEFINITION,
+            verbosity=False)
+
+        self.assertTrue(len(results) > 0)
+
+    def test_faceted_search_returns_buckets(self):
+        request_options = search_client.RequestOptions(
+            result_start_index=0,
+            num_results=1,
+            facets=[
+                search_client.Facet(name="Methods", attribute="exptl.method")
+            ])
+
+        response = search_client.perform_search(
+            text_operators.DefaultOperator(value="hemoglobin"),
+            request_options=request_options,
+            return_raw_json_dict=True,
+            verbosity=False)
+
+        self.assertIn("facets", response)
+        buckets = response["facets"][0]["buckets"]
+        self.assertTrue(len(buckets) > 0)
+        self.assertIn("X-RAY DIFFRACTION",
+                      [bucket["label"] for bucket in buckets])
+
+    def test_grouped_search_returns_groups(self):
+        request_options = search_client.RequestOptions(
+            result_start_index=0,
+            num_results=1,
+            group_by=search_client.GroupBy(
+                aggregation_method="sequence_identity", similarity_cutoff=100),
+            group_by_return_type=search_client.GroupByReturnType.GROUPS)
+
+        response = search_client.perform_search(
+            text_operators.DefaultOperator(value="hemoglobin"),
+            search_client.ReturnType.POLYMER_ENTITY,
+            request_options=request_options,
+            return_raw_json_dict=True,
+            verbosity=False)
+
+        self.assertIn("group_set", response)
+        self.assertTrue(response["group_by_count"] > 0)
 
 
 if __name__ == '__main__':

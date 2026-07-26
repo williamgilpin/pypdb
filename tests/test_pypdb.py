@@ -352,14 +352,17 @@ class TestInfoFunctions(unittest.TestCase):
 
         self.assertEqual(len(chains), 2)
 
-        alpha, beta = chains
-        self.assertEqual(alpha['entity_id'], '4HHB_1')
+        # RCSB does not guarantee the order polymer entities are returned in
+        by_entity_id = {entity['entity_id']: entity for entity in chains}
+
+        alpha = by_entity_id['4HHB_1']
         self.assertEqual(alpha['chains'], ['A', 'C'])
         self.assertEqual(alpha['description'], 'Hemoglobin subunit alpha')
         self.assertEqual(alpha['polymer_type'], 'Protein')
         self.assertIn('Homo sapiens', alpha['organism'])
         self.assertEqual(len(alpha['sequence']), 141)
 
+        beta = by_entity_id['4HHB_2']
         self.assertEqual(beta['chains'], ['B', 'D'])
         self.assertEqual(beta['description'], 'Hemoglobin subunit beta')
 

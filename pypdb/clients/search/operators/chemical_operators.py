@@ -44,6 +44,36 @@ class ChemicalOperator:
 
 
 @dataclass
+class ChemicalSimilarityOperator:
+    """Search operator matching molecular definitions by chemical similarity.
+
+    Unlike `ChemicalOperator`, which matches molecular graphs exactly or as
+    substructures, this ranks definitions by how similar their chemical
+    fingerprints are to the query descriptor.
+    """
+    # Descriptor to compare against (a valid SMILES or InChI string)
+    descriptor: str
+
+    def __post_init__(self):
+        """Derives whether the chemical descriptor string is SMILES or InChI."""
+        # All InChI strings definitionally start with "InChI="
+        if self.descriptor.startswith("InChI="):
+            self.descriptor_type = "InChI"
+        else:
+            # Otherwise, assume SMILES string by default
+            self.descriptor_type = "SMILES"
+
+    def _to_dict(self) -> Dict[str, Any]:
+        return {
+            "value": self.descriptor,
+            "type": "descriptor",
+            "descriptor_type": self.descriptor_type,
+            "match_type":
+            DescriptorMatchingCriterion.FINGERPRINT_SIMILARITY.value
+        }
+
+
+@dataclass
 class ChemicalFormulaOperator:
     """Search operator matching molecular definitions by chemical formula.
 
